@@ -11,6 +11,14 @@ npm.cmd run dev
 
 Open the local Vite URL. The first run contains three clearly labeled synthetic sources so the retrieval loop is visible immediately. Add your own text or supported files from the left rail; the browser stores the index in `localStorage`.
 
+## Add it to an iPhone Home Screen
+
+Tracework includes a branded `apple-touch-icon`, web manifest, and standalone web-app metadata. After deploying a new version, remove any older Tracework shortcut from the iPhone Home Screen and add it again from Safari so iOS refreshes the icon:
+
+1. Open the deployed Tracework URL in Safari.
+2. Tap **Share** → **Add to Home Screen**.
+3. Keep **Open as Web App** enabled, then tap **Add**.
+
 ## Phase 2: hashed versus neural retrieval
 
 Tracework now keeps two representations for the same chunk:

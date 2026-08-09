@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-labelledby="title desc">
+  <title id="title">Tracework</title>
+  <desc id="desc">A vermilion target mark on a drafting-paper field.</desc>
+  <rect width="180" height="180" fill="#17211f" />
+  <rect x="14" y="14" width="152" height="152" fill="#f2f5f2" />
+  <rect x="14" y="14" width="152" height="152" fill="none" stroke="#c84935" stroke-width="4" />
+  <circle cx="90" cy="90" r="44" fill="none" stroke="#17211f" stroke-width="8" />
+  <circle cx="90" cy="90" r="15" fill="none" stroke="#c84935" stroke-width="8" />
+  <path d="M90 26v18M154 90h-18M90 154v-18M26 90h18" fill="none" stroke="#17211f" stroke-width="8" stroke-linecap="round" />
+  <circle cx="90" cy="90" r="4" fill="#c84935" />
+</svg>
