@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-09T00:00:00.000Z",
+  "title": "Design System: Tracework",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#17211f", "tonalRamp": ["#17211f", "#33403d", "#52605c", "#71807a", "#9aa6a2", "#c7cfcc", "#e0e7e4", "#f2f5f2"] },
+      "paper": { "role": "neutral", "displayName": "Cool Paper", "canonical": "#f2f5f2", "tonalRamp": ["#17211f", "#33403d", "#52605c", "#71807a", "#9aa6a2", "#c7cfcc", "#e0e7e4", "#f2f5f2"] },
+      "vermilion": { "role": "primary", "displayName": "Vermilion Signal", "canonical": "#c84935", "tonalRamp": ["#4d1e18", "#6d2a21", "#91382b", "#ad4936", "#c84935", "#d86b59", "#ea9a8b", "#f5c8bf"] },
+      "teal": { "role": "secondary", "displayName": "Registry Teal", "canonical": "#1d6f73", "tonalRamp": ["#0b2b2d", "#10484b", "#1d6f73", "#3a888b", "#63a4a4", "#9cc3c2", "#c9dfdd", "#e8f1ef"] },
+      "rail": { "role": "neutral", "displayName": "Capture Rail", "canonical": "#d7dfdc", "tonalRamp": ["#27332f", "#46544f", "#65736e", "#899792", "#aebcb7", "#c7cfcc", "#d7dfdc", "#f2f5f2"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Question Display", "purpose": "The opening question and product statement." },
+      "label": { "displayName": "Registration Label", "purpose": "Pipeline, provenance, and retrieval state annotation." }
+    },
+    "shadows": [
+      { "name": "query-registration", "value": "9px 9px 0 rgba(200, 73, 53, 0.09)", "purpose": "A restrained offset under the query field." },
+      { "name": "notice-lift", "value": "8px 8px 0 rgba(23, 33, 31, 0.1)", "purpose": "Transient local feedback only." }
+    ],
+    "motion": [
+      { "name": "state-shift", "value": "150ms ease", "purpose": "Short hover and selection responses that preserve reading stability." }
+    ],
+    "breakpoints": [
+      { "name": "medium", "value": "1240px" },
+      { "name": "compact", "value": "840px" },
+      { "name": "phone", "value": "580px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink action for indexing a note.",
+      "html": "<button class=\"ds-btn-primary\">INDEX NOTE <span aria-hidden=\"true\">→</span></button>",
+      "css": ".ds-btn-primary { background: #17211f; color: #f2f5f2; padding: 0 12px; height: 40px; letter-spacing: .09em; text-transform: uppercase; font-weight: 800; border: 1px solid #17211f; border-radius: 0; transition: background 150ms ease, color 150ms ease; } .ds-btn-primary:hover { background: #c84935; border-color: #c84935; } .ds-btn-primary:focus-visible { outline: 2px solid #c84935; outline-offset: 3px; }"
+    },
+    {
+      "name": "Signal Button",
+      "kind": "button",
+      "refersTo": "button-signal",
+      "description": "Vermilion action for retrieving the current question.",
+      "html": "<button class=\"ds-btn-signal\">RETRIEVE <span aria-hidden=\"true\">→</span></button>",
+      "css": ".ds-btn-signal { background: #c84935; color: #fff8f4; padding: 0 15px; height: 41px; letter-spacing: .1em; text-transform: uppercase; font-weight: 800; border: 0; border-radius: 0; transition: background 150ms ease; } .ds-btn-signal:hover { background: #91382b; } .ds-btn-signal:focus-visible { outline: 2px solid #c84935; outline-offset: 3px; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "The question line where retrieval begins.",
+      "html": "<label class=\"ds-search\"><span aria-hidden=\"true\">⌕</span><input placeholder=\"Ask your indexed material...\" /></label>",
+      "css": ".ds-search { display: flex; align-items: center; gap: 13px; min-height: 57px; border: 1px solid #a9b5b1; padding: 7px 8px 7px 17px; background: #f2f5f2; } .ds-search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #17211f; font: 14px 'Trebuchet MS', 'Segoe UI', sans-serif; } .ds-search:focus-within { border-color: #c84935; outline: 2px solid #c84935; outline-offset: 3px; }"
+    },
+    {
+      "name": "Evidence Row",
+      "kind": "custom",
+      "refersTo": "evidence-stream",
+      "description": "Flat ranked passage row with source and match signal.",
+      "html": "<button class=\"ds-evidence\"><span class=\"ds-rank\">01</span><span><small>SYNTHETIC SOURCE</small><strong>marketIdentity.ts / chunk 01</strong><em>Official catalog identity first.</em></span><b>47%</b></button>",
+      "css": ".ds-evidence { display: grid; grid-template-columns: 36px 1fr 45px; gap: 12px; width: 100%; padding: 15px 10px 15px 0; border: 0; border-bottom: 1px solid #c7cfcc; border-radius: 0; background: transparent; color: #17211f; text-align: left; } .ds-evidence small { display: block; color: #1d6f73; font-size: 9px; font-weight: 800; letter-spacing: .09em; } .ds-evidence strong { display: block; margin-top: 6px; font-size: 14px; } .ds-evidence em { display: block; margin-top: 6px; color: #5f6d68; font-size: 12px; font-style: normal; } .ds-evidence b { color: #91382b; font-size: 15px; } .ds-evidence:focus-visible { outline: 2px solid #c84935; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Trace Table",
+    "overview": "Tracework is a cool drafting surface for personal memory: orderly enough to trust, visibly marked enough to question. The UI is built from ruled lanes, registration marks, and tonal paper layers. It refuses a generic chat room as the primary composition; the answer, ranked evidence, and inspected source belong to one working view.\n\nThe system is light because the product is used at a desk beside real code and notes. Ink-black text carries the working material, teal labels name the system, and vermilion appears as a deliberate signal for active retrieval and provenance.",
+    "keyCharacteristics": ["Cool mineral paper and a drafting-table rail", "Hairline rules and registration marks instead of decorative cards", "One vermilion signal for active retrieval and source focus", "Evidence rows and source inspection as the signature interaction"],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "Vermilion marks what is active or needs attention. Do not scatter it across decorative accents.", "section": "colors" },
+      { "name": "The Question Leads Rule", "body": "The visitor's question is the largest readable object in the first workbench view; supporting labels stay subordinate.", "section": "typography" },
+      { "name": "The Flat Evidence Rule", "body": "Evidence stays on the page and in the reading flow; never hide provenance in a floating or modal surface.", "section": "elevation" }
+    ],
+    "dos": ["Do keep the question, answer, evidence, and source inspector in one visible workflow.", "Do use vermilion sparingly for active retrieval and provenance.", "Do preserve source title, path, chunk offset, and embedding version whenever a result is rendered."],
+    "donts": ["Don't replace the evidence stream with a generic chat transcript.", "Don't use colored borders, gradients, or floating card stacks as decoration.", "Don't present weak near-matches as grounded citations."]
+  }
+}
