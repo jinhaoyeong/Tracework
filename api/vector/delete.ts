@@ -1,3 +1,3 @@
-import { handleVectorDelete } from '../../server/traceworkApi'
+import { createVercelFetchHandler, handleVectorDelete } from '../../server/traceworkApi'
 
-export default handleVectorDelete
+export default createVercelFetchHandler(handleVectorDelete)

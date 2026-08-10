@@ -1,3 +1,3 @@
-import { handleGeneration } from '../server/traceworkApi'
+import { createVercelFetchHandler, handleGeneration } from '../server/traceworkApi'
 
-export default handleGeneration
+export default createVercelFetchHandler(handleGeneration)

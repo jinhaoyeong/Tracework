@@ -1,3 +1,3 @@
-import { handleEmbedding } from '../server/traceworkApi'
+import { createVercelFetchHandler, handleEmbedding } from '../server/traceworkApi'
 
-export default handleEmbedding
+export default createVercelFetchHandler(handleEmbedding)
