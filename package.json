@@ -9,6 +9,8 @@
     "check": "tsc --noEmit -p tsconfig.app.json",
     "test:grounded": "node --experimental-strip-types scripts/test-grounded.mjs",
     "stress:grounded": "node --experimental-strip-types scripts/stress-grounded.mjs",
+    "test:retrieval": "node --experimental-strip-types scripts/test-retrieval.mjs",
+    "eval:retrieval": "node --experimental-strip-types scripts/eval-retrieval.mjs",
     "preview": "vite preview --configLoader runner"
   },
   "dependencies": {

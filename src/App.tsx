@@ -4,6 +4,8 @@ import { Icon } from './components/Icon'
 import { buildAnswer, createDocument, formatBytes, searchDocuments, tokenize } from './lib/rag'
 import { buildGroundedContext, buildInsufficientAnswer, classifyGeneratedAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
 import { GenerationError, requestGroundedAnswer } from './lib/generation'
+import { buildLexicalIndex, searchLexical, toLexicalResults } from './lib/lexical'
+import { fuseRankings, RRF_K } from './lib/fusion'
 import { NeuralEmbeddingError, requestNeuralEmbeddings } from './lib/semantic'
 import { PGVECTOR_DIMENSIONS, PgvectorError, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
@@ -154,7 +156,28 @@ function App() {
 
   const hashedResults = useMemo(() => searchDocuments(documents, activeQuery, { engine: 'hashed' }), [documents, activeQuery])
   const neuralResults = useMemo(() => searchDocuments(documents, activeQuery, { engine: 'neural', queryVector: neuralQueryVector ?? undefined }), [documents, activeQuery, neuralQueryVector])
-  const results = engine === 'neural' ? neuralResults : engine === 'pgvector' ? pgvectorResults : hashedResults
+  const lexicalIndex = useMemo(() => buildLexicalIndex(documents), [documents])
+  const lexicalResults = useMemo(
+    () => toLexicalResults(searchLexical(lexicalIndex, activeQuery, 8), documents),
+    [documents, lexicalIndex, activeQuery],
+  )
+  // The dense side of a fusion is whichever real dense ranking exists: the
+  // database ranking when pgvector has run, the local neural ranking otherwise.
+  const denseResultsForFusion = pgvectorResults.length ? pgvectorResults : neuralResults
+  const denseSourceLabel = pgvectorResults.length ? 'pgvector' : 'local neural'
+  const hybridResults = useMemo(
+    () => fuseRankings({ dense: denseResultsForFusion, lexical: lexicalResults }, 8),
+    [denseResultsForFusion, lexicalResults],
+  )
+  const results = engine === 'neural'
+    ? neuralResults
+    : engine === 'pgvector'
+      ? pgvectorResults
+      : engine === 'lexical'
+        ? lexicalResults
+        : engine === 'hybrid'
+          ? hybridResults
+          : hashedResults
   const answer = useMemo(() => buildAnswer(activeQuery, results), [activeQuery, results])
   const evidenceAssessment = useMemo(() => evaluateEvidence(activeQuery, results), [activeQuery, results])
   const groundedPreviewContext = useMemo(() => buildGroundedContext(activeQuery, results, {
@@ -709,7 +732,7 @@ function App() {
           </div>
 
           <div className="rail-footer">
-            <div><span>engine</span><strong>{engine === 'pgvector' ? 'supabase pgvector' : engine === 'neural' ? neuralState.model ?? 'local neural embeddings' : compareMode ? 'local neural + pgvector' : 'local hashed vectors'}</strong></div>
+            <div><span>engine</span><strong>{engine === 'pgvector' ? 'supabase pgvector' : engine === 'neural' ? neuralState.model ?? 'local neural embeddings' : engine === 'lexical' ? 'bm25 lexical index' : engine === 'hybrid' ? `rrf / ${denseSourceLabel} + bm25` : compareMode ? 'local neural + pgvector' : 'local hashed vectors'}</strong></div>
             <div><span>vocabulary</span><strong>{indexedTerms.toLocaleString()} terms</strong></div>
             <div><span>memory</span><strong>{formatBytes(new Blob([JSON.stringify(documents)]).size)}</strong></div>
           </div>
@@ -740,6 +763,8 @@ function App() {
                   <button className={`engine-option ${engine === 'hashed' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('hashed')}>hashed baseline</button>
                   <button className={`engine-option ${engine === 'neural' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('neural')}>local neural</button>
                   <button className={`engine-option ${engine === 'pgvector' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('pgvector')}>pgvector</button>
+                  <button className={`engine-option ${engine === 'lexical' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('lexical')}>lexical bm25</button>
+                  <button className={`engine-option ${engine === 'hybrid' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('hybrid')}>hybrid rrf</button>
                   <button className={`compare-button ${compareMode ? 'is-active' : ''}`} type="button" onClick={handleCompare} disabled={neuralState.status === 'indexing' || ['syncing', 'searching'].includes(pgvectorState.status)}>compare</button>
                 </div>
                 <span className="control-divider" aria-hidden="true" />
@@ -751,7 +776,7 @@ function App() {
               </div>
             </div>
             <div className="neural-status-row" role="status" aria-live="polite">
-              <span className="method-label">{engine === 'pgvector' ? 'pgvector / database cosine search' : engine === 'neural' ? 'local neural / semantic similarity' : 'baseline / hashed vector + term overlap'}</span>
+              <span className="method-label">{engine === 'pgvector' ? 'pgvector / database cosine search' : engine === 'neural' ? 'local neural / semantic similarity' : engine === 'lexical' ? 'lexical / bm25 over title, path, and body' : engine === 'hybrid' ? `hybrid / reciprocal rank fusion of ${denseSourceLabel} + bm25` : 'baseline / hashed vector + term overlap'}</span>
               <span className={`neural-state-label is-${activeStatus}`}>
                 {activeStatus === 'indexing'
                   ? `${neuralState.progress}% / ${activeStatusMessage}`
@@ -779,6 +804,57 @@ function App() {
               </div>
             </div>
           </section>
+
+          {(engine === 'lexical' || engine === 'hybrid') && <section className="retrieval-explain-section" aria-labelledby="retrieval-explain-title">
+            <div className="grounded-debug-heading">
+              <div>
+                <div className="section-marker"><span className="marker-line" /> retrieval / why it ranked <span className="marker-line short" /></div>
+                <h2 id="retrieval-explain-title">Two rankers, side by side.</h2>
+              </div>
+              <span className="grounded-debug-state is-sent">rrf k={RRF_K}</span>
+            </div>
+            <div className="retrieval-explain-grid">
+              <div className="retrieval-column">
+                <h3>dense / {denseSourceLabel}</h3>
+                {denseResultsForFusion.slice(0, 5).map((result, index) => (
+                  <div className="retrieval-row" key={`dense-${result.chunk.id}`}>
+                    <span className="retrieval-rank">{index + 1}</span>
+                    <span><strong>{result.document.title}</strong><small>similarity {result.score.toFixed(4)}{result.distance === undefined ? '' : ` · distance ${result.distance.toFixed(4)}`}</small></span>
+                  </div>
+                ))}
+                {denseResultsForFusion.length ? null : <div className="retrieval-empty">No dense ranking yet. Run pgvector or local neural retrieval.</div>}
+              </div>
+              <div className="retrieval-column">
+                <h3>lexical / bm25</h3>
+                {lexicalResults.slice(0, 5).map((result, index) => (
+                  <div className="retrieval-row" key={`lexical-${result.chunk.id}`}>
+                    <span className="retrieval-rank">{index + 1}</span>
+                    <span>
+                      <strong>{result.document.title}</strong>
+                      <small>bm25 {result.lexicalScore?.toFixed(4) ?? 'n/a'} · title {result.lexicalFieldHits?.title ?? 0} · path {result.lexicalFieldHits?.path ?? 0} · body {result.lexicalFieldHits?.body ?? 0}</small>
+                      <small>matched: {result.matchedTerms.join(', ') || 'none'}</small>
+                    </span>
+                  </div>
+                ))}
+                {lexicalResults.length ? null : <div className="retrieval-empty">No lexical match for this query.</div>}
+              </div>
+              <div className="retrieval-column">
+                <h3>hybrid / rrf</h3>
+                {hybridResults.slice(0, 5).map((result, index) => (
+                  <div className="retrieval-row" key={`hybrid-${result.chunk.id}`}>
+                    <span className="retrieval-rank">{index + 1}</span>
+                    <span>
+                      <strong>{result.document.title}</strong>
+                      <small>rrf {result.fusion?.rrfScore.toFixed(6) ?? 'n/a'} = dense {result.fusion?.denseContribution.toFixed(6) ?? '0'} + lexical {result.fusion?.lexicalContribution.toFixed(6) ?? '0'}</small>
+                      <small>dense rank {result.fusion?.denseRank ?? 'absent'} · lexical rank {result.fusion?.lexicalRank ?? 'absent'}</small>
+                    </span>
+                  </div>
+                ))}
+                {hybridResults.length ? null : <div className="retrieval-empty">Nothing to fuse yet.</div>}
+              </div>
+            </div>
+            <p className="grounded-debug-note">Reciprocal rank fusion scores each chunk as the sum of 1 / (k + rank) across both rankings, with k = {RRF_K}. A chunk found by only one ranker keeps a single contribution, which is why a strong lexical-only hit can still lose to a chunk both rankers placed moderately well. BM25 scores are unbounded and are not comparable to cosine similarity.</p>
+          </section>}
 
           {answerMode === 'grounded' && <section className="grounded-debug-section" aria-labelledby="grounded-debug-title">
             <div className="grounded-debug-heading">

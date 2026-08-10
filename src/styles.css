@@ -216,6 +216,17 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .grounded-context-chunk > button { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; border: 0; padding: 12px 13px; background: transparent; color: inherit; cursor: pointer; text-align: left; }
 .grounded-context-chunk > button:hover strong, .grounded-context-chunk > button:focus-visible strong { color: var(--vermilion-dark); }
 .grounded-context-chunk > button > span { color: var(--vermilion); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; }
+.retrieval-explain-section { margin-top: 20px; border: 1px solid var(--line-strong); padding: 20px; background: var(--paper); }
+.retrieval-explain-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-bottom: 13px; border: 1px solid var(--line-strong); background: #c3cfca; }
+.retrieval-column { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 13px; background: #e4ebe7; }
+.retrieval-column h3 { margin: 0 0 3px; color: #62736d; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.retrieval-row { display: flex; gap: 9px; align-items: baseline; }
+.retrieval-row > span:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.retrieval-row strong { overflow: hidden; color: var(--ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.retrieval-row small { color: #71807a; font-size: 9px; line-height: 1.4; word-break: break-word; }
+.retrieval-rank { flex: 0 0 auto; color: var(--vermilion); font-size: 10px; font-weight: 800; }
+.retrieval-empty { color: #8a9893; font-size: 10px; line-height: 1.5; }
+@media (max-width: 900px) { .retrieval-explain-grid { grid-template-columns: 1fr; } }
 .grounded-chunk-warning { margin: 0 13px 10px; border-left: 2px solid var(--vermilion); padding: 6px 9px; background: #e8ddd7; color: var(--vermilion-dark); font-size: 10px; font-weight: 650; line-height: 1.45; }
 .grounded-context-chunk > button > span:nth-child(2) { min-width: 0; flex: 1; }
 .grounded-context-chunk > button strong { min-width: 0; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }

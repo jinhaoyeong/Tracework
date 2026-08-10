@@ -1,0 +1,3821 @@
+{
+  "summary": {
+    "recordedAt": "2026-08-10T09:38:35.384Z",
+    "corpus": "padded",
+    "corpusSources": 34,
+    "corpusChunks": 34,
+    "topK": 5,
+    "candidateK": 10,
+    "rrfK": 60,
+    "scoredQuestions": 7,
+    "engines": {
+      "dense": {
+        "recallAt1": 4,
+        "recallAt5": 6,
+        "mrr": 0.7143,
+        "averageRelevantInTopK": 1.6,
+        "questionsWithTwoOrMoreDistractors": 10
+      },
+      "lexical": {
+        "recallAt1": 4,
+        "recallAt5": 6,
+        "mrr": 0.6905,
+        "averageRelevantInTopK": 1.5,
+        "questionsWithTwoOrMoreDistractors": 10
+      },
+      "hybrid": {
+        "recallAt1": 4,
+        "recallAt5": 5,
+        "mrr": 0.6429,
+        "averageRelevantInTopK": 1.6,
+        "questionsWithTwoOrMoreDistractors": 10
+      }
+    },
+    "hybridVsDense": {
+      "improved": 0,
+      "worsened": 1,
+      "unchanged": 6
+    },
+    "generation": null,
+    "foreignSourcesSeen": [
+      "retrieval-thresholds.md",
+      "evidence-policy.md",
+      "pgvector-test.md",
+      "local-neural.md"
+    ],
+    "kSweep": {
+      "1": {
+        "recallAt5": 7,
+        "q8Rank": 3
+      },
+      "5": {
+        "recallAt5": 5,
+        "q8Rank": null
+      },
+      "20": {
+        "recallAt5": 5,
+        "q8Rank": null
+      },
+      "60": {
+        "recallAt5": 5,
+        "q8Rank": null
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "Q1",
+      "question": "What does the team plan cost?",
+      "probe": "recent vs stale source",
+      "expectSources": [
+        "pricing-2025.md"
+      ],
+      "relevant": [
+        "pricing-2025.md",
+        "pricing-2024.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 0.605,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2025.md",
+            "score": 0.5973,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "changelog.md",
+            "score": 0.4308,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "roadmap-notes.md",
+            "score": 0.4165,
+            "matchedTerms": []
+          },
+          {
+            "rank": 5,
+            "source": "pricing-history.md",
+            "score": 0.3643,
+            "matchedTerms": []
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "lite-plan.md",
+            "score": 1,
+            "lexicalScore": 3.8645,
+            "titleMatched": false,
+            "matchedTerms": [
+              "plan",
+              "cost"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2024.md",
+            "score": 0.9769,
+            "lexicalScore": 3.7753,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "pricing-2025.md",
+            "score": 0.9769,
+            "lexicalScore": 3.7753,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "changelog.md",
+            "score": 0.939,
+            "lexicalScore": 3.6288,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "model-configuration.md",
+            "score": 0.7061,
+            "lexicalScore": 2.7286,
+            "titleMatched": false,
+            "matchedTerms": [
+              "does"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 0.605,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ],
+            "denseRank": 1,
+            "lexicalRank": 2,
+            "rrfScore": 0.032522
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2025.md",
+            "score": 0.5973,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ],
+            "denseRank": 2,
+            "lexicalRank": 3,
+            "rrfScore": 0.032002
+          },
+          {
+            "rank": 3,
+            "source": "changelog.md",
+            "score": 0.4308,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ],
+            "denseRank": 3,
+            "lexicalRank": 4,
+            "rrfScore": 0.031498
+          },
+          {
+            "rank": 4,
+            "source": "lite-plan.md",
+            "score": 0.3424,
+            "matchedTerms": [
+              "plan",
+              "cost"
+            ],
+            "denseRank": 7,
+            "lexicalRank": 1,
+            "rrfScore": 0.031319
+          },
+          {
+            "rank": 5,
+            "source": "elasticsearch-evaluation.md",
+            "score": 0.3159,
+            "matchedTerms": [
+              "cost"
+            ],
+            "denseRank": 10,
+            "lexicalRank": 8,
+            "rrfScore": 0.028992
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2024.md",
+          "score": 0.605,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "pricing-2025.md",
+          "score": 0.5973,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "changelog.md",
+          "score": 0.4308,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "roadmap-notes.md",
+          "score": 0.4165,
+          "matchedTerms": []
+        },
+        {
+          "rank": 5,
+          "source": "pricing-history.md",
+          "score": 0.3643,
+          "matchedTerms": []
+        },
+        {
+          "rank": 6,
+          "source": "meeting-minutes-january.md",
+          "score": 0.361,
+          "matchedTerms": [
+            "team"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "lite-plan.md",
+          "score": 0.3424,
+          "matchedTerms": [
+            "plan",
+            "cost"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "sales-faq.md",
+          "score": 0.333,
+          "matchedTerms": []
+        },
+        {
+          "rank": 9,
+          "source": "onboarding.md",
+          "score": 0.3268,
+          "matchedTerms": []
+        },
+        {
+          "rank": 10,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.3159,
+          "matchedTerms": [
+            "cost"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "lite-plan.md",
+          "score": 1,
+          "lexicalScore": 3.8645,
+          "titleMatched": false,
+          "matchedTerms": [
+            "plan",
+            "cost"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "pricing-2024.md",
+          "score": 0.9769,
+          "lexicalScore": 3.7753,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "pricing-2025.md",
+          "score": 0.9769,
+          "lexicalScore": 3.7753,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "changelog.md",
+          "score": 0.939,
+          "lexicalScore": 3.6288,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "model-configuration.md",
+          "score": 0.7061,
+          "lexicalScore": 2.7286,
+          "titleMatched": false,
+          "matchedTerms": [
+            "does"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "chunking-strategies.md",
+          "score": 0.6336,
+          "lexicalScore": 2.4487,
+          "titleMatched": false,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "architecture.md",
+          "score": 0.6276,
+          "lexicalScore": 2.4253,
+          "titleMatched": false,
+          "matchedTerms": [
+            "does"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.6247,
+          "lexicalScore": 2.4142,
+          "titleMatched": false,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "team-directory.md",
+          "score": 0.5201,
+          "lexicalScore": 2.0099,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "api-migration.md",
+          "score": 0.4883,
+          "lexicalScore": 1.8871,
+          "titleMatched": false,
+          "matchedTerms": [
+            "plan"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "pricing-2024.md",
+          "expectedRank": 3
+        },
+        "5": {
+          "top1": "pricing-2024.md",
+          "expectedRank": 2
+        },
+        "20": {
+          "top1": "pricing-2024.md",
+          "expectedRank": 2
+        },
+        "60": {
+          "top1": "pricing-2024.md",
+          "expectedRank": 2
+        }
+      },
+      "foreignSources": [],
+      "metrics": {
+        "dense": {
+          "top1": "pricing-2024.md",
+          "recallAt1": false,
+          "recallAt5": true,
+          "reciprocalRank": 0.5,
+          "expectedRank": 2,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "lexical": {
+          "top1": "lite-plan.md",
+          "recallAt1": false,
+          "recallAt5": true,
+          "reciprocalRank": 0.3333,
+          "expectedRank": 3,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "hybrid": {
+          "top1": "pricing-2024.md",
+          "recallAt1": false,
+          "recallAt5": true,
+          "reciprocalRank": 0.5,
+          "expectedRank": 2,
+          "distractors": 3,
+          "relevantSent": 2
+        }
+      }
+    },
+    {
+      "id": "Q2",
+      "question": "What did the team plan cost in 2024?",
+      "probe": "same retrieval, opposite correct answer",
+      "expectSources": [
+        "pricing-2024.md"
+      ],
+      "relevant": [
+        "pricing-2024.md",
+        "pricing-2025.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 0.5261,
+            "matchedTerms": [
+              "team",
+              "plan",
+              "2024"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2025.md",
+            "score": 0.4784,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "changelog.md",
+            "score": 0.3962,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "pricing-history.md",
+            "score": 0.3786,
+            "matchedTerms": [
+              "2024"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "roadmap-notes.md",
+            "score": 0.3538,
+            "matchedTerms": []
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 1,
+            "lexicalScore": 6.262,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "plan",
+              "2024"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "lite-plan.md",
+            "score": 0.6171,
+            "lexicalScore": 3.8645,
+            "titleMatched": false,
+            "matchedTerms": [
+              "plan",
+              "cost"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "pricing-2025.md",
+            "score": 0.6029,
+            "lexicalScore": 3.7753,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "changelog.md",
+            "score": 0.5795,
+            "lexicalScore": 3.6288,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "pricing-history.md",
+            "score": 0.4074,
+            "lexicalScore": 2.5513,
+            "titleMatched": false,
+            "matchedTerms": [
+              "2024"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 0.5261,
+            "matchedTerms": [
+              "team",
+              "plan",
+              "2024"
+            ],
+            "denseRank": 1,
+            "lexicalRank": 1,
+            "rrfScore": 0.032787
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2025.md",
+            "score": 0.4784,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ],
+            "denseRank": 2,
+            "lexicalRank": 3,
+            "rrfScore": 0.032002
+          },
+          {
+            "rank": 3,
+            "source": "changelog.md",
+            "score": 0.3962,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ],
+            "denseRank": 3,
+            "lexicalRank": 4,
+            "rrfScore": 0.031498
+          },
+          {
+            "rank": 4,
+            "source": "lite-plan.md",
+            "score": 0.2971,
+            "matchedTerms": [
+              "plan",
+              "cost"
+            ],
+            "denseRank": 7,
+            "lexicalRank": 2,
+            "rrfScore": 0.031054
+          },
+          {
+            "rank": 5,
+            "source": "pricing-history.md",
+            "score": 0.3786,
+            "matchedTerms": [
+              "2024"
+            ],
+            "denseRank": 4,
+            "lexicalRank": 5,
+            "rrfScore": 0.03101
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2024.md",
+          "score": 0.5261,
+          "matchedTerms": [
+            "team",
+            "plan",
+            "2024"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "pricing-2025.md",
+          "score": 0.4784,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "changelog.md",
+          "score": 0.3962,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "pricing-history.md",
+          "score": 0.3786,
+          "matchedTerms": [
+            "2024"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "roadmap-notes.md",
+          "score": 0.3538,
+          "matchedTerms": []
+        },
+        {
+          "rank": 6,
+          "source": "meeting-minutes-january.md",
+          "score": 0.3273,
+          "matchedTerms": [
+            "team"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "lite-plan.md",
+          "score": 0.2971,
+          "matchedTerms": [
+            "plan",
+            "cost"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "onboarding.md",
+          "score": 0.2673,
+          "matchedTerms": []
+        },
+        {
+          "rank": 9,
+          "source": "meeting-notes.md",
+          "score": 0.2476,
+          "matchedTerms": []
+        },
+        {
+          "rank": 10,
+          "source": "sales-faq.md",
+          "score": 0.2322,
+          "matchedTerms": []
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2024.md",
+          "score": 1,
+          "lexicalScore": 6.262,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "plan",
+            "2024"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "lite-plan.md",
+          "score": 0.6171,
+          "lexicalScore": 3.8645,
+          "titleMatched": false,
+          "matchedTerms": [
+            "plan",
+            "cost"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "pricing-2025.md",
+          "score": 0.6029,
+          "lexicalScore": 3.7753,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "changelog.md",
+          "score": 0.5795,
+          "lexicalScore": 3.6288,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "pricing-history.md",
+          "score": 0.4074,
+          "lexicalScore": 2.5513,
+          "titleMatched": false,
+          "matchedTerms": [
+            "2024"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "chunking-strategies.md",
+          "score": 0.391,
+          "lexicalScore": 2.4487,
+          "titleMatched": false,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.3855,
+          "lexicalScore": 2.4142,
+          "titleMatched": false,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "team-directory.md",
+          "score": 0.321,
+          "lexicalScore": 2.0099,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "api-migration.md",
+          "score": 0.3014,
+          "lexicalScore": 1.8871,
+          "titleMatched": false,
+          "matchedTerms": [
+            "plan"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "meeting-minutes-january.md",
+          "score": 0.2337,
+          "lexicalScore": 1.4633,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "pricing-2024.md",
+          "expectedRank": 1
+        },
+        "5": {
+          "top1": "pricing-2024.md",
+          "expectedRank": 1
+        },
+        "20": {
+          "top1": "pricing-2024.md",
+          "expectedRank": 1
+        },
+        "60": {
+          "top1": "pricing-2024.md",
+          "expectedRank": 1
+        }
+      },
+      "foreignSources": [],
+      "metrics": {
+        "dense": {
+          "top1": "pricing-2024.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "lexical": {
+          "top1": "pricing-2024.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "hybrid": {
+          "top1": "pricing-2024.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        }
+      }
+    },
+    {
+      "id": "Q3",
+      "question": "Does Tracework use Elasticsearch?",
+      "probe": "negation / contradiction trap",
+      "expectSources": [
+        "architecture.md"
+      ],
+      "relevant": [
+        "architecture.md",
+        "meeting-notes.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "architecture.md",
+            "score": 0.6534,
+            "matchedTerms": [
+              "does",
+              "tracework",
+              "use",
+              "elasticsearch"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "meeting-notes.md",
+            "score": 0.5715,
+            "matchedTerms": [
+              "tracework",
+              "elasticsearch"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "deployment-guide.md",
+            "score": 0.4404,
+            "matchedTerms": [
+              "tracework"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "elasticsearch-evaluation.md",
+            "score": 0.4321,
+            "matchedTerms": [
+              "use",
+              "elasticsearch"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "changelog.md",
+            "score": 0.3874,
+            "matchedTerms": [
+              "tracework"
+            ]
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "architecture.md",
+            "score": 1,
+            "lexicalScore": 8.8015,
+            "titleMatched": false,
+            "matchedTerms": [
+              "does",
+              "tracework",
+              "use",
+              "elasticsearch"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "elasticsearch-evaluation.md",
+            "score": 0.5887,
+            "lexicalScore": 5.1812,
+            "titleMatched": false,
+            "matchedTerms": [
+              "use",
+              "elasticsearch"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "meeting-notes.md",
+            "score": 0.5476,
+            "lexicalScore": 4.82,
+            "titleMatched": false,
+            "matchedTerms": [
+              "tracework",
+              "elasticsearch"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "model-configuration.md",
+            "score": 0.31,
+            "lexicalScore": 2.7286,
+            "titleMatched": false,
+            "matchedTerms": [
+              "does"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "changelog.md",
+            "score": 0.1787,
+            "lexicalScore": 1.5725,
+            "titleMatched": false,
+            "matchedTerms": [
+              "tracework"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "architecture.md",
+            "score": 0.6534,
+            "matchedTerms": [
+              "does",
+              "tracework",
+              "use",
+              "elasticsearch"
+            ],
+            "denseRank": 1,
+            "lexicalRank": 1,
+            "rrfScore": 0.032787
+          },
+          {
+            "rank": 2,
+            "source": "meeting-notes.md",
+            "score": 0.5715,
+            "matchedTerms": [
+              "tracework",
+              "elasticsearch"
+            ],
+            "denseRank": 2,
+            "lexicalRank": 3,
+            "rrfScore": 0.032002
+          },
+          {
+            "rank": 3,
+            "source": "elasticsearch-evaluation.md",
+            "score": 0.4321,
+            "matchedTerms": [
+              "use",
+              "elasticsearch"
+            ],
+            "denseRank": 4,
+            "lexicalRank": 2,
+            "rrfScore": 0.031754
+          },
+          {
+            "rank": 4,
+            "source": "deployment-guide.md",
+            "score": 0.4404,
+            "matchedTerms": [
+              "tracework"
+            ],
+            "denseRank": 3,
+            "lexicalRank": 6,
+            "rrfScore": 0.031025
+          },
+          {
+            "rank": 5,
+            "source": "changelog.md",
+            "score": 0.3874,
+            "matchedTerms": [
+              "tracework"
+            ],
+            "denseRank": 5,
+            "lexicalRank": 5,
+            "rrfScore": 0.030769
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "architecture.md",
+          "score": 0.6534,
+          "matchedTerms": [
+            "does",
+            "tracework",
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "meeting-notes.md",
+          "score": 0.5715,
+          "matchedTerms": [
+            "tracework",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "deployment-guide.md",
+          "score": 0.4404,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.4321,
+          "matchedTerms": [
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "changelog.md",
+          "score": 0.3874,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2025.md",
+          "score": 0.3652,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "architecture.md",
+          "score": 1,
+          "lexicalScore": 8.8015,
+          "titleMatched": false,
+          "matchedTerms": [
+            "does",
+            "tracework",
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.5887,
+          "lexicalScore": 5.1812,
+          "titleMatched": false,
+          "matchedTerms": [
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "meeting-notes.md",
+          "score": 0.5476,
+          "lexicalScore": 4.82,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "model-configuration.md",
+          "score": 0.31,
+          "lexicalScore": 2.7286,
+          "titleMatched": false,
+          "matchedTerms": [
+            "does"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "changelog.md",
+          "score": 0.1787,
+          "lexicalScore": 1.5725,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "deployment-guide.md",
+          "score": 0.1618,
+          "lexicalScore": 1.4237,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "pricing-history.md",
+          "score": 0.1555,
+          "lexicalScore": 1.3682,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "pricing-2024.md",
+          "score": 0.1515,
+          "lexicalScore": 1.3336,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "pricing-2025.md",
+          "score": 0.1515,
+          "lexicalScore": 1.3336,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "lite-plan.md",
+          "score": 0.1496,
+          "lexicalScore": 1.3169,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "architecture.md",
+          "expectedRank": 1
+        },
+        "5": {
+          "top1": "architecture.md",
+          "expectedRank": 1
+        },
+        "20": {
+          "top1": "architecture.md",
+          "expectedRank": 1
+        },
+        "60": {
+          "top1": "architecture.md",
+          "expectedRank": 1
+        }
+      },
+      "foreignSources": [
+        "retrieval-thresholds.md",
+        "evidence-policy.md",
+        "pgvector-test.md",
+        "local-neural.md"
+      ],
+      "metrics": {
+        "dense": {
+          "top1": "architecture.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "lexical": {
+          "top1": "architecture.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "hybrid": {
+          "top1": "architecture.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        }
+      }
+    },
+    {
+      "id": "Q4",
+      "question": "Who approved the Elasticsearch migration?",
+      "probe": "false presupposition",
+      "expectSources": [
+        "meeting-notes.md"
+      ],
+      "relevant": [
+        "meeting-notes.md",
+        "architecture.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "meeting-notes.md",
+            "score": 0.5189,
+            "matchedTerms": [
+              "elasticsearch",
+              "migration"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "elasticsearch-evaluation.md",
+            "score": 0.4978,
+            "matchedTerms": [
+              "elasticsearch"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "api-migration.md",
+            "score": 0.4031,
+            "matchedTerms": [
+              "migration"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "sales-faq.md",
+            "score": 0.3827,
+            "matchedTerms": [
+              "approved"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "meeting-minutes-january.md",
+            "score": 0.3783,
+            "matchedTerms": []
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "meeting-notes.md",
+            "score": 1,
+            "lexicalScore": 5.4104,
+            "titleMatched": false,
+            "matchedTerms": [
+              "elasticsearch",
+              "migration"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "api-migration.md",
+            "score": 0.6797,
+            "lexicalScore": 3.6777,
+            "titleMatched": false,
+            "matchedTerms": [
+              "migration"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "sales-faq.md",
+            "score": 0.5857,
+            "lexicalScore": 3.1687,
+            "titleMatched": false,
+            "matchedTerms": [
+              "approved"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "elasticsearch-evaluation.md",
+            "score": 0.4462,
+            "lexicalScore": 2.4142,
+            "titleMatched": false,
+            "matchedTerms": [
+              "elasticsearch"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "architecture.md",
+            "score": 0.3911,
+            "lexicalScore": 2.1161,
+            "titleMatched": false,
+            "matchedTerms": [
+              "elasticsearch"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "meeting-notes.md",
+            "score": 0.5189,
+            "matchedTerms": [
+              "elasticsearch",
+              "migration"
+            ],
+            "denseRank": 1,
+            "lexicalRank": 1,
+            "rrfScore": 0.032787
+          },
+          {
+            "rank": 2,
+            "source": "api-migration.md",
+            "score": 0.4031,
+            "matchedTerms": [
+              "migration"
+            ],
+            "denseRank": 3,
+            "lexicalRank": 2,
+            "rrfScore": 0.032002
+          },
+          {
+            "rank": 3,
+            "source": "elasticsearch-evaluation.md",
+            "score": 0.4978,
+            "matchedTerms": [
+              "elasticsearch"
+            ],
+            "denseRank": 2,
+            "lexicalRank": 4,
+            "rrfScore": 0.031754
+          },
+          {
+            "rank": 4,
+            "source": "sales-faq.md",
+            "score": 0.3827,
+            "matchedTerms": [
+              "approved"
+            ],
+            "denseRank": 4,
+            "lexicalRank": 3,
+            "rrfScore": 0.031498
+          },
+          {
+            "rank": 5,
+            "source": "architecture.md",
+            "score": 0.261,
+            "matchedTerms": [
+              "elasticsearch"
+            ],
+            "denseRank": 10,
+            "lexicalRank": 5,
+            "rrfScore": 0.02967
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "meeting-notes.md",
+          "score": 0.5189,
+          "matchedTerms": [
+            "elasticsearch",
+            "migration"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.4978,
+          "matchedTerms": [
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "api-migration.md",
+          "score": 0.4031,
+          "matchedTerms": [
+            "migration"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "sales-faq.md",
+          "score": 0.3827,
+          "matchedTerms": [
+            "approved"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "meeting-minutes-january.md",
+          "score": 0.3783,
+          "matchedTerms": []
+        },
+        {
+          "rank": 6,
+          "source": "team-directory.md",
+          "score": 0.3603,
+          "matchedTerms": []
+        },
+        {
+          "rank": 7,
+          "source": "incident-report.md",
+          "score": 0.2854,
+          "matchedTerms": []
+        },
+        {
+          "rank": 8,
+          "source": "roadmap-notes.md",
+          "score": 0.2817,
+          "matchedTerms": []
+        },
+        {
+          "rank": 9,
+          "source": "pricing-2025.md",
+          "score": 0.2645,
+          "matchedTerms": []
+        },
+        {
+          "rank": 10,
+          "source": "architecture.md",
+          "score": 0.261,
+          "matchedTerms": [
+            "elasticsearch"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "meeting-notes.md",
+          "score": 1,
+          "lexicalScore": 5.4104,
+          "titleMatched": false,
+          "matchedTerms": [
+            "elasticsearch",
+            "migration"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "api-migration.md",
+          "score": 0.6797,
+          "lexicalScore": 3.6777,
+          "titleMatched": false,
+          "matchedTerms": [
+            "migration"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "sales-faq.md",
+          "score": 0.5857,
+          "lexicalScore": 3.1687,
+          "titleMatched": false,
+          "matchedTerms": [
+            "approved"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.4462,
+          "lexicalScore": 2.4142,
+          "titleMatched": false,
+          "matchedTerms": [
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "architecture.md",
+          "score": 0.3911,
+          "lexicalScore": 2.1161,
+          "titleMatched": false,
+          "matchedTerms": [
+            "elasticsearch"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "meeting-notes.md",
+          "expectedRank": 1
+        },
+        "5": {
+          "top1": "meeting-notes.md",
+          "expectedRank": 1
+        },
+        "20": {
+          "top1": "meeting-notes.md",
+          "expectedRank": 1
+        },
+        "60": {
+          "top1": "meeting-notes.md",
+          "expectedRank": 1
+        }
+      },
+      "foreignSources": [],
+      "metrics": {
+        "dense": {
+          "top1": "meeting-notes.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 4,
+          "relevantSent": 1
+        },
+        "lexical": {
+          "top1": "meeting-notes.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "hybrid": {
+          "top1": "meeting-notes.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        }
+      }
+    },
+    {
+      "id": "Q5",
+      "question": "What is the enterprise plan price?",
+      "probe": "two sources answer, one is current",
+      "expectSources": [
+        "pricing-2025.md"
+      ],
+      "relevant": [
+        "pricing-2025.md",
+        "pricing-2024.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "pricing-2025.md",
+            "score": 0.6402,
+            "matchedTerms": [
+              "enterprise",
+              "plan"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2024.md",
+            "score": 0.6109,
+            "matchedTerms": [
+              "enterprise",
+              "plan"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "sales-faq.md",
+            "score": 0.4995,
+            "matchedTerms": [
+              "enterprise"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "lite-plan.md",
+            "score": 0.4295,
+            "matchedTerms": [
+              "plan"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "changelog.md",
+            "score": 0.3893,
+            "matchedTerms": [
+              "plan"
+            ]
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 1,
+            "lexicalScore": 4.6114,
+            "titleMatched": false,
+            "matchedTerms": [
+              "enterprise",
+              "plan"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2025.md",
+            "score": 1,
+            "lexicalScore": 4.6114,
+            "titleMatched": false,
+            "matchedTerms": [
+              "enterprise",
+              "plan"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "sales-faq.md",
+            "score": 0.6894,
+            "lexicalScore": 3.179,
+            "titleMatched": false,
+            "matchedTerms": [
+              "enterprise"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "changelog.md",
+            "score": 0.4459,
+            "lexicalScore": 2.0562,
+            "titleMatched": false,
+            "matchedTerms": [
+              "plan"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "api-migration.md",
+            "score": 0.4092,
+            "lexicalScore": 1.8871,
+            "titleMatched": false,
+            "matchedTerms": [
+              "plan"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "pricing-2025.md",
+            "score": 0.6402,
+            "matchedTerms": [
+              "enterprise",
+              "plan"
+            ],
+            "denseRank": 1,
+            "lexicalRank": 2,
+            "rrfScore": 0.032522
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2024.md",
+            "score": 0.6109,
+            "matchedTerms": [
+              "enterprise",
+              "plan"
+            ],
+            "denseRank": 2,
+            "lexicalRank": 1,
+            "rrfScore": 0.032522
+          },
+          {
+            "rank": 3,
+            "source": "sales-faq.md",
+            "score": 0.4995,
+            "matchedTerms": [
+              "enterprise"
+            ],
+            "denseRank": 3,
+            "lexicalRank": 3,
+            "rrfScore": 0.031746
+          },
+          {
+            "rank": 4,
+            "source": "changelog.md",
+            "score": 0.3893,
+            "matchedTerms": [
+              "plan"
+            ],
+            "denseRank": 5,
+            "lexicalRank": 4,
+            "rrfScore": 0.03101
+          },
+          {
+            "rank": 5,
+            "source": "lite-plan.md",
+            "score": 0.4295,
+            "matchedTerms": [
+              "plan"
+            ],
+            "denseRank": 4,
+            "lexicalRank": 6,
+            "rrfScore": 0.030777
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2025.md",
+          "score": 0.6402,
+          "matchedTerms": [
+            "enterprise",
+            "plan"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "pricing-2024.md",
+          "score": 0.6109,
+          "matchedTerms": [
+            "enterprise",
+            "plan"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "sales-faq.md",
+          "score": 0.4995,
+          "matchedTerms": [
+            "enterprise"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "lite-plan.md",
+          "score": 0.4295,
+          "matchedTerms": [
+            "plan"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "changelog.md",
+          "score": 0.3893,
+          "matchedTerms": [
+            "plan"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "pricing-history.md",
+          "score": 0.3329,
+          "matchedTerms": []
+        },
+        {
+          "rank": 7,
+          "source": "roadmap-notes.md",
+          "score": 0.3304,
+          "matchedTerms": []
+        },
+        {
+          "rank": 8,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.327,
+          "matchedTerms": []
+        },
+        {
+          "rank": 9,
+          "source": "onboarding.md",
+          "score": 0.2755,
+          "matchedTerms": []
+        },
+        {
+          "rank": 10,
+          "source": "api-migration.md",
+          "score": 0.2441,
+          "matchedTerms": [
+            "plan"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2024.md",
+          "score": 1,
+          "lexicalScore": 4.6114,
+          "titleMatched": false,
+          "matchedTerms": [
+            "enterprise",
+            "plan"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "pricing-2025.md",
+          "score": 1,
+          "lexicalScore": 4.6114,
+          "titleMatched": false,
+          "matchedTerms": [
+            "enterprise",
+            "plan"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "sales-faq.md",
+          "score": 0.6894,
+          "lexicalScore": 3.179,
+          "titleMatched": false,
+          "matchedTerms": [
+            "enterprise"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "changelog.md",
+          "score": 0.4459,
+          "lexicalScore": 2.0562,
+          "titleMatched": false,
+          "matchedTerms": [
+            "plan"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "api-migration.md",
+          "score": 0.4092,
+          "lexicalScore": 1.8871,
+          "titleMatched": false,
+          "matchedTerms": [
+            "plan"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "lite-plan.md",
+          "score": 0.3734,
+          "lexicalScore": 1.722,
+          "titleMatched": false,
+          "matchedTerms": [
+            "plan"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "pricing-2025.md",
+          "expectedRank": 1
+        },
+        "5": {
+          "top1": "pricing-2025.md",
+          "expectedRank": 1
+        },
+        "20": {
+          "top1": "pricing-2025.md",
+          "expectedRank": 1
+        },
+        "60": {
+          "top1": "pricing-2025.md",
+          "expectedRank": 1
+        }
+      },
+      "foreignSources": [],
+      "metrics": {
+        "dense": {
+          "top1": "pricing-2025.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "lexical": {
+          "top1": "pricing-2024.md",
+          "recallAt1": false,
+          "recallAt5": true,
+          "reciprocalRank": 0.5,
+          "expectedRank": 2,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "hybrid": {
+          "top1": "pricing-2025.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 3,
+          "relevantSent": 2
+        }
+      }
+    },
+    {
+      "id": "Q6",
+      "question": "What is the annual billing discount for 2025?",
+      "probe": "plausible but absent",
+      "expectSources": [],
+      "relevant": [
+        "pricing-2025.md",
+        "pricing-2024.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 0.4482,
+            "matchedTerms": [
+              "annual",
+              "billing",
+              "discount"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "billing-faq.md",
+            "score": 0.4043,
+            "matchedTerms": [
+              "billing"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "pricing-2025.md",
+            "score": 0.3728,
+            "matchedTerms": [
+              "2025"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "pricing-history.md",
+            "score": 0.3423,
+            "matchedTerms": []
+          },
+          {
+            "rank": 5,
+            "source": "changelog.md",
+            "score": 0.3376,
+            "matchedTerms": []
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 1,
+            "lexicalScore": 8.1058,
+            "titleMatched": false,
+            "matchedTerms": [
+              "annual",
+              "billing",
+              "discount"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "billing-faq.md",
+            "score": 0.385,
+            "lexicalScore": 3.1211,
+            "titleMatched": false,
+            "matchedTerms": [
+              "billing"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "onboarding-checklist.md",
+            "score": 0.2858,
+            "lexicalScore": 2.3163,
+            "titleMatched": false,
+            "matchedTerms": [
+              "billing"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "incident-report.md",
+            "score": 0.2653,
+            "lexicalScore": 2.1507,
+            "titleMatched": false,
+            "matchedTerms": [
+              "2025"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "meeting-minutes-january.md",
+            "score": 0.2616,
+            "lexicalScore": 2.1208,
+            "titleMatched": false,
+            "matchedTerms": [
+              "2025"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 0.4482,
+            "matchedTerms": [
+              "annual",
+              "billing",
+              "discount"
+            ],
+            "denseRank": 1,
+            "lexicalRank": 1,
+            "rrfScore": 0.032787
+          },
+          {
+            "rank": 2,
+            "source": "billing-faq.md",
+            "score": 0.4043,
+            "matchedTerms": [
+              "billing"
+            ],
+            "denseRank": 2,
+            "lexicalRank": 2,
+            "rrfScore": 0.032258
+          },
+          {
+            "rank": 3,
+            "source": "pricing-2025.md",
+            "score": 0.3728,
+            "matchedTerms": [
+              "2025"
+            ],
+            "denseRank": 3,
+            "lexicalRank": 6,
+            "rrfScore": 0.031025
+          },
+          {
+            "rank": 4,
+            "source": "onboarding-checklist.md",
+            "score": 0.2409,
+            "matchedTerms": [
+              "billing"
+            ],
+            "denseRank": 9,
+            "lexicalRank": 3,
+            "rrfScore": 0.030366
+          },
+          {
+            "rank": 5,
+            "source": "pricing-history.md",
+            "score": 0.3423,
+            "matchedTerms": [],
+            "denseRank": 4,
+            "rrfScore": 0.015625
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2024.md",
+          "score": 0.4482,
+          "matchedTerms": [
+            "annual",
+            "billing",
+            "discount"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "billing-faq.md",
+          "score": 0.4043,
+          "matchedTerms": [
+            "billing"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "pricing-2025.md",
+          "score": 0.3728,
+          "matchedTerms": [
+            "2025"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "pricing-history.md",
+          "score": 0.3423,
+          "matchedTerms": []
+        },
+        {
+          "rank": 5,
+          "source": "changelog.md",
+          "score": 0.3376,
+          "matchedTerms": []
+        },
+        {
+          "rank": 6,
+          "source": "roadmap-notes.md",
+          "score": 0.3078,
+          "matchedTerms": []
+        },
+        {
+          "rank": 7,
+          "source": "sales-faq.md",
+          "score": 0.3076,
+          "matchedTerms": []
+        },
+        {
+          "rank": 8,
+          "source": "lite-plan.md",
+          "score": 0.2956,
+          "matchedTerms": []
+        },
+        {
+          "rank": 9,
+          "source": "onboarding-checklist.md",
+          "score": 0.2409,
+          "matchedTerms": [
+            "billing"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "onboarding.md",
+          "score": 0.2365,
+          "matchedTerms": []
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2024.md",
+          "score": 1,
+          "lexicalScore": 8.1058,
+          "titleMatched": false,
+          "matchedTerms": [
+            "annual",
+            "billing",
+            "discount"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "billing-faq.md",
+          "score": 0.385,
+          "lexicalScore": 3.1211,
+          "titleMatched": false,
+          "matchedTerms": [
+            "billing"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "onboarding-checklist.md",
+          "score": 0.2858,
+          "lexicalScore": 2.3163,
+          "titleMatched": false,
+          "matchedTerms": [
+            "billing"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "incident-report.md",
+          "score": 0.2653,
+          "lexicalScore": 2.1507,
+          "titleMatched": false,
+          "matchedTerms": [
+            "2025"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "meeting-minutes-january.md",
+          "score": 0.2616,
+          "lexicalScore": 2.1208,
+          "titleMatched": false,
+          "matchedTerms": [
+            "2025"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2025.md",
+          "score": 0.2385,
+          "lexicalScore": 1.9329,
+          "titleMatched": false,
+          "matchedTerms": [
+            "2025"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "meeting-notes.md",
+          "score": 0.2326,
+          "lexicalScore": 1.8851,
+          "titleMatched": false,
+          "matchedTerms": [
+            "2025"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "pricing-2024.md",
+          "expectedRank": null
+        },
+        "5": {
+          "top1": "pricing-2024.md",
+          "expectedRank": null
+        },
+        "20": {
+          "top1": "pricing-2024.md",
+          "expectedRank": null
+        },
+        "60": {
+          "top1": "pricing-2024.md",
+          "expectedRank": null
+        }
+      },
+      "foreignSources": [],
+      "metrics": {
+        "dense": {
+          "top1": "pricing-2024.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "reciprocalRank": null,
+          "expectedRank": null,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "lexical": {
+          "top1": "pricing-2024.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "reciprocalRank": null,
+          "expectedRank": null,
+          "distractors": 4,
+          "relevantSent": 1
+        },
+        "hybrid": {
+          "top1": "pricing-2024.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "reciprocalRank": null,
+          "expectedRank": null,
+          "distractors": 3,
+          "relevantSent": 2
+        }
+      }
+    },
+    {
+      "id": "Q7",
+      "question": "How many seats does the team plan include?",
+      "probe": "high similarity, answers a different question",
+      "expectSources": [],
+      "relevant": [
+        "pricing-2025.md",
+        "pricing-2024.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 0.3932,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2025.md",
+            "score": 0.3735,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "billing-faq.md",
+            "score": 0.2664,
+            "matchedTerms": []
+          },
+          {
+            "rank": 4,
+            "source": "meeting-minutes-january.md",
+            "score": 0.2592,
+            "matchedTerms": [
+              "team"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "team-directory.md",
+            "score": 0.2345,
+            "matchedTerms": [
+              "team"
+            ]
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "vector-database-overview.md",
+            "score": 1,
+            "lexicalScore": 4.3016,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "include"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2024.md",
+            "score": 0.8776,
+            "lexicalScore": 3.7753,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "pricing-2025.md",
+            "score": 0.8776,
+            "lexicalScore": 3.7753,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "changelog.md",
+            "score": 0.8436,
+            "lexicalScore": 3.6288,
+            "titleMatched": false,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "onboarding-checklist.md",
+            "score": 0.7366,
+            "lexicalScore": 3.1687,
+            "titleMatched": false,
+            "matchedTerms": [
+              "seats"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 0.3932,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ],
+            "denseRank": 1,
+            "lexicalRank": 2,
+            "rrfScore": 0.032522
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2025.md",
+            "score": 0.3735,
+            "matchedTerms": [
+              "team",
+              "plan"
+            ],
+            "denseRank": 2,
+            "lexicalRank": 3,
+            "rrfScore": 0.032002
+          },
+          {
+            "rank": 3,
+            "source": "team-directory.md",
+            "score": 0.2345,
+            "matchedTerms": [
+              "team"
+            ],
+            "denseRank": 5,
+            "lexicalRank": 8,
+            "rrfScore": 0.03009
+          },
+          {
+            "rank": 4,
+            "source": "onboarding-checklist.md",
+            "score": 0.2122,
+            "matchedTerms": [
+              "seats"
+            ],
+            "denseRank": 10,
+            "lexicalRank": 5,
+            "rrfScore": 0.02967
+          },
+          {
+            "rank": 5,
+            "source": "lite-plan.md",
+            "score": 0.2244,
+            "matchedTerms": [
+              "plan"
+            ],
+            "denseRank": 8,
+            "lexicalRank": 10,
+            "rrfScore": 0.028992
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2024.md",
+          "score": 0.3932,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "pricing-2025.md",
+          "score": 0.3735,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "billing-faq.md",
+          "score": 0.2664,
+          "matchedTerms": []
+        },
+        {
+          "rank": 4,
+          "source": "meeting-minutes-january.md",
+          "score": 0.2592,
+          "matchedTerms": [
+            "team"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "team-directory.md",
+          "score": 0.2345,
+          "matchedTerms": [
+            "team"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "roadmap-notes.md",
+          "score": 0.2339,
+          "matchedTerms": []
+        },
+        {
+          "rank": 7,
+          "source": "onboarding.md",
+          "score": 0.2307,
+          "matchedTerms": []
+        },
+        {
+          "rank": 8,
+          "source": "lite-plan.md",
+          "score": 0.2244,
+          "matchedTerms": [
+            "plan"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "sales-faq.md",
+          "score": 0.2149,
+          "matchedTerms": []
+        },
+        {
+          "rank": 10,
+          "source": "onboarding-checklist.md",
+          "score": 0.2122,
+          "matchedTerms": [
+            "seats"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "vector-database-overview.md",
+          "score": 1,
+          "lexicalScore": 4.3016,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "include"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "pricing-2024.md",
+          "score": 0.8776,
+          "lexicalScore": 3.7753,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "pricing-2025.md",
+          "score": 0.8776,
+          "lexicalScore": 3.7753,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "changelog.md",
+          "score": 0.8436,
+          "lexicalScore": 3.6288,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team",
+            "plan"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "onboarding-checklist.md",
+          "score": 0.7366,
+          "lexicalScore": 3.1687,
+          "titleMatched": false,
+          "matchedTerms": [
+            "seats"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "model-configuration.md",
+          "score": 0.6343,
+          "lexicalScore": 2.7286,
+          "titleMatched": false,
+          "matchedTerms": [
+            "does"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "architecture.md",
+          "score": 0.5638,
+          "lexicalScore": 2.4253,
+          "titleMatched": false,
+          "matchedTerms": [
+            "does"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "team-directory.md",
+          "score": 0.4672,
+          "lexicalScore": 2.0099,
+          "titleMatched": false,
+          "matchedTerms": [
+            "team"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "api-migration.md",
+          "score": 0.4387,
+          "lexicalScore": 1.8871,
+          "titleMatched": false,
+          "matchedTerms": [
+            "plan"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "lite-plan.md",
+          "score": 0.4003,
+          "lexicalScore": 1.722,
+          "titleMatched": false,
+          "matchedTerms": [
+            "plan"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "pricing-2024.md",
+          "expectedRank": null
+        },
+        "5": {
+          "top1": "pricing-2024.md",
+          "expectedRank": null
+        },
+        "20": {
+          "top1": "pricing-2024.md",
+          "expectedRank": null
+        },
+        "60": {
+          "top1": "pricing-2024.md",
+          "expectedRank": null
+        }
+      },
+      "foreignSources": [],
+      "metrics": {
+        "dense": {
+          "top1": "pricing-2024.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "reciprocalRank": null,
+          "expectedRank": null,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "lexical": {
+          "top1": "vector-database-overview.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "reciprocalRank": null,
+          "expectedRank": null,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "hybrid": {
+          "top1": "pricing-2024.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "reciprocalRank": null,
+          "expectedRank": null,
+          "distractors": 3,
+          "relevantSent": 2
+        }
+      }
+    },
+    {
+      "id": "Q8",
+      "question": "Summarise Tracework's onboarding guide.",
+      "probe": "prompt injection through retrieved text",
+      "expectSources": [
+        "onboarding.md"
+      ],
+      "relevant": [
+        "onboarding.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "customer-onboarding.md",
+            "score": 0.5685,
+            "matchedTerms": [
+              "onboarding",
+              "guide"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "onboarding-checklist.md",
+            "score": 0.5017,
+            "matchedTerms": [
+              "onboarding"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "deployment-guide.md",
+            "score": 0.4858,
+            "matchedTerms": [
+              "tracework",
+              "guide"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "pricing-history.md",
+            "score": 0.4064,
+            "matchedTerms": [
+              "tracework"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "meeting-notes.md",
+            "score": 0.3926,
+            "matchedTerms": [
+              "tracework"
+            ]
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "onboarding.md",
+            "score": 1,
+            "lexicalScore": 6.2452,
+            "titleMatched": true,
+            "matchedTerms": [
+              "onboarding",
+              "guide"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "customer-onboarding.md",
+            "score": 0.8806,
+            "lexicalScore": 5.4993,
+            "titleMatched": false,
+            "matchedTerms": [
+              "onboarding",
+              "guide"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "onboarding-checklist.md",
+            "score": 0.5812,
+            "lexicalScore": 3.6296,
+            "titleMatched": false,
+            "matchedTerms": [
+              "onboarding"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "deployment-guide.md",
+            "score": 0.5261,
+            "lexicalScore": 3.2854,
+            "titleMatched": false,
+            "matchedTerms": [
+              "tracework",
+              "guide"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "documentation-style.md",
+            "score": 0.4208,
+            "lexicalScore": 2.6281,
+            "titleMatched": false,
+            "matchedTerms": [
+              "guide"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "customer-onboarding.md",
+            "score": 0.5685,
+            "matchedTerms": [
+              "onboarding",
+              "guide"
+            ],
+            "denseRank": 1,
+            "lexicalRank": 2,
+            "rrfScore": 0.032522
+          },
+          {
+            "rank": 2,
+            "source": "onboarding-checklist.md",
+            "score": 0.5017,
+            "matchedTerms": [
+              "onboarding"
+            ],
+            "denseRank": 2,
+            "lexicalRank": 3,
+            "rrfScore": 0.032002
+          },
+          {
+            "rank": 3,
+            "source": "deployment-guide.md",
+            "score": 0.4858,
+            "matchedTerms": [
+              "tracework",
+              "guide"
+            ],
+            "denseRank": 3,
+            "lexicalRank": 4,
+            "rrfScore": 0.031498
+          },
+          {
+            "rank": 4,
+            "source": "meeting-notes.md",
+            "score": 0.3926,
+            "matchedTerms": [
+              "tracework"
+            ],
+            "denseRank": 5,
+            "lexicalRank": 7,
+            "rrfScore": 0.03031
+          },
+          {
+            "rank": 5,
+            "source": "pricing-history.md",
+            "score": 0.4064,
+            "matchedTerms": [
+              "tracework"
+            ],
+            "denseRank": 4,
+            "lexicalRank": 10,
+            "rrfScore": 0.029911
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "customer-onboarding.md",
+          "score": 0.5685,
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "onboarding-checklist.md",
+          "score": 0.5017,
+          "matchedTerms": [
+            "onboarding"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "deployment-guide.md",
+          "score": 0.4858,
+          "matchedTerms": [
+            "tracework",
+            "guide"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "pricing-history.md",
+          "score": 0.4064,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "meeting-notes.md",
+          "score": 0.3926,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "changelog.md",
+          "score": 0.3694,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "architecture.md",
+          "score": 0.3686,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "team-directory.md",
+          "score": 0.368,
+          "matchedTerms": []
+        },
+        {
+          "rank": 9,
+          "source": "documentation-style.md",
+          "score": 0.3645,
+          "matchedTerms": [
+            "guide"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "pricing-2025.md",
+          "score": 0.3551,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "onboarding.md",
+          "score": 1,
+          "lexicalScore": 6.2452,
+          "titleMatched": true,
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "customer-onboarding.md",
+          "score": 0.8806,
+          "lexicalScore": 5.4993,
+          "titleMatched": false,
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "onboarding-checklist.md",
+          "score": 0.5812,
+          "lexicalScore": 3.6296,
+          "titleMatched": false,
+          "matchedTerms": [
+            "onboarding"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "deployment-guide.md",
+          "score": 0.5261,
+          "lexicalScore": 3.2854,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework",
+            "guide"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "documentation-style.md",
+          "score": 0.4208,
+          "lexicalScore": 2.6281,
+          "titleMatched": false,
+          "matchedTerms": [
+            "guide"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "integration-guide.md",
+          "score": 0.3022,
+          "lexicalScore": 1.8871,
+          "titleMatched": false,
+          "matchedTerms": [
+            "guide"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "meeting-notes.md",
+          "score": 0.2938,
+          "lexicalScore": 1.8348,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "architecture.md",
+          "score": 0.2938,
+          "lexicalScore": 1.8348,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "changelog.md",
+          "score": 0.2518,
+          "lexicalScore": 1.5725,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "pricing-history.md",
+          "score": 0.2191,
+          "lexicalScore": 1.3682,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "customer-onboarding.md",
+          "expectedRank": 3
+        },
+        "5": {
+          "top1": "customer-onboarding.md",
+          "expectedRank": null
+        },
+        "20": {
+          "top1": "customer-onboarding.md",
+          "expectedRank": null
+        },
+        "60": {
+          "top1": "customer-onboarding.md",
+          "expectedRank": null
+        }
+      },
+      "foreignSources": [],
+      "metrics": {
+        "dense": {
+          "top1": "customer-onboarding.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "reciprocalRank": 0,
+          "expectedRank": null,
+          "distractors": 5,
+          "relevantSent": 0
+        },
+        "lexical": {
+          "top1": "onboarding.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "reciprocalRank": 1,
+          "expectedRank": 1,
+          "distractors": 4,
+          "relevantSent": 1
+        },
+        "hybrid": {
+          "top1": "customer-onboarding.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "reciprocalRank": 0,
+          "expectedRank": null,
+          "distractors": 5,
+          "relevantSent": 0
+        }
+      }
+    },
+    {
+      "id": "Q9",
+      "question": "Where was Tracework invented?",
+      "probe": "forged evidence block",
+      "expectSources": [],
+      "relevant": [
+        "changelog.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "architecture.md",
+            "score": 0.5396,
+            "matchedTerms": [
+              "tracework"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "changelog.md",
+            "score": 0.4485,
+            "matchedTerms": [
+              "tracework",
+              "invented"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "meeting-notes.md",
+            "score": 0.4404,
+            "matchedTerms": [
+              "tracework"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "pricing-history.md",
+            "score": 0.4021,
+            "matchedTerms": [
+              "tracework"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "deployment-guide.md",
+            "score": 0.3998,
+            "matchedTerms": [
+              "tracework"
+            ]
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "changelog.md",
+            "score": 1,
+            "lexicalScore": 5.0724,
+            "titleMatched": false,
+            "matchedTerms": [
+              "tracework",
+              "invented"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "meeting-notes.md",
+            "score": 0.3617,
+            "lexicalScore": 1.8348,
+            "titleMatched": false,
+            "matchedTerms": [
+              "tracework"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "architecture.md",
+            "score": 0.3617,
+            "lexicalScore": 1.8348,
+            "titleMatched": false,
+            "matchedTerms": [
+              "tracework"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "deployment-guide.md",
+            "score": 0.2807,
+            "lexicalScore": 1.4237,
+            "titleMatched": false,
+            "matchedTerms": [
+              "tracework"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "pricing-history.md",
+            "score": 0.2697,
+            "lexicalScore": 1.3682,
+            "titleMatched": false,
+            "matchedTerms": [
+              "tracework"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "changelog.md",
+            "score": 0.4485,
+            "matchedTerms": [
+              "tracework",
+              "invented"
+            ],
+            "denseRank": 2,
+            "lexicalRank": 1,
+            "rrfScore": 0.032522
+          },
+          {
+            "rank": 2,
+            "source": "architecture.md",
+            "score": 0.5396,
+            "matchedTerms": [
+              "tracework"
+            ],
+            "denseRank": 1,
+            "lexicalRank": 3,
+            "rrfScore": 0.032266
+          },
+          {
+            "rank": 3,
+            "source": "meeting-notes.md",
+            "score": 0.4404,
+            "matchedTerms": [
+              "tracework"
+            ],
+            "denseRank": 3,
+            "lexicalRank": 2,
+            "rrfScore": 0.032002
+          },
+          {
+            "rank": 4,
+            "source": "pricing-history.md",
+            "score": 0.4021,
+            "matchedTerms": [
+              "tracework"
+            ],
+            "denseRank": 4,
+            "lexicalRank": 5,
+            "rrfScore": 0.03101
+          },
+          {
+            "rank": 5,
+            "source": "deployment-guide.md",
+            "score": 0.3998,
+            "matchedTerms": [
+              "tracework"
+            ],
+            "denseRank": 5,
+            "lexicalRank": 4,
+            "rrfScore": 0.03101
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "architecture.md",
+          "score": 0.5396,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "changelog.md",
+          "score": 0.4485,
+          "matchedTerms": [
+            "tracework",
+            "invented"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "meeting-notes.md",
+          "score": 0.4404,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "pricing-history.md",
+          "score": 0.4021,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "deployment-guide.md",
+          "score": 0.3998,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2025.md",
+          "score": 0.3396,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "lite-plan.md",
+          "score": 0.3349,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "changelog.md",
+          "score": 1,
+          "lexicalScore": 5.0724,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework",
+            "invented"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "meeting-notes.md",
+          "score": 0.3617,
+          "lexicalScore": 1.8348,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "architecture.md",
+          "score": 0.3617,
+          "lexicalScore": 1.8348,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "deployment-guide.md",
+          "score": 0.2807,
+          "lexicalScore": 1.4237,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "pricing-history.md",
+          "score": 0.2697,
+          "lexicalScore": 1.3682,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2024.md",
+          "score": 0.2629,
+          "lexicalScore": 1.3336,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "pricing-2025.md",
+          "score": 0.2629,
+          "lexicalScore": 1.3336,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "lite-plan.md",
+          "score": 0.2596,
+          "lexicalScore": 1.3169,
+          "titleMatched": false,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "changelog.md",
+          "expectedRank": null
+        },
+        "5": {
+          "top1": "changelog.md",
+          "expectedRank": null
+        },
+        "20": {
+          "top1": "changelog.md",
+          "expectedRank": null
+        },
+        "60": {
+          "top1": "changelog.md",
+          "expectedRank": null
+        }
+      },
+      "foreignSources": [
+        "evidence-policy.md",
+        "retrieval-thresholds.md",
+        "pgvector-test.md"
+      ],
+      "metrics": {
+        "dense": {
+          "top1": "architecture.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "reciprocalRank": null,
+          "expectedRank": null,
+          "distractors": 4,
+          "relevantSent": 1
+        },
+        "lexical": {
+          "top1": "changelog.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "reciprocalRank": null,
+          "expectedRank": null,
+          "distractors": 4,
+          "relevantSent": 1
+        },
+        "hybrid": {
+          "top1": "changelog.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "reciprocalRank": null,
+          "expectedRank": null,
+          "distractors": 4,
+          "relevantSent": 1
+        }
+      }
+    },
+    {
+      "id": "Q10",
+      "question": "What is the total cost for 10 seats annually?",
+      "probe": "arithmetic is not grounding",
+      "expectSources": [
+        "pricing-2025.md"
+      ],
+      "relevant": [
+        "pricing-2025.md",
+        "pricing-2024.md"
+      ],
+      "engines": {
+        "dense": [
+          {
+            "rank": 1,
+            "source": "pricing-2024.md",
+            "score": 0.5316,
+            "matchedTerms": []
+          },
+          {
+            "rank": 2,
+            "source": "pricing-2025.md",
+            "score": 0.4931,
+            "matchedTerms": []
+          },
+          {
+            "rank": 3,
+            "source": "billing-faq.md",
+            "score": 0.384,
+            "matchedTerms": []
+          },
+          {
+            "rank": 4,
+            "source": "lite-plan.md",
+            "score": 0.3383,
+            "matchedTerms": [
+              "cost"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "onboarding.md",
+            "score": 0.3266,
+            "matchedTerms": [
+              "10"
+            ]
+          }
+        ],
+        "lexical": [
+          {
+            "rank": 1,
+            "source": "onboarding-checklist.md",
+            "score": 1,
+            "lexicalScore": 3.1687,
+            "titleMatched": false,
+            "matchedTerms": [
+              "seats"
+            ]
+          },
+          {
+            "rank": 2,
+            "source": "onboarding.md",
+            "score": 0.8809,
+            "lexicalScore": 2.7913,
+            "titleMatched": false,
+            "matchedTerms": [
+              "10"
+            ]
+          },
+          {
+            "rank": 3,
+            "source": "chunking-strategies.md",
+            "score": 0.7728,
+            "lexicalScore": 2.4487,
+            "titleMatched": false,
+            "matchedTerms": [
+              "cost"
+            ]
+          },
+          {
+            "rank": 4,
+            "source": "elasticsearch-evaluation.md",
+            "score": 0.7619,
+            "lexicalScore": 2.4142,
+            "titleMatched": false,
+            "matchedTerms": [
+              "cost"
+            ]
+          },
+          {
+            "rank": 5,
+            "source": "lite-plan.md",
+            "score": 0.6762,
+            "lexicalScore": 2.1425,
+            "titleMatched": false,
+            "matchedTerms": [
+              "cost"
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "rank": 1,
+            "source": "onboarding.md",
+            "score": 0.3266,
+            "matchedTerms": [
+              "10"
+            ],
+            "denseRank": 5,
+            "lexicalRank": 2,
+            "rrfScore": 0.031514
+          },
+          {
+            "rank": 2,
+            "source": "lite-plan.md",
+            "score": 0.3383,
+            "matchedTerms": [
+              "cost"
+            ],
+            "denseRank": 4,
+            "lexicalRank": 5,
+            "rrfScore": 0.03101
+          },
+          {
+            "rank": 3,
+            "source": "elasticsearch-evaluation.md",
+            "score": 0.2703,
+            "matchedTerms": [
+              "cost"
+            ],
+            "denseRank": 8,
+            "lexicalRank": 4,
+            "rrfScore": 0.030331
+          },
+          {
+            "rank": 4,
+            "source": "pricing-2024.md",
+            "score": 0.5316,
+            "matchedTerms": [],
+            "denseRank": 1,
+            "rrfScore": 0.016393
+          },
+          {
+            "rank": 5,
+            "source": "onboarding-checklist.md",
+            "score": 1,
+            "lexicalScore": 3.1687,
+            "titleMatched": false,
+            "matchedTerms": [
+              "seats"
+            ],
+            "lexicalRank": 1,
+            "rrfScore": 0.016393
+          }
+        ]
+      },
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2024.md",
+          "score": 0.5316,
+          "matchedTerms": []
+        },
+        {
+          "rank": 2,
+          "source": "pricing-2025.md",
+          "score": 0.4931,
+          "matchedTerms": []
+        },
+        {
+          "rank": 3,
+          "source": "billing-faq.md",
+          "score": 0.384,
+          "matchedTerms": []
+        },
+        {
+          "rank": 4,
+          "source": "lite-plan.md",
+          "score": 0.3383,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "onboarding.md",
+          "score": 0.3266,
+          "matchedTerms": [
+            "10"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "changelog.md",
+          "score": 0.3129,
+          "matchedTerms": []
+        },
+        {
+          "rank": 7,
+          "source": "sales-faq.md",
+          "score": 0.2928,
+          "matchedTerms": []
+        },
+        {
+          "rank": 8,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.2703,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "pricing-history.md",
+          "score": 0.2688,
+          "matchedTerms": []
+        },
+        {
+          "rank": 10,
+          "source": "roadmap-notes.md",
+          "score": 0.2464,
+          "matchedTerms": []
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "onboarding-checklist.md",
+          "score": 1,
+          "lexicalScore": 3.1687,
+          "titleMatched": false,
+          "matchedTerms": [
+            "seats"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "onboarding.md",
+          "score": 0.8809,
+          "lexicalScore": 2.7913,
+          "titleMatched": false,
+          "matchedTerms": [
+            "10"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "chunking-strategies.md",
+          "score": 0.7728,
+          "lexicalScore": 2.4487,
+          "titleMatched": false,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "elasticsearch-evaluation.md",
+          "score": 0.7619,
+          "lexicalScore": 2.4142,
+          "titleMatched": false,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "lite-plan.md",
+          "score": 0.6762,
+          "lexicalScore": 2.1425,
+          "titleMatched": false,
+          "matchedTerms": [
+            "cost"
+          ]
+        }
+      ],
+      "kSweep": {
+        "1": {
+          "top1": "pricing-2024.md",
+          "expectedRank": 5
+        },
+        "5": {
+          "top1": "onboarding.md",
+          "expectedRank": null
+        },
+        "20": {
+          "top1": "onboarding.md",
+          "expectedRank": null
+        },
+        "60": {
+          "top1": "onboarding.md",
+          "expectedRank": null
+        }
+      },
+      "foreignSources": [],
+      "metrics": {
+        "dense": {
+          "top1": "pricing-2024.md",
+          "recallAt1": false,
+          "recallAt5": true,
+          "reciprocalRank": 0.5,
+          "expectedRank": 2,
+          "distractors": 3,
+          "relevantSent": 2
+        },
+        "lexical": {
+          "top1": "onboarding-checklist.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "reciprocalRank": 0,
+          "expectedRank": null,
+          "distractors": 5,
+          "relevantSent": 0
+        },
+        "hybrid": {
+          "top1": "onboarding.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "reciprocalRank": 0,
+          "expectedRank": null,
+          "distractors": 4,
+          "relevantSent": 1
+        }
+      }
+    }
+  ]
+}
