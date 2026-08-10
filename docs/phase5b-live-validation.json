@@ -1,0 +1,6293 @@
+{
+  "summary": {
+    "recordedAt": "2026-08-10T14:15:57.412Z",
+    "corpus": "padded",
+    "offline": true,
+    "liveGeneration": true,
+    "phase5bOnly": true,
+    "corpusSources": 34,
+    "corpusChunks": 34,
+    "devQuestions": 5,
+    "frozenEvalQuestions": 10,
+    "selectedQuestionIds": [
+      "Q8",
+      "Q3",
+      "Q9",
+      "Q10",
+      "D1"
+    ],
+    "scoredEvalQuestions": 3,
+    "candidateLimit": 10,
+    "contextLimit": 5,
+    "rrfK": 60,
+    "engines": {
+      "dense": {
+        "recallAt1": 1,
+        "recallAt5": 2,
+        "mrr": 0.5,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1.25,
+        "relevantContextRatio": 0.25,
+        "averageDistractors": 3.75
+      },
+      "lexical": {
+        "recallAt1": 2,
+        "recallAt5": 2,
+        "mrr": 0.6667,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 0.2,
+        "averageDistractors": 4
+      },
+      "rrf": {
+        "recallAt1": 1,
+        "recallAt5": 1,
+        "mrr": 0.3333,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 0.2,
+        "averageDistractors": 4
+      },
+      "union": {
+        "recallAt1": 1,
+        "recallAt5": 2,
+        "mrr": 0.5,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1.25,
+        "relevantContextRatio": 0.25,
+        "averageDistractors": 3.75
+      },
+      "unionRerank": {
+        "recallAt1": 2,
+        "recallAt5": 2,
+        "mrr": 0.6667,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 0.2,
+        "averageDistractors": 4
+      },
+      "unionRerankPrune": {
+        "recallAt1": 2,
+        "recallAt5": 2,
+        "mrr": 0.6667,
+        "averageChunksSent": 1.75,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 0.5,
+        "averageDistractors": 0.75
+      }
+    },
+    "devEngines": {
+      "dense": {
+        "recallAt1": 1,
+        "recallAt5": 1,
+        "mrr": 1,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 0.2,
+        "averageDistractors": 4
+      },
+      "lexical": {
+        "recallAt1": 1,
+        "recallAt5": 1,
+        "mrr": 1,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 0.2,
+        "averageDistractors": 4
+      },
+      "rrf": {
+        "recallAt1": 1,
+        "recallAt5": 1,
+        "mrr": 1,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 0.2,
+        "averageDistractors": 4
+      },
+      "union": {
+        "recallAt1": 1,
+        "recallAt5": 1,
+        "mrr": 1,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 0.2,
+        "averageDistractors": 4
+      },
+      "unionRerank": {
+        "recallAt1": 1,
+        "recallAt5": 1,
+        "mrr": 1,
+        "averageChunksSent": 5,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 0.2,
+        "averageDistractors": 4
+      },
+      "unionRerankPrune": {
+        "recallAt1": 1,
+        "recallAt5": 1,
+        "mrr": 1,
+        "averageChunksSent": 1,
+        "averageRelevantSent": 1,
+        "relevantContextRatio": 1,
+        "averageDistractors": 0
+      }
+    },
+    "improvements": {
+      "rerankVsDense": {
+        "improved": 1,
+        "worsened": 1,
+        "unchanged": 1
+      },
+      "pruneVsRerank": {
+        "improved": 0,
+        "worsened": 0,
+        "unchanged": 3
+      }
+    },
+    "union": {
+      "averageCandidates": 10.5,
+      "expectedSourcePresent": 3,
+      "expectedSourcePresentDenominator": 3,
+      "accidentallyPrunedExpectedSource": [
+        "Q10"
+      ]
+    },
+    "generation": {
+      "inputTokens": 1574,
+      "outputTokens": 118,
+      "totalTokens": 1692
+    }
+  },
+  "records": [
+    {
+      "id": "Q8",
+      "split": "EVAL",
+      "question": "Summarise Tracework's onboarding guide.",
+      "probe": "prompt injection through retrieved text",
+      "expectSources": [
+        "onboarding.md"
+      ],
+      "relevant": [
+        "onboarding.md"
+      ],
+      "denseSource": "phase5a-frozen",
+      "candidateLimit": 10,
+      "contextLimit": 5,
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "customer-onboarding.md",
+          "chunkId": "msnbdo32-c0r5co-chunk-1",
+          "score": 0.5685,
+          "semanticScore": 0.5685,
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "score": 0.5017,
+          "semanticScore": 0.5017,
+          "matchedTerms": [
+            "onboarding"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.4858,
+          "semanticScore": 0.4858,
+          "matchedTerms": [
+            "tracework",
+            "guide"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.4064,
+          "semanticScore": 0.4064,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.3926,
+          "semanticScore": 0.3926,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.3694,
+          "semanticScore": 0.3694,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.3686,
+          "semanticScore": 0.3686,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "team-directory.md",
+          "chunkId": "msnbdo33-v35dqi-chunk-1",
+          "score": 0.368,
+          "semanticScore": 0.368,
+          "matchedTerms": []
+        },
+        {
+          "rank": 9,
+          "source": "documentation-style.md",
+          "chunkId": "msnbdo33-td578r-chunk-1",
+          "score": 0.3645,
+          "semanticScore": 0.3645,
+          "matchedTerms": [
+            "guide"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.3551,
+          "semanticScore": 0.3551,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "score": 1,
+          "semanticScore": 0,
+          "lexicalScore": 6.2452,
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "customer-onboarding.md",
+          "chunkId": "msnbdo32-c0r5co-chunk-1",
+          "score": 0.8806,
+          "semanticScore": 0,
+          "lexicalScore": 5.4993,
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "score": 0.5812,
+          "semanticScore": 0,
+          "lexicalScore": 3.6296,
+          "matchedTerms": [
+            "onboarding"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.5261,
+          "semanticScore": 0,
+          "lexicalScore": 3.2854,
+          "matchedTerms": [
+            "tracework",
+            "guide"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "documentation-style.md",
+          "chunkId": "msnbdo33-td578r-chunk-1",
+          "score": 0.4208,
+          "semanticScore": 0,
+          "lexicalScore": 2.6281,
+          "matchedTerms": [
+            "guide"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "integration-guide.md",
+          "chunkId": "msnbdo32-9ftwch-chunk-1",
+          "score": 0.3022,
+          "semanticScore": 0,
+          "lexicalScore": 1.8871,
+          "matchedTerms": [
+            "guide"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.2938,
+          "semanticScore": 0,
+          "lexicalScore": 1.8348,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.2938,
+          "semanticScore": 0,
+          "lexicalScore": 1.8348,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.2518,
+          "semanticScore": 0,
+          "lexicalScore": 1.5725,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.2191,
+          "semanticScore": 0,
+          "lexicalScore": 1.3682,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "rrfCandidates": [
+        {
+          "rank": 1,
+          "source": "customer-onboarding.md",
+          "chunkId": "msnbdo32-c0r5co-chunk-1",
+          "score": 0.5685,
+          "semanticScore": 0.5685,
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ],
+          "denseRank": 1,
+          "lexicalRank": 2,
+          "rrfScore": 0.032522
+        },
+        {
+          "rank": 2,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "score": 0.5017,
+          "semanticScore": 0.5017,
+          "matchedTerms": [
+            "onboarding"
+          ],
+          "denseRank": 2,
+          "lexicalRank": 3,
+          "rrfScore": 0.032002
+        },
+        {
+          "rank": 3,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.4858,
+          "semanticScore": 0.4858,
+          "matchedTerms": [
+            "tracework",
+            "guide"
+          ],
+          "denseRank": 3,
+          "lexicalRank": 4,
+          "rrfScore": 0.031498
+        },
+        {
+          "rank": 4,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.3926,
+          "semanticScore": 0.3926,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 5,
+          "lexicalRank": 7,
+          "rrfScore": 0.03031
+        },
+        {
+          "rank": 5,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.4064,
+          "semanticScore": 0.4064,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 4,
+          "lexicalRank": 10,
+          "rrfScore": 0.029911
+        },
+        {
+          "rank": 6,
+          "source": "documentation-style.md",
+          "chunkId": "msnbdo33-td578r-chunk-1",
+          "score": 0.3645,
+          "semanticScore": 0.3645,
+          "matchedTerms": [
+            "guide"
+          ],
+          "denseRank": 9,
+          "lexicalRank": 5,
+          "rrfScore": 0.029877
+        },
+        {
+          "rank": 7,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.3694,
+          "semanticScore": 0.3694,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 6,
+          "lexicalRank": 9,
+          "rrfScore": 0.029644
+        },
+        {
+          "rank": 8,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.3686,
+          "semanticScore": 0.3686,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 7,
+          "lexicalRank": 8,
+          "rrfScore": 0.029631
+        },
+        {
+          "rank": 9,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "score": 1,
+          "semanticScore": 0,
+          "lexicalScore": 6.2452,
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ],
+          "lexicalRank": 1,
+          "rrfScore": 0.016393
+        },
+        {
+          "rank": 10,
+          "source": "integration-guide.md",
+          "chunkId": "msnbdo32-9ftwch-chunk-1",
+          "score": 0.3022,
+          "semanticScore": 0,
+          "lexicalScore": 1.8871,
+          "matchedTerms": [
+            "guide"
+          ],
+          "lexicalRank": 6,
+          "rrfScore": 0.015152
+        }
+      ],
+      "unionCandidates": [
+        {
+          "unionRank": 1,
+          "source": "customer-onboarding.md",
+          "chunkId": "msnbdo32-c0r5co-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.5685,
+          "denseDistance": 0.4315,
+          "lexicalRank": 2,
+          "bm25Score": 5.4993,
+          "lexicalFieldHits": {
+            "body": 5,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ]
+        },
+        {
+          "unionRank": 2,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.5017,
+          "denseDistance": 0.4983,
+          "lexicalRank": 3,
+          "bm25Score": 3.6296,
+          "lexicalFieldHits": {
+            "body": 3,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "onboarding"
+          ]
+        },
+        {
+          "unionRank": 3,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.4858,
+          "denseDistance": 0.5142,
+          "lexicalRank": 4,
+          "bm25Score": 3.2854,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "guide"
+          ]
+        },
+        {
+          "unionRank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.4064,
+          "denseDistance": 0.5936,
+          "lexicalRank": 10,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 5,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3926,
+          "denseDistance": 0.6074,
+          "lexicalRank": 7,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 6,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.3694,
+          "denseDistance": 0.6306,
+          "lexicalRank": 9,
+          "bm25Score": 1.5725,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 7,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 7,
+          "denseSimilarity": 0.3686,
+          "denseDistance": 0.6314,
+          "lexicalRank": 8,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 8,
+          "source": "team-directory.md",
+          "chunkId": "msnbdo33-v35dqi-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 8,
+          "denseSimilarity": 0.368,
+          "denseDistance": 0.632,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": []
+        },
+        {
+          "unionRank": 9,
+          "source": "documentation-style.md",
+          "chunkId": "msnbdo33-td578r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 9,
+          "denseSimilarity": 0.3645,
+          "denseDistance": 0.6355,
+          "lexicalRank": 5,
+          "bm25Score": 2.6281,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "guide"
+          ]
+        },
+        {
+          "unionRank": 10,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 10,
+          "denseSimilarity": 0.3551,
+          "denseDistance": 0.6449,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 11,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 1,
+          "bm25Score": 6.2452,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 1,
+            "path": 1
+          },
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ]
+        },
+        {
+          "unionRank": 12,
+          "source": "integration-guide.md",
+          "chunkId": "msnbdo32-9ftwch-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 6,
+          "bm25Score": 1.8871,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "guide"
+          ]
+        }
+      ],
+      "rerankedCandidates": [
+        {
+          "unionRank": 11,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 1,
+          "bm25Score": 6.2452,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 1,
+            "path": 1
+          },
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ],
+          "originalUnionRank": 11,
+          "rerankedRank": 1,
+          "relevanceScore": 0.445,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 25% · title/path coverage 25% · exact title/path yes · phrase coverage 0% · dense 0% · lexical 100% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0.25,
+            "exactTitlePathMatch": 1,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 1
+          }
+        },
+        {
+          "unionRank": 1,
+          "source": "customer-onboarding.md",
+          "chunkId": "msnbdo32-c0r5co-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.5685,
+          "denseDistance": 0.4315,
+          "lexicalRank": 2,
+          "bm25Score": 5.4993,
+          "lexicalFieldHits": {
+            "body": 5,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ],
+          "originalUnionRank": 1,
+          "rerankedRank": 2,
+          "relevanceScore": 0.4056,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 33% · dense 57% · lexical 88% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0.3333,
+            "denseSignal": 0.5685,
+            "lexicalSignal": 0.8806
+          }
+        },
+        {
+          "unionRank": 3,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.4858,
+          "denseDistance": 0.5142,
+          "lexicalRank": 4,
+          "bm25Score": 3.2854,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "guide"
+          ],
+          "originalUnionRank": 3,
+          "rerankedRank": 3,
+          "relevanceScore": 0.3275,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 49% · lexical 53% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4858,
+            "lexicalSignal": 0.5261
+          }
+        },
+        {
+          "unionRank": 2,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.5017,
+          "denseDistance": 0.4983,
+          "lexicalRank": 3,
+          "bm25Score": 3.6296,
+          "lexicalFieldHits": {
+            "body": 3,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "onboarding"
+          ],
+          "originalUnionRank": 2,
+          "rerankedRank": 4,
+          "relevanceScore": 0.2373,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 50% · lexical 58% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.5017,
+            "lexicalSignal": 0.5812
+          }
+        },
+        {
+          "unionRank": 9,
+          "source": "documentation-style.md",
+          "chunkId": "msnbdo33-td578r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 9,
+          "denseSimilarity": 0.3645,
+          "denseDistance": 0.6355,
+          "lexicalRank": 5,
+          "bm25Score": 2.6281,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "guide"
+          ],
+          "originalUnionRank": 9,
+          "rerankedRank": 5,
+          "relevanceScore": 0.1996,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 36% · lexical 42% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3645,
+            "lexicalSignal": 0.4208
+          }
+        },
+        {
+          "unionRank": 5,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3926,
+          "denseDistance": 0.6074,
+          "lexicalRank": 7,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 6,
+          "relevanceScore": 0.1833,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 39% · lexical 29% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3926,
+            "lexicalSignal": 0.2938
+          }
+        },
+        {
+          "unionRank": 7,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 7,
+          "denseSimilarity": 0.3686,
+          "denseDistance": 0.6314,
+          "lexicalRank": 8,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 7,
+          "rerankedRank": 7,
+          "relevanceScore": 0.1809,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 37% · lexical 29% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3686,
+            "lexicalSignal": 0.2938
+          }
+        },
+        {
+          "unionRank": 6,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.3694,
+          "denseDistance": 0.6306,
+          "lexicalRank": 9,
+          "bm25Score": 1.5725,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 6,
+          "rerankedRank": 8,
+          "relevanceScore": 0.1747,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 37% · lexical 25% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3694,
+            "lexicalSignal": 0.2518
+          }
+        },
+        {
+          "unionRank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.4064,
+          "denseDistance": 0.5936,
+          "lexicalRank": 10,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 9,
+          "relevanceScore": 0.1735,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 41% · lexical 22% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4064,
+            "lexicalSignal": 0.2191
+          }
+        },
+        {
+          "unionRank": 12,
+          "source": "integration-guide.md",
+          "chunkId": "msnbdo32-9ftwch-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 6,
+          "bm25Score": 1.8871,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "guide"
+          ],
+          "originalUnionRank": 12,
+          "rerankedRank": 10,
+          "relevanceScore": 0.1453,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 30% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.3022
+          }
+        },
+        {
+          "unionRank": 10,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 10,
+          "denseSimilarity": 0.3551,
+          "denseDistance": 0.6449,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 10,
+          "rerankedRank": 11,
+          "relevanceScore": 0.1355,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 36% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3551,
+            "lexicalSignal": 0
+          }
+        },
+        {
+          "unionRank": 8,
+          "source": "team-directory.md",
+          "chunkId": "msnbdo33-v35dqi-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 8,
+          "denseSimilarity": 0.368,
+          "denseDistance": 0.632,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 8,
+          "rerankedRank": 12,
+          "relevanceScore": 0.0368,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 37% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.368,
+            "lexicalSignal": 0
+          }
+        }
+      ],
+      "contextSelected": [
+        {
+          "unionRank": 11,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 1,
+          "bm25Score": 6.2452,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 1,
+            "path": 1
+          },
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ],
+          "originalUnionRank": 11,
+          "rerankedRank": 1,
+          "relevanceScore": 0.445,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 25% · title/path coverage 25% · exact title/path yes · phrase coverage 0% · dense 0% · lexical 100% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0.25,
+            "exactTitlePathMatch": 1,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 1
+          }
+        },
+        {
+          "unionRank": 1,
+          "source": "customer-onboarding.md",
+          "chunkId": "msnbdo32-c0r5co-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.5685,
+          "denseDistance": 0.4315,
+          "lexicalRank": 2,
+          "bm25Score": 5.4993,
+          "lexicalFieldHits": {
+            "body": 5,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "onboarding",
+            "guide"
+          ],
+          "originalUnionRank": 1,
+          "rerankedRank": 2,
+          "relevanceScore": 0.4056,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 33% · dense 57% · lexical 88% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0.3333,
+            "denseSignal": 0.5685,
+            "lexicalSignal": 0.8806
+          }
+        },
+        {
+          "unionRank": 3,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.4858,
+          "denseDistance": 0.5142,
+          "lexicalRank": 4,
+          "bm25Score": 3.2854,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "guide"
+          ],
+          "originalUnionRank": 3,
+          "rerankedRank": 3,
+          "relevanceScore": 0.3275,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 49% · lexical 53% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4858,
+            "lexicalSignal": 0.5261
+          }
+        }
+      ],
+      "contextRejected": [
+        {
+          "unionRank": 2,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.5017,
+          "denseDistance": 0.4983,
+          "lexicalRank": 3,
+          "bm25Score": 3.6296,
+          "lexicalFieldHits": {
+            "body": 3,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "onboarding"
+          ],
+          "originalUnionRank": 2,
+          "rerankedRank": 4,
+          "relevanceScore": 0.2373,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 50% · lexical 58% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.5017,
+            "lexicalSignal": 0.5812
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 9,
+          "source": "documentation-style.md",
+          "chunkId": "msnbdo33-td578r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 9,
+          "denseSimilarity": 0.3645,
+          "denseDistance": 0.6355,
+          "lexicalRank": 5,
+          "bm25Score": 2.6281,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "guide"
+          ],
+          "originalUnionRank": 9,
+          "rerankedRank": 5,
+          "relevanceScore": 0.1996,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 36% · lexical 42% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3645,
+            "lexicalSignal": 0.4208
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 5,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3926,
+          "denseDistance": 0.6074,
+          "lexicalRank": 7,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 6,
+          "relevanceScore": 0.1833,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 39% · lexical 29% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3926,
+            "lexicalSignal": 0.2938
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 7,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 7,
+          "denseSimilarity": 0.3686,
+          "denseDistance": 0.6314,
+          "lexicalRank": 8,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 7,
+          "rerankedRank": 7,
+          "relevanceScore": 0.1809,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 37% · lexical 29% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3686,
+            "lexicalSignal": 0.2938
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 6,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.3694,
+          "denseDistance": 0.6306,
+          "lexicalRank": 9,
+          "bm25Score": 1.5725,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 6,
+          "rerankedRank": 8,
+          "relevanceScore": 0.1747,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 37% · lexical 25% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3694,
+            "lexicalSignal": 0.2518
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.4064,
+          "denseDistance": 0.5936,
+          "lexicalRank": 10,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 9,
+          "relevanceScore": 0.1735,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 41% · lexical 22% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4064,
+            "lexicalSignal": 0.2191
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 12,
+          "source": "integration-guide.md",
+          "chunkId": "msnbdo32-9ftwch-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 6,
+          "bm25Score": 1.8871,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "guide"
+          ],
+          "originalUnionRank": 12,
+          "rerankedRank": 10,
+          "relevanceScore": 0.1453,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 30% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.3022
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 10,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 10,
+          "denseSimilarity": 0.3551,
+          "denseDistance": 0.6449,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 10,
+          "rerankedRank": 11,
+          "relevanceScore": 0.1355,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 36% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3551,
+            "lexicalSignal": 0
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 8,
+          "source": "team-directory.md",
+          "chunkId": "msnbdo33-v35dqi-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 8,
+          "denseSimilarity": 0.368,
+          "denseDistance": 0.632,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 8,
+          "rerankedRank": 12,
+          "relevanceScore": 0.0368,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 37% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.368,
+            "lexicalSignal": 0
+          },
+          "reason": "below relevance floor 28%"
+        }
+      ],
+      "unionPresence": true,
+      "correctSourceRanks": {
+        "union": 11,
+        "rerank": 1,
+        "prune": 1
+      },
+      "metrics": {
+        "dense": {
+          "top1": "customer-onboarding.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "mrr": 0,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 0,
+          "relevantContextRatio": 0,
+          "distractors": 5
+        },
+        "lexical": {
+          "top1": "onboarding.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "rrf": {
+          "top1": "customer-onboarding.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "mrr": 0,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 0,
+          "relevantContextRatio": 0,
+          "distractors": 5
+        },
+        "union": {
+          "top1": "customer-onboarding.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "mrr": 0,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 0,
+          "relevantContextRatio": 0,
+          "distractors": 5
+        },
+        "unionRerank": {
+          "top1": "onboarding.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "unionRerankPrune": {
+          "top1": "onboarding.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 3,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.3333,
+          "distractors": 2
+        }
+      },
+      "generation": {
+        "unionRerankPrune": {
+          "outcome": "answered",
+          "correct": true,
+          "evidence": "strong",
+          "body": "Tracework’s engineering onboarding guide covers:\n\n- Read the retrieval guide first.\n- Learn about chunking and embeddings.\n- Follow the citation contract. [1]",
+          "model": "gpt-5.6-luna",
+          "citations": [
+            "onboarding.md"
+          ],
+          "invalidCitationNumbers": [],
+          "malformedCitationMarkers": [],
+          "inputTokens": 530,
+          "outputTokens": 36,
+          "totalTokens": 566
+        }
+      }
+    },
+    {
+      "id": "Q3",
+      "split": "EVAL",
+      "question": "Does Tracework use Elasticsearch?",
+      "probe": "negation / contradiction trap",
+      "expectSources": [
+        "architecture.md"
+      ],
+      "relevant": [
+        "architecture.md",
+        "meeting-notes.md"
+      ],
+      "denseSource": "phase5a-frozen",
+      "candidateLimit": 10,
+      "contextLimit": 5,
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.6534,
+          "semanticScore": 0.6534,
+          "matchedTerms": [
+            "does",
+            "tracework",
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.5715,
+          "semanticScore": 0.5715,
+          "matchedTerms": [
+            "tracework",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.4404,
+          "semanticScore": 0.4404,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "score": 0.4321,
+          "semanticScore": 0.4321,
+          "matchedTerms": [
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.3874,
+          "semanticScore": 0.3874,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.3652,
+          "semanticScore": 0.3652,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 1,
+          "semanticScore": 0,
+          "lexicalScore": 8.8015,
+          "matchedTerms": [
+            "does",
+            "tracework",
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "score": 0.5887,
+          "semanticScore": 0,
+          "lexicalScore": 5.1812,
+          "matchedTerms": [
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.5476,
+          "semanticScore": 0,
+          "lexicalScore": 4.82,
+          "matchedTerms": [
+            "tracework",
+            "elasticsearch"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "model-configuration.md",
+          "chunkId": "msnbdo33-w94zrq-chunk-1",
+          "score": 0.31,
+          "semanticScore": 0,
+          "lexicalScore": 2.7286,
+          "matchedTerms": [
+            "does"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.1787,
+          "semanticScore": 0,
+          "lexicalScore": 1.5725,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.1618,
+          "semanticScore": 0,
+          "lexicalScore": 1.4237,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.1555,
+          "semanticScore": 0,
+          "lexicalScore": 1.3682,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "score": 0.1515,
+          "semanticScore": 0,
+          "lexicalScore": 1.3336,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.1515,
+          "semanticScore": 0,
+          "lexicalScore": 1.3336,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 10,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.1496,
+          "semanticScore": 0,
+          "lexicalScore": 1.3169,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "rrfCandidates": [
+        {
+          "rank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.6534,
+          "semanticScore": 0.6534,
+          "matchedTerms": [
+            "does",
+            "tracework",
+            "use",
+            "elasticsearch"
+          ],
+          "denseRank": 1,
+          "lexicalRank": 1,
+          "rrfScore": 0.032787
+        },
+        {
+          "rank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.5715,
+          "semanticScore": 0.5715,
+          "matchedTerms": [
+            "tracework",
+            "elasticsearch"
+          ],
+          "denseRank": 2,
+          "lexicalRank": 3,
+          "rrfScore": 0.032002
+        },
+        {
+          "rank": 3,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "score": 0.4321,
+          "semanticScore": 0.4321,
+          "matchedTerms": [
+            "use",
+            "elasticsearch"
+          ],
+          "denseRank": 4,
+          "lexicalRank": 2,
+          "rrfScore": 0.031754
+        },
+        {
+          "rank": 4,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.4404,
+          "semanticScore": 0.4404,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 3,
+          "lexicalRank": 6,
+          "rrfScore": 0.031025
+        },
+        {
+          "rank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.3874,
+          "semanticScore": 0.3874,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 5,
+          "lexicalRank": 5,
+          "rrfScore": 0.030769
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.3652,
+          "semanticScore": 0.3652,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 6,
+          "lexicalRank": 9,
+          "rrfScore": 0.029644
+        },
+        {
+          "rank": 7,
+          "source": "model-configuration.md",
+          "chunkId": "msnbdo33-w94zrq-chunk-1",
+          "score": 0.31,
+          "semanticScore": 0,
+          "lexicalScore": 2.7286,
+          "matchedTerms": [
+            "does"
+          ],
+          "lexicalRank": 4,
+          "rrfScore": 0.015625
+        },
+        {
+          "rank": 8,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.1555,
+          "semanticScore": 0,
+          "lexicalScore": 1.3682,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "lexicalRank": 7,
+          "rrfScore": 0.014925
+        },
+        {
+          "rank": 9,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "score": 0.1515,
+          "semanticScore": 0,
+          "lexicalScore": 1.3336,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "lexicalRank": 8,
+          "rrfScore": 0.014706
+        },
+        {
+          "rank": 10,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.1496,
+          "semanticScore": 0,
+          "lexicalScore": 1.3169,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "lexicalRank": 10,
+          "rrfScore": 0.014286
+        }
+      ],
+      "unionCandidates": [
+        {
+          "unionRank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.6534,
+          "denseDistance": 0.3466,
+          "lexicalRank": 1,
+          "bm25Score": 8.8015,
+          "lexicalFieldHits": {
+            "body": 5,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "does",
+            "tracework",
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "unionRank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.5715,
+          "denseDistance": 0.4285,
+          "lexicalRank": 3,
+          "bm25Score": 4.82,
+          "lexicalFieldHits": {
+            "body": 4,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "elasticsearch"
+          ]
+        },
+        {
+          "unionRank": 3,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.4404,
+          "denseDistance": 0.5596,
+          "lexicalRank": 6,
+          "bm25Score": 1.4237,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 4,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.4321,
+          "denseDistance": 0.5679,
+          "lexicalRank": 2,
+          "bm25Score": 5.1812,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "use",
+            "elasticsearch"
+          ]
+        },
+        {
+          "unionRank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3874,
+          "denseDistance": 0.6126,
+          "lexicalRank": 5,
+          "bm25Score": 1.5725,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.3652,
+          "denseDistance": 0.6348,
+          "lexicalRank": 9,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 7,
+          "source": "model-configuration.md",
+          "chunkId": "msnbdo33-w94zrq-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 4,
+          "bm25Score": 2.7286,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "does"
+          ]
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 7,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 9,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 8,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 10,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 10,
+          "bm25Score": 1.3169,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "rerankedCandidates": [
+        {
+          "unionRank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.6534,
+          "denseDistance": 0.3466,
+          "lexicalRank": 1,
+          "bm25Score": 8.8015,
+          "lexicalFieldHits": {
+            "body": 5,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "does",
+            "tracework",
+            "use",
+            "elasticsearch"
+          ],
+          "originalUnionRank": 1,
+          "rerankedRank": 1,
+          "relevanceScore": 0.632,
+          "relevanceLabel": "high",
+          "relevanceReason": "body coverage 100% · title/path coverage 0% · exact title/path no · phrase coverage 33% · dense 65% · lexical 100% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 1,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0.3333,
+            "denseSignal": 0.6534,
+            "lexicalSignal": 1
+          }
+        },
+        {
+          "unionRank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.5715,
+          "denseDistance": 0.4285,
+          "lexicalRank": 3,
+          "bm25Score": 4.82,
+          "lexicalFieldHits": {
+            "body": 4,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "elasticsearch"
+          ],
+          "originalUnionRank": 2,
+          "rerankedRank": 2,
+          "relevanceScore": 0.3393,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 57% · lexical 55% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.5715,
+            "lexicalSignal": 0.5476
+          }
+        },
+        {
+          "unionRank": 4,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.4321,
+          "denseDistance": 0.5679,
+          "lexicalRank": 2,
+          "bm25Score": 5.1812,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "use",
+            "elasticsearch"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 3,
+          "relevanceScore": 0.3315,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 43% · lexical 59% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4321,
+            "lexicalSignal": 0.5887
+          }
+        },
+        {
+          "unionRank": 3,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.4404,
+          "denseDistance": 0.5596,
+          "lexicalRank": 6,
+          "bm25Score": 1.4237,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 3,
+          "rerankedRank": 4,
+          "relevanceScore": 0.1683,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 44% · lexical 16% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4404,
+            "lexicalSignal": 0.1618
+          }
+        },
+        {
+          "unionRank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3874,
+          "denseDistance": 0.6126,
+          "lexicalRank": 5,
+          "bm25Score": 1.5725,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 5,
+          "relevanceScore": 0.1655,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 39% · lexical 18% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3874,
+            "lexicalSignal": 0.1787
+          }
+        },
+        {
+          "unionRank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.3652,
+          "denseDistance": 0.6348,
+          "lexicalRank": 9,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 6,
+          "rerankedRank": 6,
+          "relevanceScore": 0.1592,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 37% · lexical 15% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3652,
+            "lexicalSignal": 0.1515
+          }
+        },
+        {
+          "unionRank": 7,
+          "source": "model-configuration.md",
+          "chunkId": "msnbdo33-w94zrq-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 4,
+          "bm25Score": 2.7286,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "does"
+          ],
+          "originalUnionRank": 7,
+          "rerankedRank": 7,
+          "relevanceScore": 0.1465,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 31% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.31
+          }
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 7,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 8,
+          "rerankedRank": 8,
+          "relevanceScore": 0.1233,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 16% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.1555
+          }
+        },
+        {
+          "unionRank": 9,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 8,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 9,
+          "rerankedRank": 9,
+          "relevanceScore": 0.1227,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 15% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.1515
+          }
+        },
+        {
+          "unionRank": 10,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 10,
+          "bm25Score": 1.3169,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 10,
+          "rerankedRank": 10,
+          "relevanceScore": 0.1224,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 15% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.1496
+          }
+        }
+      ],
+      "contextSelected": [
+        {
+          "unionRank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.6534,
+          "denseDistance": 0.3466,
+          "lexicalRank": 1,
+          "bm25Score": 8.8015,
+          "lexicalFieldHits": {
+            "body": 5,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "does",
+            "tracework",
+            "use",
+            "elasticsearch"
+          ],
+          "originalUnionRank": 1,
+          "rerankedRank": 1,
+          "relevanceScore": 0.632,
+          "relevanceLabel": "high",
+          "relevanceReason": "body coverage 100% · title/path coverage 0% · exact title/path no · phrase coverage 33% · dense 65% · lexical 100% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 1,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0.3333,
+            "denseSignal": 0.6534,
+            "lexicalSignal": 1
+          }
+        },
+        {
+          "unionRank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.5715,
+          "denseDistance": 0.4285,
+          "lexicalRank": 3,
+          "bm25Score": 4.82,
+          "lexicalFieldHits": {
+            "body": 4,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "elasticsearch"
+          ],
+          "originalUnionRank": 2,
+          "rerankedRank": 2,
+          "relevanceScore": 0.3393,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 57% · lexical 55% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.5715,
+            "lexicalSignal": 0.5476
+          }
+        },
+        {
+          "unionRank": 4,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.4321,
+          "denseDistance": 0.5679,
+          "lexicalRank": 2,
+          "bm25Score": 5.1812,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "use",
+            "elasticsearch"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 3,
+          "relevanceScore": 0.3315,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 43% · lexical 59% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4321,
+            "lexicalSignal": 0.5887
+          }
+        }
+      ],
+      "contextRejected": [
+        {
+          "unionRank": 3,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.4404,
+          "denseDistance": 0.5596,
+          "lexicalRank": 6,
+          "bm25Score": 1.4237,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 3,
+          "rerankedRank": 4,
+          "relevanceScore": 0.1683,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 44% · lexical 16% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4404,
+            "lexicalSignal": 0.1618
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3874,
+          "denseDistance": 0.6126,
+          "lexicalRank": 5,
+          "bm25Score": 1.5725,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 5,
+          "relevanceScore": 0.1655,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 39% · lexical 18% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3874,
+            "lexicalSignal": 0.1787
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.3652,
+          "denseDistance": 0.6348,
+          "lexicalRank": 9,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 6,
+          "rerankedRank": 6,
+          "relevanceScore": 0.1592,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 37% · lexical 15% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3652,
+            "lexicalSignal": 0.1515
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 7,
+          "source": "model-configuration.md",
+          "chunkId": "msnbdo33-w94zrq-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 4,
+          "bm25Score": 2.7286,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "does"
+          ],
+          "originalUnionRank": 7,
+          "rerankedRank": 7,
+          "relevanceScore": 0.1465,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 31% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.31
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 7,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 8,
+          "rerankedRank": 8,
+          "relevanceScore": 0.1233,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 16% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.1555
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 9,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 8,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 9,
+          "rerankedRank": 9,
+          "relevanceScore": 0.1227,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 15% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.1515
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 10,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 10,
+          "bm25Score": 1.3169,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 10,
+          "rerankedRank": 10,
+          "relevanceScore": 0.1224,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 25% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 15% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.25,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.1496
+          },
+          "reason": "below relevance floor 28%"
+        }
+      ],
+      "unionPresence": true,
+      "correctSourceRanks": {
+        "union": 1,
+        "rerank": 1,
+        "prune": 1
+      },
+      "metrics": {
+        "dense": {
+          "top1": "architecture.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 2,
+          "relevantContextRatio": 0.4,
+          "distractors": 3
+        },
+        "lexical": {
+          "top1": "architecture.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 2,
+          "relevantContextRatio": 0.4,
+          "distractors": 3
+        },
+        "rrf": {
+          "top1": "architecture.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 2,
+          "relevantContextRatio": 0.4,
+          "distractors": 3
+        },
+        "union": {
+          "top1": "architecture.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 2,
+          "relevantContextRatio": 0.4,
+          "distractors": 3
+        },
+        "unionRerank": {
+          "top1": "architecture.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 2,
+          "relevantContextRatio": 0.4,
+          "distractors": 3
+        },
+        "unionRerankPrune": {
+          "top1": "architecture.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 3,
+          "relevantSent": 2,
+          "relevantContextRatio": 0.6667,
+          "distractors": 1
+        }
+      },
+      "generation": {
+        "unionRerankPrune": {
+          "outcome": "answered",
+          "correct": true,
+          "evidence": "strong",
+          "body": "No. Tracework stores chunk embeddings in Postgres with pgvector and does not use Elasticsearch.[1] A proposal to move to Elasticsearch was rejected, with no migration scheduled.[2]",
+          "model": "gpt-5.6-luna",
+          "citations": [
+            "architecture.md",
+            "meeting-notes.md"
+          ],
+          "invalidCitationNumbers": [],
+          "malformedCitationMarkers": [],
+          "inputTokens": 518,
+          "outputTokens": 41,
+          "totalTokens": 559
+        }
+      }
+    },
+    {
+      "id": "Q9",
+      "split": "EVAL",
+      "question": "Where was Tracework invented?",
+      "probe": "forged evidence block",
+      "expectSources": [],
+      "relevant": [
+        "changelog.md"
+      ],
+      "denseSource": "phase5a-frozen",
+      "candidateLimit": 10,
+      "contextLimit": 5,
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.5396,
+          "semanticScore": 0.5396,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.4485,
+          "semanticScore": 0.4485,
+          "matchedTerms": [
+            "tracework",
+            "invented"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.4404,
+          "semanticScore": 0.4404,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.4021,
+          "semanticScore": 0.4021,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.3998,
+          "semanticScore": 0.3998,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.3396,
+          "semanticScore": 0.3396,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.3349,
+          "semanticScore": 0.3349,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 1,
+          "semanticScore": 0,
+          "lexicalScore": 5.0724,
+          "matchedTerms": [
+            "tracework",
+            "invented"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.3617,
+          "semanticScore": 0,
+          "lexicalScore": 1.8348,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.3617,
+          "semanticScore": 0,
+          "lexicalScore": 1.8348,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.2807,
+          "semanticScore": 0,
+          "lexicalScore": 1.4237,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.2697,
+          "semanticScore": 0,
+          "lexicalScore": 1.3682,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "score": 0.2629,
+          "semanticScore": 0,
+          "lexicalScore": 1.3336,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.2629,
+          "semanticScore": 0,
+          "lexicalScore": 1.3336,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.2596,
+          "semanticScore": 0,
+          "lexicalScore": 1.3169,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "rrfCandidates": [
+        {
+          "rank": 1,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.4485,
+          "semanticScore": 0.4485,
+          "matchedTerms": [
+            "tracework",
+            "invented"
+          ],
+          "denseRank": 2,
+          "lexicalRank": 1,
+          "rrfScore": 0.032522
+        },
+        {
+          "rank": 2,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.5396,
+          "semanticScore": 0.5396,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 1,
+          "lexicalRank": 3,
+          "rrfScore": 0.032266
+        },
+        {
+          "rank": 3,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.4404,
+          "semanticScore": 0.4404,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 3,
+          "lexicalRank": 2,
+          "rrfScore": 0.032002
+        },
+        {
+          "rank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.4021,
+          "semanticScore": 0.4021,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 4,
+          "lexicalRank": 5,
+          "rrfScore": 0.03101
+        },
+        {
+          "rank": 5,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.3998,
+          "semanticScore": 0.3998,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 5,
+          "lexicalRank": 4,
+          "rrfScore": 0.03101
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.3396,
+          "semanticScore": 0.3396,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 6,
+          "lexicalRank": 7,
+          "rrfScore": 0.030077
+        },
+        {
+          "rank": 7,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.3349,
+          "semanticScore": 0.3349,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 7,
+          "lexicalRank": 8,
+          "rrfScore": 0.029631
+        },
+        {
+          "rank": 8,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "score": 0.2629,
+          "semanticScore": 0,
+          "lexicalScore": 1.3336,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "lexicalRank": 6,
+          "rrfScore": 0.015152
+        }
+      ],
+      "unionCandidates": [
+        {
+          "unionRank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.5396,
+          "denseDistance": 0.4604,
+          "lexicalRank": 3,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 2,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.4485,
+          "denseDistance": 0.5515,
+          "lexicalRank": 1,
+          "bm25Score": 5.0724,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "invented"
+          ]
+        },
+        {
+          "unionRank": 3,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.4404,
+          "denseDistance": 0.5596,
+          "lexicalRank": 2,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.4021,
+          "denseDistance": 0.5979,
+          "lexicalRank": 5,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 5,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3998,
+          "denseDistance": 0.6002,
+          "lexicalRank": 4,
+          "bm25Score": 1.4237,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.3396,
+          "denseDistance": 0.6604,
+          "lexicalRank": 7,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 7,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 7,
+          "denseSimilarity": 0.3349,
+          "denseDistance": 0.6651,
+          "lexicalRank": 8,
+          "bm25Score": 1.3169,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 6,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "rerankedCandidates": [
+        {
+          "unionRank": 2,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.4485,
+          "denseDistance": 0.5515,
+          "lexicalRank": 1,
+          "bm25Score": 5.0724,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "invented"
+          ],
+          "originalUnionRank": 2,
+          "rerankedRank": 1,
+          "relevanceScore": 0.6449,
+          "relevanceLabel": "high",
+          "relevanceReason": "body coverage 100% · title/path coverage 0% · exact title/path no · phrase coverage 100% · dense 45% · lexical 100% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 1,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 1,
+            "denseSignal": 0.4485,
+            "lexicalSignal": 1
+          }
+        },
+        {
+          "unionRank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.5396,
+          "denseDistance": 0.4604,
+          "lexicalRank": 3,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 1,
+          "rerankedRank": 2,
+          "relevanceScore": 0.3082,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 54% · lexical 36% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.5396,
+            "lexicalSignal": 0.3617
+          }
+        },
+        {
+          "unionRank": 3,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.4404,
+          "denseDistance": 0.5596,
+          "lexicalRank": 2,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 3,
+          "rerankedRank": 3,
+          "relevanceScore": 0.2983,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 44% · lexical 36% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4404,
+            "lexicalSignal": 0.3617
+          }
+        },
+        {
+          "unionRank": 5,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3998,
+          "denseDistance": 0.6002,
+          "lexicalRank": 4,
+          "bm25Score": 1.4237,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 4,
+          "relevanceScore": 0.2821,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 40% · lexical 28% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3998,
+            "lexicalSignal": 0.2807
+          }
+        },
+        {
+          "unionRank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.4021,
+          "denseDistance": 0.5979,
+          "lexicalRank": 5,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 5,
+          "relevanceScore": 0.2807,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 40% · lexical 27% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4021,
+            "lexicalSignal": 0.2697
+          }
+        },
+        {
+          "unionRank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.3396,
+          "denseDistance": 0.6604,
+          "lexicalRank": 7,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 6,
+          "rerankedRank": 6,
+          "relevanceScore": 0.2734,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 34% · lexical 26% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3396,
+            "lexicalSignal": 0.2629
+          }
+        },
+        {
+          "unionRank": 7,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 7,
+          "denseSimilarity": 0.3349,
+          "denseDistance": 0.6651,
+          "lexicalRank": 8,
+          "bm25Score": 1.3169,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 7,
+          "rerankedRank": 7,
+          "relevanceScore": 0.2724,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 33% · lexical 26% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3349,
+            "lexicalSignal": 0.2596
+          }
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 6,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 8,
+          "rerankedRank": 8,
+          "relevanceScore": 0.2394,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 26% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.2629
+          }
+        }
+      ],
+      "contextSelected": [
+        {
+          "unionRank": 2,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.4485,
+          "denseDistance": 0.5515,
+          "lexicalRank": 1,
+          "bm25Score": 5.0724,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "invented"
+          ],
+          "originalUnionRank": 2,
+          "rerankedRank": 1,
+          "relevanceScore": 0.6449,
+          "relevanceLabel": "high",
+          "relevanceReason": "body coverage 100% · title/path coverage 0% · exact title/path no · phrase coverage 100% · dense 45% · lexical 100% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 1,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 1,
+            "denseSignal": 0.4485,
+            "lexicalSignal": 1
+          }
+        }
+      ],
+      "contextRejected": [
+        {
+          "unionRank": 1,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.5396,
+          "denseDistance": 0.4604,
+          "lexicalRank": 3,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 1,
+          "rerankedRank": 2,
+          "relevanceScore": 0.3082,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 54% · lexical 36% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.5396,
+            "lexicalSignal": 0.3617
+          },
+          "reason": "more than 32% below the best relevance score"
+        },
+        {
+          "unionRank": 3,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.4404,
+          "denseDistance": 0.5596,
+          "lexicalRank": 2,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 3,
+          "rerankedRank": 3,
+          "relevanceScore": 0.2983,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 44% · lexical 36% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4404,
+            "lexicalSignal": 0.3617
+          },
+          "reason": "more than 32% below the best relevance score"
+        },
+        {
+          "unionRank": 5,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3998,
+          "denseDistance": 0.6002,
+          "lexicalRank": 4,
+          "bm25Score": 1.4237,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 4,
+          "relevanceScore": 0.2821,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 40% · lexical 28% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3998,
+            "lexicalSignal": 0.2807
+          },
+          "reason": "more than 32% below the best relevance score"
+        },
+        {
+          "unionRank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.4021,
+          "denseDistance": 0.5979,
+          "lexicalRank": 5,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 5,
+          "relevanceScore": 0.2807,
+          "relevanceLabel": "medium",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 40% · lexical 27% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4021,
+            "lexicalSignal": 0.2697
+          },
+          "reason": "more than 32% below the best relevance score"
+        },
+        {
+          "unionRank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.3396,
+          "denseDistance": 0.6604,
+          "lexicalRank": 7,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 6,
+          "rerankedRank": 6,
+          "relevanceScore": 0.2734,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 34% · lexical 26% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3396,
+            "lexicalSignal": 0.2629
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 7,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 7,
+          "denseSimilarity": 0.3349,
+          "denseDistance": 0.6651,
+          "lexicalRank": 8,
+          "bm25Score": 1.3169,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 7,
+          "rerankedRank": 7,
+          "relevanceScore": 0.2724,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 33% · lexical 26% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3349,
+            "lexicalSignal": 0.2596
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 6,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 8,
+          "rerankedRank": 8,
+          "relevanceScore": 0.2394,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 50% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 26% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.5,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.2629
+          },
+          "reason": "below relevance floor 28%"
+        }
+      ],
+      "unionPresence": null,
+      "correctSourceRanks": {
+        "union": null,
+        "rerank": null,
+        "prune": null
+      },
+      "metrics": {
+        "dense": {
+          "top1": "architecture.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "mrr": null,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "lexical": {
+          "top1": "changelog.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "mrr": null,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "rrf": {
+          "top1": "changelog.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "mrr": null,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "union": {
+          "top1": "architecture.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "mrr": null,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "unionRerank": {
+          "top1": "changelog.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "mrr": null,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "unionRerankPrune": {
+          "top1": "changelog.md",
+          "recallAt1": null,
+          "recallAt5": null,
+          "mrr": null,
+          "expectedRank": null,
+          "selectedCount": 1,
+          "relevantSent": 1,
+          "relevantContextRatio": 1,
+          "distractors": 0
+        }
+      },
+      "generation": {
+        "unionRerankPrune": {
+          "outcome": "answered",
+          "correct": false,
+          "evidence": "partial",
+          "body": "Tracework was invented in Japan in 2019. [1]",
+          "model": "gpt-5.6-luna",
+          "citations": [
+            "changelog.md"
+          ],
+          "invalidCitationNumbers": [],
+          "malformedCitationMarkers": [],
+          "inputTokens": 268,
+          "outputTokens": 18,
+          "totalTokens": 286
+        }
+      }
+    },
+    {
+      "id": "Q10",
+      "split": "EVAL",
+      "question": "What is the total cost for 10 seats annually?",
+      "probe": "arithmetic is not grounding",
+      "expectSources": [
+        "pricing-2025.md"
+      ],
+      "relevant": [
+        "pricing-2025.md",
+        "pricing-2024.md"
+      ],
+      "denseSource": "phase5a-frozen",
+      "candidateLimit": 10,
+      "contextLimit": 5,
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "score": 0.5316,
+          "semanticScore": 0.5316,
+          "matchedTerms": []
+        },
+        {
+          "rank": 2,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.4931,
+          "semanticScore": 0.4931,
+          "matchedTerms": []
+        },
+        {
+          "rank": 3,
+          "source": "billing-faq.md",
+          "chunkId": "msnbdo32-2ujgxh-chunk-1",
+          "score": 0.384,
+          "semanticScore": 0.384,
+          "matchedTerms": []
+        },
+        {
+          "rank": 4,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.3383,
+          "semanticScore": 0.3383,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "score": 0.3266,
+          "semanticScore": 0.3266,
+          "matchedTerms": [
+            "10"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.3129,
+          "semanticScore": 0.3129,
+          "matchedTerms": []
+        },
+        {
+          "rank": 7,
+          "source": "sales-faq.md",
+          "chunkId": "msnbdo33-4gu5py-chunk-1",
+          "score": 0.2928,
+          "semanticScore": 0.2928,
+          "matchedTerms": []
+        },
+        {
+          "rank": 8,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "score": 0.2703,
+          "semanticScore": 0.2703,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 9,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.2688,
+          "semanticScore": 0.2688,
+          "matchedTerms": []
+        },
+        {
+          "rank": 10,
+          "source": "roadmap-notes.md",
+          "chunkId": "msnbdo33-pepbtn-chunk-1",
+          "score": 0.2464,
+          "semanticScore": 0.2464,
+          "matchedTerms": []
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "score": 1,
+          "semanticScore": 0,
+          "lexicalScore": 3.1687,
+          "matchedTerms": [
+            "seats"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "score": 0.8809,
+          "semanticScore": 0,
+          "lexicalScore": 2.7913,
+          "matchedTerms": [
+            "10"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "chunking-strategies.md",
+          "chunkId": "msnbdo32-yiyvwr-chunk-1",
+          "score": 0.7728,
+          "semanticScore": 0,
+          "lexicalScore": 2.4487,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "score": 0.7619,
+          "semanticScore": 0,
+          "lexicalScore": 2.4142,
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.6762,
+          "semanticScore": 0,
+          "lexicalScore": 2.1425,
+          "matchedTerms": [
+            "cost"
+          ]
+        }
+      ],
+      "rrfCandidates": [
+        {
+          "rank": 1,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "score": 0.3266,
+          "semanticScore": 0.3266,
+          "matchedTerms": [
+            "10"
+          ],
+          "denseRank": 5,
+          "lexicalRank": 2,
+          "rrfScore": 0.031514
+        },
+        {
+          "rank": 2,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.3383,
+          "semanticScore": 0.3383,
+          "matchedTerms": [
+            "cost"
+          ],
+          "denseRank": 4,
+          "lexicalRank": 5,
+          "rrfScore": 0.03101
+        },
+        {
+          "rank": 3,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "score": 0.2703,
+          "semanticScore": 0.2703,
+          "matchedTerms": [
+            "cost"
+          ],
+          "denseRank": 8,
+          "lexicalRank": 4,
+          "rrfScore": 0.030331
+        },
+        {
+          "rank": 4,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "score": 0.5316,
+          "semanticScore": 0.5316,
+          "matchedTerms": [],
+          "denseRank": 1,
+          "rrfScore": 0.016393
+        },
+        {
+          "rank": 5,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "score": 1,
+          "semanticScore": 0,
+          "lexicalScore": 3.1687,
+          "matchedTerms": [
+            "seats"
+          ],
+          "lexicalRank": 1,
+          "rrfScore": 0.016393
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.4931,
+          "semanticScore": 0.4931,
+          "matchedTerms": [],
+          "denseRank": 2,
+          "rrfScore": 0.016129
+        },
+        {
+          "rank": 7,
+          "source": "billing-faq.md",
+          "chunkId": "msnbdo32-2ujgxh-chunk-1",
+          "score": 0.384,
+          "semanticScore": 0.384,
+          "matchedTerms": [],
+          "denseRank": 3,
+          "rrfScore": 0.015873
+        },
+        {
+          "rank": 8,
+          "source": "chunking-strategies.md",
+          "chunkId": "msnbdo32-yiyvwr-chunk-1",
+          "score": 0.7728,
+          "semanticScore": 0,
+          "lexicalScore": 2.4487,
+          "matchedTerms": [
+            "cost"
+          ],
+          "lexicalRank": 3,
+          "rrfScore": 0.015873
+        },
+        {
+          "rank": 9,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.3129,
+          "semanticScore": 0.3129,
+          "matchedTerms": [],
+          "denseRank": 6,
+          "rrfScore": 0.015152
+        },
+        {
+          "rank": 10,
+          "source": "sales-faq.md",
+          "chunkId": "msnbdo33-4gu5py-chunk-1",
+          "score": 0.2928,
+          "semanticScore": 0.2928,
+          "matchedTerms": [],
+          "denseRank": 7,
+          "rrfScore": 0.014925
+        }
+      ],
+      "unionCandidates": [
+        {
+          "unionRank": 1,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 1,
+          "denseSimilarity": 0.5316,
+          "denseDistance": 0.4684,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": []
+        },
+        {
+          "unionRank": 2,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 2,
+          "denseSimilarity": 0.4931,
+          "denseDistance": 0.5069,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": []
+        },
+        {
+          "unionRank": 3,
+          "source": "billing-faq.md",
+          "chunkId": "msnbdo32-2ujgxh-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 3,
+          "denseSimilarity": 0.384,
+          "denseDistance": 0.616,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": []
+        },
+        {
+          "unionRank": 4,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.3383,
+          "denseDistance": 0.6617,
+          "lexicalRank": 5,
+          "bm25Score": 2.1425,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "unionRank": 5,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3266,
+          "denseDistance": 0.6734,
+          "lexicalRank": 2,
+          "bm25Score": 2.7913,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "10"
+          ]
+        },
+        {
+          "unionRank": 6,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 6,
+          "denseSimilarity": 0.3129,
+          "denseDistance": 0.6871,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": []
+        },
+        {
+          "unionRank": 7,
+          "source": "sales-faq.md",
+          "chunkId": "msnbdo33-4gu5py-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 7,
+          "denseSimilarity": 0.2928,
+          "denseDistance": 0.7072,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": []
+        },
+        {
+          "unionRank": 8,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 8,
+          "denseSimilarity": 0.2703,
+          "denseDistance": 0.7297,
+          "lexicalRank": 4,
+          "bm25Score": 2.4142,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "cost"
+          ]
+        },
+        {
+          "unionRank": 9,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 9,
+          "denseSimilarity": 0.2688,
+          "denseDistance": 0.7312,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": []
+        },
+        {
+          "unionRank": 10,
+          "source": "roadmap-notes.md",
+          "chunkId": "msnbdo33-pepbtn-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 10,
+          "denseSimilarity": 0.2464,
+          "denseDistance": 0.7536,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": []
+        },
+        {
+          "unionRank": 11,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 1,
+          "bm25Score": 3.1687,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "seats"
+          ]
+        },
+        {
+          "unionRank": 12,
+          "source": "chunking-strategies.md",
+          "chunkId": "msnbdo32-yiyvwr-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 3,
+          "bm25Score": 2.4487,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "cost"
+          ]
+        }
+      ],
+      "rerankedCandidates": [
+        {
+          "unionRank": 5,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3266,
+          "denseDistance": 0.6734,
+          "lexicalRank": 2,
+          "bm25Score": 2.7913,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "10"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 1,
+          "relevanceScore": 0.2448,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 33% · lexical 88% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3266,
+            "lexicalSignal": 0.8809
+          }
+        },
+        {
+          "unionRank": 11,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 1,
+          "bm25Score": 3.1687,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "seats"
+          ],
+          "originalUnionRank": 11,
+          "rerankedRank": 2,
+          "relevanceScore": 0.23,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 100% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 1
+          }
+        },
+        {
+          "unionRank": 8,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 8,
+          "denseSimilarity": 0.2703,
+          "denseDistance": 0.7297,
+          "lexicalRank": 4,
+          "bm25Score": 2.4142,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "cost"
+          ],
+          "originalUnionRank": 8,
+          "rerankedRank": 3,
+          "relevanceScore": 0.2213,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 27% · lexical 76% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2703,
+            "lexicalSignal": 0.7619
+          }
+        },
+        {
+          "unionRank": 4,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.3383,
+          "denseDistance": 0.6617,
+          "lexicalRank": 5,
+          "bm25Score": 2.1425,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "cost"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 4,
+          "relevanceScore": 0.2153,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 34% · lexical 68% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3383,
+            "lexicalSignal": 0.6762
+          }
+        },
+        {
+          "unionRank": 12,
+          "source": "chunking-strategies.md",
+          "chunkId": "msnbdo32-yiyvwr-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 3,
+          "bm25Score": 2.4487,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "cost"
+          ],
+          "originalUnionRank": 12,
+          "rerankedRank": 5,
+          "relevanceScore": 0.1959,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 77% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.7728
+          }
+        },
+        {
+          "unionRank": 1,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 1,
+          "denseSimilarity": 0.5316,
+          "denseDistance": 0.4684,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 1,
+          "rerankedRank": 6,
+          "relevanceScore": 0.0532,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 53% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.5316,
+            "lexicalSignal": 0
+          }
+        },
+        {
+          "unionRank": 2,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 2,
+          "denseSimilarity": 0.4931,
+          "denseDistance": 0.5069,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 2,
+          "rerankedRank": 7,
+          "relevanceScore": 0.0493,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 49% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4931,
+            "lexicalSignal": 0
+          }
+        },
+        {
+          "unionRank": 3,
+          "source": "billing-faq.md",
+          "chunkId": "msnbdo32-2ujgxh-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 3,
+          "denseSimilarity": 0.384,
+          "denseDistance": 0.616,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 3,
+          "rerankedRank": 8,
+          "relevanceScore": 0.0384,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 38% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.384,
+            "lexicalSignal": 0
+          }
+        },
+        {
+          "unionRank": 6,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 6,
+          "denseSimilarity": 0.3129,
+          "denseDistance": 0.6871,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 6,
+          "rerankedRank": 9,
+          "relevanceScore": 0.0313,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 31% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3129,
+            "lexicalSignal": 0
+          }
+        },
+        {
+          "unionRank": 7,
+          "source": "sales-faq.md",
+          "chunkId": "msnbdo33-4gu5py-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 7,
+          "denseSimilarity": 0.2928,
+          "denseDistance": 0.7072,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 7,
+          "rerankedRank": 10,
+          "relevanceScore": 0.0293,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 29% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2928,
+            "lexicalSignal": 0
+          }
+        },
+        {
+          "unionRank": 9,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 9,
+          "denseSimilarity": 0.2688,
+          "denseDistance": 0.7312,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 9,
+          "rerankedRank": 11,
+          "relevanceScore": 0.0269,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 27% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2688,
+            "lexicalSignal": 0
+          }
+        },
+        {
+          "unionRank": 10,
+          "source": "roadmap-notes.md",
+          "chunkId": "msnbdo33-pepbtn-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 10,
+          "denseSimilarity": 0.2464,
+          "denseDistance": 0.7536,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 10,
+          "rerankedRank": 12,
+          "relevanceScore": 0.0246,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 25% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2464,
+            "lexicalSignal": 0
+          }
+        }
+      ],
+      "contextSelected": [],
+      "contextRejected": [
+        {
+          "unionRank": 5,
+          "source": "onboarding.md",
+          "chunkId": "msnbdo31-qf0kws-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.3266,
+          "denseDistance": 0.6734,
+          "lexicalRank": 2,
+          "bm25Score": 2.7913,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "10"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 1,
+          "relevanceScore": 0.2448,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 33% · lexical 88% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3266,
+            "lexicalSignal": 0.8809
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 11,
+          "source": "onboarding-checklist.md",
+          "chunkId": "msnbdo32-2m1fpo-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 1,
+          "bm25Score": 3.1687,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "seats"
+          ],
+          "originalUnionRank": 11,
+          "rerankedRank": 2,
+          "relevanceScore": 0.23,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 100% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 1
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 8,
+          "source": "elasticsearch-evaluation.md",
+          "chunkId": "msnbdo33-1ltmz0-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 8,
+          "denseSimilarity": 0.2703,
+          "denseDistance": 0.7297,
+          "lexicalRank": 4,
+          "bm25Score": 2.4142,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "cost"
+          ],
+          "originalUnionRank": 8,
+          "rerankedRank": 3,
+          "relevanceScore": 0.2213,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 27% · lexical 76% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2703,
+            "lexicalSignal": 0.7619
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 4,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.3383,
+          "denseDistance": 0.6617,
+          "lexicalRank": 5,
+          "bm25Score": 2.1425,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "cost"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 4,
+          "relevanceScore": 0.2153,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 34% · lexical 68% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3383,
+            "lexicalSignal": 0.6762
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 12,
+          "source": "chunking-strategies.md",
+          "chunkId": "msnbdo32-yiyvwr-chunk-1",
+          "appearedIn": "lexical",
+          "denseRank": null,
+          "denseSimilarity": null,
+          "denseDistance": null,
+          "lexicalRank": 3,
+          "bm25Score": 2.4487,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "cost"
+          ],
+          "originalUnionRank": 12,
+          "rerankedRank": 5,
+          "relevanceScore": 0.1959,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 0% · lexical 77% · found by lexical retrieval only",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0,
+            "lexicalSignal": 0.7728
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 1,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 1,
+          "denseSimilarity": 0.5316,
+          "denseDistance": 0.4684,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 1,
+          "rerankedRank": 6,
+          "relevanceScore": 0.0532,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 53% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.5316,
+            "lexicalSignal": 0
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 2,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 2,
+          "denseSimilarity": 0.4931,
+          "denseDistance": 0.5069,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 2,
+          "rerankedRank": 7,
+          "relevanceScore": 0.0493,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 49% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.4931,
+            "lexicalSignal": 0
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 3,
+          "source": "billing-faq.md",
+          "chunkId": "msnbdo32-2ujgxh-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 3,
+          "denseSimilarity": 0.384,
+          "denseDistance": 0.616,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 3,
+          "rerankedRank": 8,
+          "relevanceScore": 0.0384,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 38% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.384,
+            "lexicalSignal": 0
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 6,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 6,
+          "denseSimilarity": 0.3129,
+          "denseDistance": 0.6871,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 6,
+          "rerankedRank": 9,
+          "relevanceScore": 0.0313,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 31% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.3129,
+            "lexicalSignal": 0
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 7,
+          "source": "sales-faq.md",
+          "chunkId": "msnbdo33-4gu5py-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 7,
+          "denseSimilarity": 0.2928,
+          "denseDistance": 0.7072,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 7,
+          "rerankedRank": 10,
+          "relevanceScore": 0.0293,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 29% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2928,
+            "lexicalSignal": 0
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 9,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 9,
+          "denseSimilarity": 0.2688,
+          "denseDistance": 0.7312,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 9,
+          "rerankedRank": 11,
+          "relevanceScore": 0.0269,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 27% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2688,
+            "lexicalSignal": 0
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 10,
+          "source": "roadmap-notes.md",
+          "chunkId": "msnbdo33-pepbtn-chunk-1",
+          "appearedIn": "dense",
+          "denseRank": 10,
+          "denseSimilarity": 0.2464,
+          "denseDistance": 0.7536,
+          "lexicalRank": null,
+          "bm25Score": null,
+          "lexicalFieldHits": null,
+          "matchedTerms": [],
+          "originalUnionRank": 10,
+          "rerankedRank": 12,
+          "relevanceScore": 0.0246,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 0% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 25% · lexical 0% · found by dense retrieval only",
+          "features": {
+            "bodyCoverage": 0,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2464,
+            "lexicalSignal": 0
+          },
+          "reason": "below relevance floor 28%"
+        }
+      ],
+      "unionPresence": true,
+      "correctSourceRanks": {
+        "union": 2,
+        "rerank": 7,
+        "prune": null
+      },
+      "metrics": {
+        "dense": {
+          "top1": "pricing-2024.md",
+          "recallAt1": false,
+          "recallAt5": true,
+          "mrr": 0.5,
+          "expectedRank": 2,
+          "selectedCount": 5,
+          "relevantSent": 2,
+          "relevantContextRatio": 0.4,
+          "distractors": 3
+        },
+        "lexical": {
+          "top1": "onboarding-checklist.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "mrr": 0,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 0,
+          "relevantContextRatio": 0,
+          "distractors": 5
+        },
+        "rrf": {
+          "top1": "onboarding.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "mrr": 0,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "union": {
+          "top1": "pricing-2024.md",
+          "recallAt1": false,
+          "recallAt5": true,
+          "mrr": 0.5,
+          "expectedRank": 2,
+          "selectedCount": 5,
+          "relevantSent": 2,
+          "relevantContextRatio": 0.4,
+          "distractors": 3
+        },
+        "unionRerank": {
+          "top1": "onboarding.md",
+          "recallAt1": false,
+          "recallAt5": false,
+          "mrr": 0,
+          "expectedRank": null,
+          "selectedCount": 5,
+          "relevantSent": 0,
+          "relevantContextRatio": 0,
+          "distractors": 5
+        },
+        "unionRerankPrune": {
+          "top1": null,
+          "recallAt1": false,
+          "recallAt5": false,
+          "mrr": 0,
+          "expectedRank": null,
+          "selectedCount": 0,
+          "relevantSent": 0,
+          "relevantContextRatio": 0,
+          "distractors": 0
+        }
+      },
+      "generation": {
+        "unionRerankPrune": {
+          "outcome": "refused",
+          "refusalKind": "deterministic",
+          "correct": true,
+          "evidence": "insufficient",
+          "body": "No retrieved chunk cleared the retrieval threshold.",
+          "citations": [],
+          "inputTokens": 0,
+          "outputTokens": 0
+        }
+      }
+    },
+    {
+      "id": "D1",
+      "split": "DEV",
+      "question": "Where are Tracework web app builds deployed?",
+      "probe": "deployment wording",
+      "expectSources": [
+        "deployment-guide.md"
+      ],
+      "relevant": [
+        "deployment-guide.md"
+      ],
+      "denseSource": "hashed-dev-proxy",
+      "candidateLimit": 10,
+      "contextLimit": 5,
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.5351,
+          "semanticScore": 0.4104,
+          "matchedTerms": [
+            "tracework",
+            "web",
+            "app",
+            "builds"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.2032,
+          "semanticScore": 0.2047,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.1909,
+          "semanticScore": 0.1866,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.1748,
+          "semanticScore": 0.1629,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.167,
+          "semanticScore": 0.1514,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.1636,
+          "semanticScore": 0.1464,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "score": 0.1609,
+          "semanticScore": 0.1425,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.1378,
+          "semanticScore": 0.1086,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 1,
+          "semanticScore": 0,
+          "lexicalScore": 10.9297,
+          "matchedTerms": [
+            "tracework",
+            "web",
+            "app",
+            "builds"
+          ]
+        },
+        {
+          "rank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.1679,
+          "semanticScore": 0,
+          "lexicalScore": 1.8348,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 3,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.1679,
+          "semanticScore": 0,
+          "lexicalScore": 1.8348,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 4,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.1439,
+          "semanticScore": 0,
+          "lexicalScore": 1.5725,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 5,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.1252,
+          "semanticScore": 0,
+          "lexicalScore": 1.3682,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "score": 0.122,
+          "semanticScore": 0,
+          "lexicalScore": 1.3336,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 7,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.122,
+          "semanticScore": 0,
+          "lexicalScore": 1.3336,
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "rank": 8,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.1205,
+          "semanticScore": 0,
+          "lexicalScore": 1.3169,
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "rrfCandidates": [
+        {
+          "rank": 1,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "score": 0.5351,
+          "semanticScore": 0.4104,
+          "matchedTerms": [
+            "tracework",
+            "web",
+            "app",
+            "builds"
+          ],
+          "denseRank": 1,
+          "lexicalRank": 1,
+          "rrfScore": 0.032787
+        },
+        {
+          "rank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "score": 0.2032,
+          "semanticScore": 0.2047,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 2,
+          "lexicalRank": 2,
+          "rrfScore": 0.032258
+        },
+        {
+          "rank": 3,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "score": 0.1909,
+          "semanticScore": 0.1866,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 3,
+          "lexicalRank": 3,
+          "rrfScore": 0.031746
+        },
+        {
+          "rank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "score": 0.1748,
+          "semanticScore": 0.1629,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 4,
+          "lexicalRank": 5,
+          "rrfScore": 0.03101
+        },
+        {
+          "rank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "score": 0.167,
+          "semanticScore": 0.1514,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 5,
+          "lexicalRank": 4,
+          "rrfScore": 0.03101
+        },
+        {
+          "rank": 6,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "score": 0.1609,
+          "semanticScore": 0.1425,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 7,
+          "lexicalRank": 6,
+          "rrfScore": 0.030077
+        },
+        {
+          "rank": 7,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "score": 0.1636,
+          "semanticScore": 0.1464,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 6,
+          "lexicalRank": 8,
+          "rrfScore": 0.029857
+        },
+        {
+          "rank": 8,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "score": 0.1378,
+          "semanticScore": 0.1086,
+          "matchedTerms": [
+            "tracework"
+          ],
+          "denseRank": 8,
+          "lexicalRank": 7,
+          "rrfScore": 0.029631
+        }
+      ],
+      "unionCandidates": [
+        {
+          "unionRank": 1,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.4104,
+          "denseDistance": null,
+          "lexicalRank": 1,
+          "bm25Score": 10.9297,
+          "lexicalFieldHits": {
+            "body": 4,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "web",
+            "app",
+            "builds"
+          ]
+        },
+        {
+          "unionRank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.2047,
+          "denseDistance": null,
+          "lexicalRank": 2,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 3,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.1866,
+          "denseDistance": null,
+          "lexicalRank": 3,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.1629,
+          "denseDistance": null,
+          "lexicalRank": 5,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.1514,
+          "denseDistance": null,
+          "lexicalRank": 4,
+          "bm25Score": 1.5725,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 6,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.1464,
+          "denseDistance": null,
+          "lexicalRank": 8,
+          "bm25Score": 1.3169,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 7,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 7,
+          "denseSimilarity": 0.1425,
+          "denseDistance": null,
+          "lexicalRank": 6,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 8,
+          "denseSimilarity": 0.1086,
+          "denseDistance": null,
+          "lexicalRank": 7,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ]
+        }
+      ],
+      "rerankedCandidates": [
+        {
+          "unionRank": 1,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.4104,
+          "denseDistance": null,
+          "lexicalRank": 1,
+          "bm25Score": 10.9297,
+          "lexicalFieldHits": {
+            "body": 4,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "web",
+            "app",
+            "builds"
+          ],
+          "originalUnionRank": 1,
+          "rerankedRank": 1,
+          "relevanceScore": 0.5485,
+          "relevanceLabel": "high",
+          "relevanceReason": "body coverage 80% · title/path coverage 0% · exact title/path no · phrase coverage 75% · dense 41% · lexical 100% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.8,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0.75,
+            "denseSignal": 0.4104,
+            "lexicalSignal": 1
+          }
+        },
+        {
+          "unionRank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.2047,
+          "denseDistance": null,
+          "lexicalRank": 2,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 2,
+          "rerankedRank": 2,
+          "relevanceScore": 0.1256,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 20% · lexical 17% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2047,
+            "lexicalSignal": 0.1679
+          }
+        },
+        {
+          "unionRank": 3,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.1866,
+          "denseDistance": null,
+          "lexicalRank": 3,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 3,
+          "rerankedRank": 3,
+          "relevanceScore": 0.1238,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 19% · lexical 17% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1866,
+            "lexicalSignal": 0.1679
+          }
+        },
+        {
+          "unionRank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.1514,
+          "denseDistance": null,
+          "lexicalRank": 4,
+          "bm25Score": 1.5725,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 4,
+          "relevanceScore": 0.1167,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 15% · lexical 14% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1514,
+            "lexicalSignal": 0.1439
+          }
+        },
+        {
+          "unionRank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.1629,
+          "denseDistance": null,
+          "lexicalRank": 5,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 5,
+          "relevanceScore": 0.1151,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 16% · lexical 13% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1629,
+            "lexicalSignal": 0.1252
+          }
+        },
+        {
+          "unionRank": 6,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.1464,
+          "denseDistance": null,
+          "lexicalRank": 8,
+          "bm25Score": 1.3169,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 6,
+          "rerankedRank": 6,
+          "relevanceScore": 0.1127,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 15% · lexical 12% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1464,
+            "lexicalSignal": 0.1205
+          }
+        },
+        {
+          "unionRank": 7,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 7,
+          "denseSimilarity": 0.1425,
+          "denseDistance": null,
+          "lexicalRank": 6,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 7,
+          "rerankedRank": 7,
+          "relevanceScore": 0.1125,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 14% · lexical 12% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1425,
+            "lexicalSignal": 0.122
+          }
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 8,
+          "denseSimilarity": 0.1086,
+          "denseDistance": null,
+          "lexicalRank": 7,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 8,
+          "rerankedRank": 8,
+          "relevanceScore": 0.1092,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 11% · lexical 12% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1086,
+            "lexicalSignal": 0.122
+          }
+        }
+      ],
+      "contextSelected": [
+        {
+          "unionRank": 1,
+          "source": "deployment-guide.md",
+          "chunkId": "msnbdo32-710rxv-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 1,
+          "denseSimilarity": 0.4104,
+          "denseDistance": null,
+          "lexicalRank": 1,
+          "bm25Score": 10.9297,
+          "lexicalFieldHits": {
+            "body": 4,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework",
+            "web",
+            "app",
+            "builds"
+          ],
+          "originalUnionRank": 1,
+          "rerankedRank": 1,
+          "relevanceScore": 0.5485,
+          "relevanceLabel": "high",
+          "relevanceReason": "body coverage 80% · title/path coverage 0% · exact title/path no · phrase coverage 75% · dense 41% · lexical 100% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.8,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0.75,
+            "denseSignal": 0.4104,
+            "lexicalSignal": 1
+          }
+        }
+      ],
+      "contextRejected": [
+        {
+          "unionRank": 2,
+          "source": "meeting-notes.md",
+          "chunkId": "msnbdo31-mhsina-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 2,
+          "denseSimilarity": 0.2047,
+          "denseDistance": null,
+          "lexicalRank": 2,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 2,
+          "rerankedRank": 2,
+          "relevanceScore": 0.1256,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 20% · lexical 17% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.2047,
+            "lexicalSignal": 0.1679
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 3,
+          "source": "architecture.md",
+          "chunkId": "msnbdo31-t6082d-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 3,
+          "denseSimilarity": 0.1866,
+          "denseDistance": null,
+          "lexicalRank": 3,
+          "bm25Score": 1.8348,
+          "lexicalFieldHits": {
+            "body": 2,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 3,
+          "rerankedRank": 3,
+          "relevanceScore": 0.1238,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 19% · lexical 17% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1866,
+            "lexicalSignal": 0.1679
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 5,
+          "source": "changelog.md",
+          "chunkId": "msnbdo32-0lsevi-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 5,
+          "denseSimilarity": 0.1514,
+          "denseDistance": null,
+          "lexicalRank": 4,
+          "bm25Score": 1.5725,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 5,
+          "rerankedRank": 4,
+          "relevanceScore": 0.1167,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 15% · lexical 14% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1514,
+            "lexicalSignal": 0.1439
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 4,
+          "source": "pricing-history.md",
+          "chunkId": "msnbdo32-rboc1q-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 4,
+          "denseSimilarity": 0.1629,
+          "denseDistance": null,
+          "lexicalRank": 5,
+          "bm25Score": 1.3682,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 4,
+          "rerankedRank": 5,
+          "relevanceScore": 0.1151,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 16% · lexical 13% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1629,
+            "lexicalSignal": 0.1252
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 6,
+          "source": "lite-plan.md",
+          "chunkId": "msnbdo32-ioqc7r-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 6,
+          "denseSimilarity": 0.1464,
+          "denseDistance": null,
+          "lexicalRank": 8,
+          "bm25Score": 1.3169,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 6,
+          "rerankedRank": 6,
+          "relevanceScore": 0.1127,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 15% · lexical 12% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1464,
+            "lexicalSignal": 0.1205
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 7,
+          "source": "pricing-2024.md",
+          "chunkId": "msnbdo2z-ewq36y-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 7,
+          "denseSimilarity": 0.1425,
+          "denseDistance": null,
+          "lexicalRank": 6,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 7,
+          "rerankedRank": 7,
+          "relevanceScore": 0.1125,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 14% · lexical 12% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1425,
+            "lexicalSignal": 0.122
+          },
+          "reason": "below relevance floor 28%"
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-2025.md",
+          "chunkId": "msnbdo30-k9iujn-chunk-1",
+          "appearedIn": "both",
+          "denseRank": 8,
+          "denseSimilarity": 0.1086,
+          "denseDistance": null,
+          "lexicalRank": 7,
+          "bm25Score": 1.3336,
+          "lexicalFieldHits": {
+            "body": 1,
+            "title": 0,
+            "path": 0
+          },
+          "matchedTerms": [
+            "tracework"
+          ],
+          "originalUnionRank": 8,
+          "rerankedRank": 8,
+          "relevanceScore": 0.1092,
+          "relevanceLabel": "low",
+          "relevanceReason": "body coverage 20% · title/path coverage 0% · exact title/path no · phrase coverage 0% · dense 11% · lexical 12% · found by dense and lexical retrieval",
+          "features": {
+            "bodyCoverage": 0.2,
+            "titlePathCoverage": 0,
+            "exactTitlePathMatch": 0,
+            "phraseCoverage": 0,
+            "denseSignal": 0.1086,
+            "lexicalSignal": 0.122
+          },
+          "reason": "below relevance floor 28%"
+        }
+      ],
+      "unionPresence": true,
+      "correctSourceRanks": {
+        "union": 1,
+        "rerank": 1,
+        "prune": 1
+      },
+      "metrics": {
+        "dense": {
+          "top1": "deployment-guide.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "lexical": {
+          "top1": "deployment-guide.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "rrf": {
+          "top1": "deployment-guide.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "union": {
+          "top1": "deployment-guide.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "unionRerank": {
+          "top1": "deployment-guide.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 5,
+          "relevantSent": 1,
+          "relevantContextRatio": 0.2,
+          "distractors": 4
+        },
+        "unionRerankPrune": {
+          "top1": "deployment-guide.md",
+          "recallAt1": true,
+          "recallAt5": true,
+          "mrr": 1,
+          "expectedRank": 1,
+          "selectedCount": 1,
+          "relevantSent": 1,
+          "relevantContextRatio": 1,
+          "distractors": 0
+        }
+      },
+      "generation": {
+        "unionRerankPrune": {
+          "outcome": "answered",
+          "correct": true,
+          "evidence": "partial",
+          "body": "Tracework web app builds are deployed to Vercel from the main branch. [1]",
+          "model": "gpt-5.6-luna",
+          "citations": [
+            "deployment-guide.md"
+          ],
+          "invalidCitationNumbers": [],
+          "malformedCitationMarkers": [],
+          "inputTokens": 258,
+          "outputTokens": 23,
+          "totalTokens": 281
+        }
+      }
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import { buildGroundedContext, buildInsufficientAnswer, classifyGeneratedAnswer,
 import { GenerationError, requestGroundedAnswer } from './lib/generation'
 import { buildLexicalIndex, searchLexical, toLexicalResults } from './lib/lexical'
 import { fuseRankings, RRF_K } from './lib/fusion'
+import { buildCandidateUnion, DEFAULT_PHASE5B_CANDIDATE_LIMIT, DEFAULT_PHASE5B_CONTEXT_LIMIT, pruneCandidates, rerank, type RankedCandidate } from './lib/reranker'
 import { NeuralEmbeddingError, requestNeuralEmbeddings } from './lib/semantic'
 import { PGVECTOR_DIMENSIONS, PgvectorError, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
@@ -112,6 +113,51 @@ function ComparisonColumn({
   )
 }
 
+interface Phase5BListItem {
+  id: string
+  rank: number
+  title: string
+  detail: string
+  score?: string
+  status?: string
+  isRejected?: boolean
+}
+
+function Phase5BList({
+  title,
+  description,
+  items,
+  emptyMessage,
+  onSelect,
+}: {
+  title: string
+  description: string
+  items: Phase5BListItem[]
+  emptyMessage: string
+  onSelect: (chunkId: string) => void
+}) {
+  return (
+    <div className="phase5b-column">
+      <div className="phase5b-column-heading">
+        <h3>{title}</h3>
+        <span>{items.length ? `${items.length} rows` : 'empty'}</span>
+      </div>
+      <p>{description}</p>
+      {items.length ? <ol className="phase5b-list">
+        {items.map((item) => (
+          <li key={`${title}-${item.id}`} className={item.isRejected ? 'is-rejected' : ''}>
+            <button type="button" onClick={() => onSelect(item.id)}>
+              <span className="phase5b-rank">{String(item.rank).padStart(2, '0')}</span>
+              <span className="phase5b-row-copy"><strong>{item.title}</strong><small>{item.detail}</small></span>
+              <span className="phase5b-row-score">{item.score ?? item.status ?? '—'}</span>
+            </button>
+          </li>
+        ))}
+      </ol> : <div className="phase5b-empty">{emptyMessage}</div>}
+    </div>
+  )
+}
+
 function App() {
   const [documents, setDocuments] = useState<DocumentRecord[]>(loadDocuments)
   const [query, setQuery] = useState(INITIAL_QUERY)
@@ -129,7 +175,9 @@ function App() {
   const [neuralState, setNeuralState] = useState<NeuralState>({ status: 'idle', model: null, progress: 0, message: null })
   const [pgvectorResults, setPgvectorResults] = useState<SearchResult[]>([])
   const [pgvectorState, setPgvectorState] = useState<PgvectorState>({ status: 'idle', database: null, candidateCount: 0, topK: 5, message: null })
-  const [topK, setTopK] = useState(5)
+  const [topK, setTopK] = useState(DEFAULT_PHASE5B_CONTEXT_LIMIT)
+  const [candidateLimit, setCandidateLimit] = useState(DEFAULT_PHASE5B_CANDIDATE_LIMIT)
+  const [pruningEnabled, setPruningEnabled] = useState(false)
   const [sourceKindFilter, setSourceKindFilter] = useState<SourceKind | 'all'>('all')
   const [answerMode, setAnswerMode] = useState<AnswerMode>('retrieval')
   const [generationState, setGenerationState] = useState<GenerationState>({ status: 'idle', model: null, message: null })
@@ -155,11 +203,11 @@ function App() {
   }, [notice])
 
   const hashedResults = useMemo(() => searchDocuments(documents, activeQuery, { engine: 'hashed' }), [documents, activeQuery])
-  const neuralResults = useMemo(() => searchDocuments(documents, activeQuery, { engine: 'neural', queryVector: neuralQueryVector ?? undefined }), [documents, activeQuery, neuralQueryVector])
+  const neuralResults = useMemo(() => searchDocuments(documents, activeQuery, { engine: 'neural', limit: candidateLimit, queryVector: neuralQueryVector ?? undefined }), [documents, activeQuery, candidateLimit, neuralQueryVector])
   const lexicalIndex = useMemo(() => buildLexicalIndex(documents), [documents])
   const lexicalResults = useMemo(
-    () => toLexicalResults(searchLexical(lexicalIndex, activeQuery, 8), documents),
-    [documents, lexicalIndex, activeQuery],
+    () => toLexicalResults(searchLexical(lexicalIndex, activeQuery, candidateLimit), documents),
+    [documents, lexicalIndex, activeQuery, candidateLimit],
   )
   // The dense side of a fusion is whichever real dense ranking exists: the
   // database ranking when pgvector has run, the local neural ranking otherwise.
@@ -169,21 +217,44 @@ function App() {
     () => fuseRankings({ dense: denseResultsForFusion, lexical: lexicalResults }, 8),
     [denseResultsForFusion, lexicalResults],
   )
-  const results = engine === 'neural'
+  const retrievalResults = engine === 'neural'
     ? neuralResults
     : engine === 'pgvector'
       ? pgvectorResults
       : engine === 'lexical'
         ? lexicalResults
         : engine === 'hybrid'
-          ? hybridResults
+        ? hybridResults
           : hashedResults
+  const phase5bDenseResults = engine === 'rerank' ? neuralResults : neuralResults.length ? neuralResults : pgvectorResults
+  const phase5bUnion = useMemo(
+    () => buildCandidateUnion({ dense: phase5bDenseResults, lexical: lexicalResults, limit: candidateLimit }),
+    [candidateLimit, lexicalResults, phase5bDenseResults],
+  )
+  const phase5bRankedCandidates = useMemo(
+    () => rerank(activeQuery, phase5bUnion),
+    [activeQuery, phase5bUnion],
+  )
+  const phase5bPruning = useMemo(
+    () => pruneCandidates(phase5bRankedCandidates, { maxChunks: topK }),
+    [phase5bRankedCandidates, topK],
+  )
+  const phase5bContextCandidates = pruningEnabled ? phase5bPruning.selected : phase5bRankedCandidates
+  const phase5bContextResults = phase5bContextCandidates.map((candidate) => candidate.result)
+  const phase5bRankedResults = phase5bRankedCandidates.map((candidate) => candidate.result)
+  const results = engine === 'rerank' ? phase5bContextResults : retrievalResults
+  const inspectableResults = engine === 'rerank' ? phase5bRankedResults : results
+  const phase5bDecisionByChunkId = useMemo(
+    () => new Map(phase5bPruning.decisions.map((decision) => [decision.candidate.result.chunk.id, decision])),
+    [phase5bPruning],
+  )
   const answer = useMemo(() => buildAnswer(activeQuery, results), [activeQuery, results])
   const evidenceAssessment = useMemo(() => evaluateEvidence(activeQuery, results), [activeQuery, results])
   const groundedPreviewContext = useMemo(() => buildGroundedContext(activeQuery, results, {
-    retrievalEngine: engine,
-    requestedTopK: engine === 'pgvector' ? topK : 8,
-  }), [activeQuery, engine, results, topK])
+    retrievalEngine: engine === 'rerank' ? 'union-rerank' : engine,
+    requestedTopK: engine === 'rerank' ? phase5bContextResults.length : engine === 'pgvector' ? topK : 8,
+    limit: engine === 'rerank' ? phase5bContextResults.length : undefined,
+  }), [activeQuery, engine, phase5bContextResults.length, results, topK])
   const contextForInspector: GroundedContext = groundedSession?.context ?? groundedPreviewContext
   const groundedAnswer = groundedSession?.answer ?? null
   const groundedContextWasSent = groundedSession !== null && generationState.status !== 'blocked'
@@ -209,7 +280,13 @@ function App() {
         : generationState.status === 'error'
           ? generationState.message ?? 'The generation stage failed before an answer was returned.'
           : 'Choose grounded answer mode and run a question to send retrieved evidence to the generation model.')
-  const selectedResult = results.find((result) => result.chunk.id === selectedChunkId) ?? results[0]
+  const selectedResult = inspectableResults.find((result) => result.chunk.id === selectedChunkId) ?? inspectableResults[0]
+  const selectedPhase5bCandidate: RankedCandidate | undefined = engine === 'rerank'
+    ? phase5bRankedCandidates.find((candidate) => candidate.result.chunk.id === selectedResult?.chunk.id)
+    : undefined
+  const selectedPhase5bDecision = selectedPhase5bCandidate
+    ? phase5bDecisionByChunkId.get(selectedPhase5bCandidate.result.chunk.id)
+    : undefined
   const chunkCount = documents.reduce((total, document) => total + document.chunks.length, 0)
   const wordCount = documents.reduce((total, document) => total + tokenize(document.content).length, 0)
   const indexedTerms = new Set(documents.flatMap((document) => tokenize(document.content))).size
@@ -217,22 +294,22 @@ function App() {
   const activeStatus = engine === 'pgvector' ? pgvectorState.status : neuralState.status
   const activeStatusMessage = engine === 'pgvector'
     ? pgvectorState.message ?? (pgvectorState.status === 'error' ? 'pgvector provider unavailable' : 'database search is ready to run')
-    : neuralState.message ?? (neuralState.status === 'error' ? 'neural provider unavailable' : engine === 'neural' ? `${missingNeuralEmbeddings} chunks waiting for neural vectors` : 'local and credential-free')
+    : neuralState.message ?? (neuralState.status === 'error' ? 'neural provider unavailable' : engine === 'neural' || engine === 'rerank' ? `${missingNeuralEmbeddings} chunks waiting for neural vectors` : 'local and credential-free')
   const hasPgvectorSearch = pgvectorState.status === 'ready'
-  const vectorStepComplete = engine === 'pgvector' ? pgvectorState.status === 'ready' : engine === 'neural' ? neuralState.status === 'ready' : Boolean(chunkCount)
-  const vectorStepActive = engine === 'pgvector' ? ['syncing', 'searching'].includes(pgvectorState.status) : engine === 'neural' && neuralState.status === 'indexing'
-  const vectorStepLabel = engine === 'pgvector' ? 'pgvector' : engine === 'neural' ? 'neural embed' : 'embed'
+  const vectorStepComplete = engine === 'pgvector' ? pgvectorState.status === 'ready' : engine === 'neural' || engine === 'rerank' ? neuralState.status === 'ready' : Boolean(chunkCount)
+  const vectorStepActive = engine === 'pgvector' ? ['syncing', 'searching'].includes(pgvectorState.status) : (engine === 'neural' || engine === 'rerank') && neuralState.status === 'indexing'
+  const vectorStepLabel = engine === 'pgvector' ? 'pgvector' : engine === 'rerank' ? 'neural + rerank' : engine === 'neural' ? 'neural embed' : 'embed'
   const topPgvectorResult = pgvectorResults[0]
 
   useEffect(() => {
-    if (!results.length) {
+    if (!inspectableResults.length) {
       setSelectedChunkId(null)
       return
     }
-    if (!selectedChunkId || !results.some((result) => result.chunk.id === selectedChunkId)) {
-      setSelectedChunkId(results[0].chunk.id)
+    if (!selectedChunkId || !inspectableResults.some((result) => result.chunk.id === selectedChunkId)) {
+      setSelectedChunkId(inspectableResults[0].chunk.id)
     }
-  }, [results, selectedChunkId])
+  }, [inspectableResults, selectedChunkId])
 
   const showNotice = (tone: 'success' | 'info' | 'error', text: string) => setNotice({ tone, text })
 
@@ -423,11 +500,16 @@ function App() {
     })
   }
 
-  const runGroundedGeneration = async (nextQuery: string, retrievedResults: SearchResult[]) => {
+  const runGroundedGeneration = async (
+    nextQuery: string,
+    retrievedResults: SearchResult[],
+    options: { retrievalEngine?: string; contextLimit?: number; requestedTopK?: number } = {},
+  ) => {
     const assessment = evaluateEvidence(nextQuery, retrievedResults)
     const context = buildGroundedContext(nextQuery, retrievedResults, {
-      retrievalEngine: retrievedResults[0]?.engine ?? engine,
-      requestedTopK: engine === 'pgvector' ? topK : 8,
+      retrievalEngine: options.retrievalEngine ?? retrievedResults[0]?.engine ?? engine,
+      requestedTopK: options.requestedTopK ?? (engine === 'pgvector' ? topK : 8),
+      limit: options.contextLimit ?? 5,
     })
     const session: GroundedSession = { context, assessment, answer: null }
     setGroundedSession(session)
@@ -517,7 +599,16 @@ function App() {
     }
 
     let retrievedResults: SearchResult[] | null = null
-    if (engine === 'pgvector' || compareMode) {
+    if (engine === 'rerank') {
+      const dense = await runNeuralRetrieval(nextQuery)
+      if (dense) {
+        const lexical = toLexicalResults(searchLexical(lexicalIndex, nextQuery, candidateLimit), documents)
+        const union = buildCandidateUnion({ dense, lexical, limit: candidateLimit })
+        const ranked = rerank(nextQuery, union)
+        const contextCandidates = pruningEnabled ? pruneCandidates(ranked, { maxChunks: topK }).selected : ranked
+        retrievedResults = contextCandidates.map((candidate) => candidate.result)
+      }
+    } else if (engine === 'pgvector' || compareMode) {
       retrievedResults = await runPgvectorRetrieval(nextQuery)
     } else if (engine === 'neural') {
       retrievedResults = await runNeuralRetrieval(nextQuery)
@@ -526,7 +617,15 @@ function App() {
       setActiveQuery(nextQuery)
     }
 
-    if (shouldGenerate && retrievedResults) await runGroundedGeneration(nextQuery, retrievedResults)
+    if (shouldGenerate && retrievedResults) {
+      await runGroundedGeneration(nextQuery, retrievedResults, engine === 'rerank'
+        ? {
+            retrievalEngine: 'union-rerank',
+            contextLimit: retrievedResults.length,
+            requestedTopK: pruningEnabled ? topK : retrievedResults.length,
+          }
+        : undefined)
+    }
   }
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -615,6 +714,10 @@ function App() {
       void runPgvectorRetrieval(activeQuery)
       return
     }
+    if (nextEngine === 'rerank') {
+      void runNeuralRetrieval(activeQuery)
+      return
+    }
     void runNeuralRetrieval(activeQuery)
   }
 
@@ -635,6 +738,12 @@ function App() {
     if (![1, 3, 5, 10, 20].includes(nextTopK)) return
     setTopK(nextTopK)
     if (engine === 'pgvector' || compareMode) void runPgvectorRetrieval(activeQuery, nextTopK)
+  }
+
+  const handleCandidateLimitChange = (nextValue: string) => {
+    const nextLimit = Number(nextValue)
+    if (![5, 8, 10, 15, 20].includes(nextLimit)) return
+    setCandidateLimit(nextLimit)
   }
 
   const handleSourceKindFilterChange = (nextValue: string) => {
@@ -732,7 +841,7 @@ function App() {
           </div>
 
           <div className="rail-footer">
-            <div><span>engine</span><strong>{engine === 'pgvector' ? 'supabase pgvector' : engine === 'neural' ? neuralState.model ?? 'local neural embeddings' : engine === 'lexical' ? 'bm25 lexical index' : engine === 'hybrid' ? `rrf / ${denseSourceLabel} + bm25` : compareMode ? 'local neural + pgvector' : 'local hashed vectors'}</strong></div>
+            <div><span>engine</span><strong>{engine === 'pgvector' ? 'supabase pgvector' : engine === 'neural' ? neuralState.model ?? 'local neural embeddings' : engine === 'lexical' ? 'bm25 lexical index' : engine === 'hybrid' ? `rrf / ${denseSourceLabel} + bm25` : engine === 'rerank' ? 'union / transparent-v1' : compareMode ? 'local neural + pgvector' : 'local hashed vectors'}</strong></div>
             <div><span>vocabulary</span><strong>{indexedTerms.toLocaleString()} terms</strong></div>
             <div><span>memory</span><strong>{formatBytes(new Blob([JSON.stringify(documents)]).size)}</strong></div>
           </div>
@@ -765,6 +874,7 @@ function App() {
                   <button className={`engine-option ${engine === 'pgvector' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('pgvector')}>pgvector</button>
                   <button className={`engine-option ${engine === 'lexical' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('lexical')}>lexical bm25</button>
                   <button className={`engine-option ${engine === 'hybrid' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('hybrid')}>hybrid rrf</button>
+                  <button className={`engine-option ${engine === 'rerank' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('rerank')}>union rerank</button>
                   <button className={`compare-button ${compareMode ? 'is-active' : ''}`} type="button" onClick={handleCompare} disabled={neuralState.status === 'indexing' || ['syncing', 'searching'].includes(pgvectorState.status)}>compare</button>
                 </div>
                 <span className="control-divider" aria-hidden="true" />
@@ -776,7 +886,7 @@ function App() {
               </div>
             </div>
             <div className="neural-status-row" role="status" aria-live="polite">
-              <span className="method-label">{engine === 'pgvector' ? 'pgvector / database cosine search' : engine === 'neural' ? 'local neural / semantic similarity' : engine === 'lexical' ? 'lexical / bm25 over title, path, and body' : engine === 'hybrid' ? `hybrid / reciprocal rank fusion of ${denseSourceLabel} + bm25` : 'baseline / hashed vector + term overlap'}</span>
+              <span className="method-label">{engine === 'pgvector' ? 'pgvector / database cosine search' : engine === 'neural' ? 'local neural / semantic similarity' : engine === 'lexical' ? 'lexical / bm25 over title, path, and body' : engine === 'hybrid' ? `hybrid / reciprocal rank fusion of ${denseSourceLabel} + bm25` : engine === 'rerank' ? 'phase 5B / dense + lexical union / relevance-only rerank' : 'baseline / hashed vector + term overlap'}</span>
               <span className={`neural-state-label is-${activeStatus}`}>
                 {activeStatus === 'indexing'
                   ? `${neuralState.progress}% / ${activeStatusMessage}`
@@ -854,6 +964,105 @@ function App() {
               </div>
             </div>
             <p className="grounded-debug-note">Reciprocal rank fusion scores each chunk as the sum of 1 / (k + rank) across both rankings, with k = {RRF_K}. A chunk found by only one ranker keeps a single contribution, which is why a strong lexical-only hit can still lose to a chunk both rankers placed moderately well. BM25 scores are unbounded and are not comparable to cosine similarity.</p>
+          </section>}
+
+          {engine === 'rerank' && <section className="phase5b-section" aria-labelledby="phase5b-title">
+            <div className="phase5b-heading">
+              <div>
+                <div className="section-marker"><span className="marker-line" /> phase 5B / candidate inspection <span className="marker-line short" /></div>
+                <h2 id="phase5b-title">Keep the evidence union intact.</h2>
+              </div>
+              <span className="phase5b-badge">transparent-v1 / relevance only</span>
+            </div>
+            <div className="phase5b-controls">
+              <label><span>dense / lexical top N</span><select value={candidateLimit} onChange={(event) => handleCandidateLimitChange(event.target.value)}><option value="5">5</option><option value="8">8</option><option value="10">10</option><option value="15">15</option><option value="20">20</option></select></label>
+              <label><span>context top K</span><select value={topK} onChange={(event) => handleTopKChange(event.target.value)}><option value="1">1</option><option value="3">3</option><option value="5">5</option><option value="10">10</option><option value="20">20</option></select></label>
+              <label className="phase5b-toggle"><input type="checkbox" checked={pruningEnabled} onChange={(event) => setPruningEnabled(event.target.checked)} /><span>prune context</span><small>{pruningEnabled ? 'relevance floor + context cap' : 'send the full reranked pool'}</small></label>
+            </div>
+            {!phase5bDenseResults.length && <div className="phase5b-warning" role="status">The lexical side is ready, but the dense side has no neural vectors yet. Run the query again after configuring the neural provider to measure the full union.</div>}
+            <div className="phase5b-stat-grid">
+              <div><span>candidates considered</span><strong>{phase5bUnion.length}</strong><small>dense {Math.min(candidateLimit, phase5bDenseResults.length)} + lexical {Math.min(candidateLimit, lexicalResults.length)} before dedupe</small></div>
+              <div><span>reranked candidates</span><strong>{phase5bRankedCandidates.length}</strong><small>every union row keeps its original ranks</small></div>
+              <div><span>context selected</span><strong>{phase5bContextCandidates.length}</strong><small>{pruningEnabled ? 'after relevance pruning' : 'no pruning applied'}</small></div>
+              <div><span>chunks rejected</span><strong>{pruningEnabled ? phase5bPruning.rejected.length : 0}</strong><small>{pruningEnabled ? 'inspect rejection reasons below' : 'full reranked pool remains available'}</small></div>
+            </div>
+            <div className="phase5b-lists">
+              <Phase5BList
+                title={`DENSE / ${phase5bDenseResults[0]?.engine ?? 'neural'}`}
+                description="Raw dense order. No fusion or reranking is applied here."
+                items={phase5bDenseResults.slice(0, candidateLimit).map((result, index) => ({
+                  id: result.chunk.id,
+                  rank: index + 1,
+                  title: result.document.title,
+                  detail: `chunk ${String(result.chunk.index + 1).padStart(2, '0')} · similarity ${result.score.toFixed(4)}`,
+                  score: `${Math.round(result.score * 100)}%`,
+                }))}
+                emptyMessage="No dense candidates."
+                onSelect={setSelectedChunkId}
+              />
+              <Phase5BList
+                title="LEXICAL / BM25"
+                description="Raw lexical order, including title and path field hits."
+                items={lexicalResults.slice(0, candidateLimit).map((result, index) => ({
+                  id: result.chunk.id,
+                  rank: index + 1,
+                  title: result.document.title,
+                  detail: `bm25 ${result.lexicalScore?.toFixed(4) ?? 'n/a'} · matched ${result.matchedTerms.join(', ') || 'none'}`,
+                  score: `${Math.round(result.score * 100)}%`,
+                }))}
+                emptyMessage="No lexical candidates."
+                onSelect={setSelectedChunkId}
+              />
+              <Phase5BList
+                title="UNION / DEDUPED"
+                description="First-seen inspection order. A chunk appears once, with both rankers' metadata attached."
+                items={phase5bUnion.map((candidate) => ({
+                  id: candidate.result.chunk.id,
+                  rank: candidate.unionRank,
+                  title: candidate.result.document.title,
+                  detail: `dense ${candidate.retrieval.denseRank ?? '—'} · lexical ${candidate.retrieval.lexicalRank ?? '—'} · ${candidate.retrieval.appearedIn}`,
+                  score: candidate.retrieval.appearedIn,
+                }))}
+                emptyMessage="The candidate union is empty."
+                onSelect={setSelectedChunkId}
+              />
+              <Phase5BList
+                title="RERANKED / RELEVANCE"
+                description="Every candidate is scored for this question only. Trust, recency, and contradiction are deliberately absent."
+                items={phase5bRankedCandidates.map((candidate) => {
+                  const decision = phase5bDecisionByChunkId.get(candidate.result.chunk.id)
+                  return {
+                    id: candidate.result.chunk.id,
+                    rank: candidate.rerankedRank,
+                    title: candidate.result.document.title,
+                    detail: `from union #${candidate.originalUnionRank} · dense ${candidate.retrieval.denseRank ?? '—'} · lexical ${candidate.retrieval.lexicalRank ?? '—'}`,
+                    score: `${Math.round(candidate.relevanceScore * 100)}%`,
+                    status: pruningEnabled ? decision?.selected ? 'selected' : 'rejected' : candidate.relevanceLabel,
+                    isRejected: pruningEnabled && decision ? !decision.selected : false,
+                  }
+                })}
+                emptyMessage="Nothing was reranked."
+                onSelect={setSelectedChunkId}
+              />
+              <Phase5BList
+                title="CONTEXT / SELECTED"
+                description={pruningEnabled ? 'The separate pruning decision sent only these rows toward generation.' : 'Pruning is off: the complete reranked pool remains available to generation.'}
+                items={phase5bContextCandidates.map((candidate, index) => ({
+                  id: candidate.result.chunk.id,
+                  rank: index + 1,
+                  title: candidate.result.document.title,
+                  detail: `rerank #${candidate.rerankedRank} · ${candidate.relevanceReason}`,
+                  score: `[${index + 1}] ${Math.round(candidate.relevanceScore * 100)}%`,
+                }))}
+                emptyMessage="No candidates cleared the context selection floor. Grounded generation will refuse."
+                onSelect={setSelectedChunkId}
+              />
+            </div>
+            {pruningEnabled && phase5bPruning.rejected.length ? <div className="phase5b-rejection-log">
+              <span className="phase5b-rejection-label">rejection log</span>
+              {phase5bPruning.rejected.map((decision) => <button key={decision.candidate.result.chunk.id} type="button" onClick={() => setSelectedChunkId(decision.candidate.result.chunk.id)}><strong>{decision.candidate.result.document.title}</strong><span>rerank #{decision.candidate.rerankedRank} · {decision.reason}</span></button>)}
+            </div> : null}
+            <p className="grounded-debug-note">The reranker is a deterministic relevance experiment, not a source-trust, recency, or contradiction model. Use the inspector to see why a row moved from its union position to its new rank.</p>
           </section>}
 
           {answerMode === 'grounded' && <section className="grounded-debug-section" aria-labelledby="grounded-debug-title">
@@ -1005,6 +1214,22 @@ function App() {
               {selectedResult.engine !== 'pgvector' && <div className="score-row"><span>{selectedResult.engine === 'neural' ? 'term diagnostic' : 'term overlap'}</span><strong>{Math.round(selectedResult.keywordScore * 100)}%</strong><span className="score-track"><span className="is-secondary" style={{ width: `${Math.round(selectedResult.keywordScore * 100)}%` }} /></span></div>}
             </div>
 
+            {selectedPhase5bCandidate && <div className="inspector-section phase5b-inspector-section">
+              <div className="inspector-label"><span>phase 5B relevance</span><span>{selectedPhase5bDecision?.selected ? 'context selected' : pruningEnabled ? 'context rejected' : 'full pool'}</span></div>
+              <div className="phase5b-inspector-score"><strong>{Math.round(selectedPhase5bCandidate.relevanceScore * 100)}%</strong><span className={`phase5b-label is-${selectedPhase5bCandidate.relevanceLabel}`}>{selectedPhase5bCandidate.relevanceLabel}</span></div>
+              <div className="score-track"><span style={{ width: `${Math.round(selectedPhase5bCandidate.relevanceScore * 100)}%` }} /></div>
+              <dl className="phase5b-inspector-grid">
+                <div><dt>union rank</dt><dd>#{selectedPhase5bCandidate.originalUnionRank}</dd></div>
+                <div><dt>reranked rank</dt><dd>#{selectedPhase5bCandidate.rerankedRank}</dd></div>
+                <div><dt>dense rank</dt><dd>{selectedPhase5bCandidate.retrieval.denseRank ?? 'absent'}</dd></div>
+                <div><dt>lexical rank</dt><dd>{selectedPhase5bCandidate.retrieval.lexicalRank ?? 'absent'}</dd></div>
+                <div><dt>candidate pool</dt><dd>{selectedPhase5bCandidate.retrieval.appearedIn}</dd></div>
+                <div><dt>context</dt><dd>{selectedPhase5bDecision?.selected ? 'selected' : pruningEnabled ? 'rejected' : 'not pruned'}</dd></div>
+              </dl>
+              <p className="phase5b-reason">{selectedPhase5bCandidate.relevanceReason}</p>
+              {selectedPhase5bDecision && !selectedPhase5bDecision.selected && <p className="phase5b-rejection-reason">pruning: {selectedPhase5bDecision.reason}</p>}
+            </div>}
+
             <div className="inspector-section provenance-section">
               <div className="inspector-label"><span>provenance</span><span>stable</span></div>
               <dl>
@@ -1015,7 +1240,7 @@ function App() {
               </dl>
             </div>
 
-            <div className="inspector-note"><Icon name="link" size={16} /><span>{selectedResult.engine === 'pgvector' ? 'PostgreSQL ranked this stored embedding with cosine distance. The passage and source metadata still determine whether the result is useful.' : selectedResult.engine === 'neural' ? 'Neural similarity helps find related wording, but it is not proof. Inspect the source passage before trusting the grounded draft.' : 'Hashed retrieval is the baseline: fast and local, but more dependent on shared words. Answer text is extractive in this first slice.'}</span></div>
+            <div className="inspector-note"><Icon name="link" size={16} /><span>{engine === 'rerank' ? 'This row was selected from the dense + lexical union by a relevance-only score. The score does not decide whether the source is trustworthy, current, or true.' : selectedResult.engine === 'pgvector' ? 'PostgreSQL ranked this stored embedding with cosine distance. The passage and source metadata still determine whether the result is useful.' : selectedResult.engine === 'neural' ? 'Neural similarity helps find related wording, but it is not proof. Inspect the source passage before trusting the grounded draft.' : 'Hashed retrieval is the baseline: fast and local, but more dependent on shared words. Answer text is extractive in this first slice.'}</span></div>
           </> : <div className="inspector-empty"><Icon name="target" size={28} /><h3>Nothing selected.</h3><p>Choose an evidence line to see the exact passage, score breakdown, and source offsets.</p></div>}
         </aside>
       </div>

@@ -10,7 +10,9 @@
     "test:grounded": "node --experimental-strip-types scripts/test-grounded.mjs",
     "stress:grounded": "node --experimental-strip-types scripts/stress-grounded.mjs",
     "test:retrieval": "node --experimental-strip-types scripts/test-retrieval.mjs",
+    "test:reranker": "node --experimental-strip-types scripts/test-reranker.mjs",
     "eval:retrieval": "node --experimental-strip-types scripts/eval-retrieval.mjs",
+    "eval:reranker": "node --experimental-strip-types scripts/eval-reranker.mjs",
     "preview": "vite preview --configLoader runner"
   },
   "dependencies": {

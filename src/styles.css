@@ -414,3 +414,79 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+.phase5b-section { max-width: 900px; margin: 0 auto 48px; border-top: 1px solid var(--line-strong); padding-top: 19px; }
+.phase5b-heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 13px; }
+.phase5b-heading .section-marker { margin-bottom: 11px; }
+.phase5b-heading h2 { margin: 0; font-size: 30px; letter-spacing: -0.06em; line-height: 1; }
+.phase5b-badge { border: 1px solid #8ca9a0; padding: 5px 6px; color: var(--teal); font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.phase5b-controls { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 1.4fr); gap: 1px; margin-bottom: 13px; border: 1px solid var(--line-strong); background: #c3cfca; }
+.phase5b-controls > label { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 13px; background: #e4ebe7; color: #62736d; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.phase5b-controls select { width: 100%; min-height: 32px; border: 1px solid var(--line-strong); padding: 5px 7px; background: var(--paper); color: var(--ink); font: inherit; font-size: 11px; letter-spacing: 0; text-transform: none; }
+.phase5b-controls select:focus-visible { outline: 2px solid var(--vermilion); outline-offset: 2px; }
+.phase5b-toggle { display: grid !important; grid-template-columns: 18px minmax(0, 1fr); align-items: center; column-gap: 8px; row-gap: 4px; cursor: pointer; }
+.phase5b-toggle input { grid-row: 1 / span 2; width: 16px; height: 16px; margin: 0; accent-color: var(--vermilion); }
+.phase5b-toggle span { color: var(--ink); }
+.phase5b-toggle small { grid-column: 2; color: #71807a; font-size: 10px; font-weight: 500; letter-spacing: 0; line-height: 1.35; text-transform: none; }
+.phase5b-warning { margin-bottom: 13px; border: 1px solid #b49d91; padding: 10px 12px; background: #e8ddd7; color: var(--vermilion-dark); font-size: 11px; line-height: 1.45; }
+.phase5b-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-bottom: 13px; border: 1px solid var(--line-strong); background: #c3cfca; }
+.phase5b-stat-grid > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 12px 13px; background: #d8e1dd; }
+.phase5b-stat-grid span { color: #71807a; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.phase5b-stat-grid strong { color: var(--ink); font-size: 22px; letter-spacing: -0.05em; line-height: 1; }
+.phase5b-stat-grid small { color: #71807a; font-size: 9px; line-height: 1.4; }
+.phase5b-lists { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--line-strong); background: #c3cfca; }
+.phase5b-column { min-width: 0; padding: 13px; background: #e4ebe7; }
+.phase5b-column-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.phase5b-column-heading h3 { margin: 0; color: var(--ink); font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.phase5b-column-heading span { flex: 0 0 auto; color: #71807a; font-size: 9px; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; }
+.phase5b-column > p { min-height: 31px; margin: 7px 0 10px; color: #71807a; font-size: 10px; line-height: 1.45; }
+.phase5b-list { overflow: auto; max-height: 330px; margin: 0; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); padding: 0; list-style: none; }
+.phase5b-list li { border-bottom: 1px solid #c3cfca; }
+.phase5b-list li:last-child { border-bottom: 0; }
+.phase5b-list li.is-rejected { background: #eadfd9; }
+.phase5b-list button { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 8px; width: 100%; min-height: 53px; border: 0; padding: 8px 7px; background: transparent; color: inherit; cursor: pointer; text-align: left; }
+.phase5b-list button:hover, .phase5b-list button:focus-visible { background: #d8e6e2; }
+.phase5b-list button:focus-visible { outline: 2px solid var(--vermilion); outline-offset: -2px; }
+.phase5b-rank { align-self: start; padding-top: 2px; color: var(--vermilion); font-size: 10px; font-weight: 800; }
+.phase5b-row-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.phase5b-row-copy strong { overflow: hidden; color: var(--ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.phase5b-row-copy small { overflow: hidden; color: #71807a; font-size: 9px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.phase5b-row-score { color: var(--vermilion-dark); font-size: 10px; font-weight: 800; text-align: right; white-space: nowrap; }
+.phase5b-list li.is-rejected .phase5b-row-score { color: var(--vermilion-dark); }
+.phase5b-empty { border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); padding: 17px 8px; color: #71807a; font-size: 10px; line-height: 1.45; }
+.phase5b-rejection-log { display: flex; flex-direction: column; gap: 1px; margin-top: 13px; border: 1px solid #b49d91; background: #b49d91; }
+.phase5b-rejection-label { padding: 9px 11px; background: #e8ddd7; color: var(--vermilion-dark); font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.phase5b-rejection-log button { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border: 0; padding: 9px 11px; background: #f0e6e1; color: var(--vermilion-dark); cursor: pointer; text-align: left; }
+.phase5b-rejection-log button:hover, .phase5b-rejection-log button:focus-visible { background: #ead7d0; }
+.phase5b-rejection-log button:focus-visible { outline: 2px solid var(--vermilion); outline-offset: -2px; }
+.phase5b-rejection-log strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.phase5b-rejection-log span { color: #805d54; font-size: 9px; line-height: 1.35; text-align: right; }
+.phase5b-inspector-section { background: #d8e1dd; }
+.phase5b-inspector-score { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.phase5b-inspector-score > strong { color: var(--vermilion-dark); font-size: 24px; letter-spacing: -0.05em; }
+.phase5b-label { border: 1px solid #aebcb7; padding: 4px 5px; color: #62736d; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.phase5b-label.is-high { border-color: #8ca9a0; color: var(--teal); }
+.phase5b-label.is-medium { border-color: #b9aa74; color: #756431; }
+.phase5b-label.is-low { border-color: #b49d91; color: var(--vermilion-dark); }
+.phase5b-inspector-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin: 14px 0 0; }
+.phase5b-inspector-grid div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.phase5b-inspector-grid dt { color: #71807a; font-size: 9px; text-transform: lowercase; }
+.phase5b-inspector-grid dd { overflow: hidden; margin: 0; color: var(--ink); font-size: 10px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.phase5b-reason { margin: 15px 0 0; color: #53645e; font-size: 10px; line-height: 1.5; }
+.phase5b-rejection-reason { margin: 9px 0 0; border-left: 1px solid var(--vermilion); padding-left: 8px; color: var(--vermilion-dark); font-size: 10px; line-height: 1.45; }
+
+@media (max-width: 900px) {
+  .phase5b-lists { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 580px) {
+  .phase5b-section { margin-bottom: 39px; }
+  .phase5b-heading { align-items: start; flex-direction: column; gap: 9px; }
+  .phase5b-heading h2 { font-size: 27px; }
+  .phase5b-badge { align-self: start; }
+  .phase5b-controls { grid-template-columns: 1fr; }
+  .phase5b-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .phase5b-list { max-height: 250px; }
+  .phase5b-rejection-log button { align-items: start; flex-direction: column; gap: 3px; }
+  .phase5b-rejection-log span { text-align: left; }
+}

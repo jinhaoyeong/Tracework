@@ -1,5 +1,5 @@
 export type SourceKind = 'note' | 'file' | 'sample'
-export type RetrievalEngine = 'hashed' | 'neural' | 'pgvector' | 'lexical' | 'hybrid'
+export type RetrievalEngine = 'hashed' | 'neural' | 'pgvector' | 'lexical' | 'hybrid' | 'rerank'
 export type LocalRetrievalEngine = 'hashed' | 'neural'
 
 export interface NeuralEmbedding {
