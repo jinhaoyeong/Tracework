@@ -1,0 +1,212 @@
+{
+  "recordedAt": "2026-08-10T14:46:21.124Z",
+  "phase": "5C",
+  "records": [
+    {
+      "id": "Q9-CONFLICT",
+      "question": "Where was Tracework invented?",
+      "expectedStatus": "conflicted",
+      "actualStatus": "conflicted",
+      "passed": true,
+      "ranked": [
+        {
+          "rank": 1,
+          "source": "changelog.md",
+          "score": 0.5836
+        },
+        {
+          "rank": 2,
+          "source": "project-history.md",
+          "score": 0.2978
+        }
+      ],
+      "selected": [
+        {
+          "citation": 1,
+          "source": "changelog.md"
+        },
+        {
+          "citation": 2,
+          "source": "project-history.md"
+        }
+      ],
+      "claims": [
+        {
+          "key": "origin",
+          "value": "japan 2019",
+          "sentence": "Tracework was invented in Japan in 2019.",
+          "source": "changelog.md",
+          "citation": 1,
+          "authority": "unknown"
+        },
+        {
+          "key": "origin",
+          "value": "malaysia 2026",
+          "sentence": "Tracework was created in Malaysia in 2026.",
+          "source": "project-history.md",
+          "citation": 2,
+          "authority": "unknown"
+        }
+      ],
+      "conflicts": [
+        {
+          "key": "origin",
+          "summary": "project origin has 2 incompatible values across the retrieved evidence.",
+          "claims": [
+            {
+              "key": "origin",
+              "value": "japan 2019",
+              "sentence": "Tracework was invented in Japan in 2019.",
+              "source": "changelog.md",
+              "citation": 1,
+              "authority": "unknown"
+            },
+            {
+              "key": "origin",
+              "value": "malaysia 2026",
+              "sentence": "Tracework was created in Malaysia in 2026.",
+              "source": "project-history.md",
+              "citation": 2,
+              "authority": "unknown"
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "changelog.md",
+          "state": "conflicted",
+          "authority": "unknown",
+          "basis": "Changelog entry with no declared authority record."
+        },
+        {
+          "title": "project-history.md",
+          "state": "conflicted",
+          "authority": "unknown",
+          "basis": "Historical note with no declared authority record."
+        }
+      ],
+      "notice": "Sources disagree across changelog.md, project-history.md. No supplied provenance establishes a winner, so Tracework must report the conflict instead of choosing by majority or relevance.",
+      "contextStatusLine": "EVIDENCE STATE (system metadata, not source content):\nstatus: conflicted\nSources disagree across changelog.md, project-history.md. No supplied provenance establishes a winner, so Tracework must report the conflict instead of choosing by majority or relevance.\nDo not choose a winner by relevance, repetition, or majority. Report the disagreement and cite the conflicting passages."
+    },
+    {
+      "id": "Q9-AUTHORITY",
+      "question": "Where was Tracework invented?",
+      "expectedStatus": "authority-supported",
+      "actualStatus": "authority-supported",
+      "passed": true,
+      "ranked": [
+        {
+          "rank": 1,
+          "source": "changelog.md",
+          "score": 0.5836
+        },
+        {
+          "rank": 2,
+          "source": "project-history.md",
+          "score": 0.2978
+        },
+        {
+          "rank": 3,
+          "source": "README.md",
+          "score": 0.2736
+        }
+      ],
+      "selected": [
+        {
+          "citation": 1,
+          "source": "changelog.md"
+        },
+        {
+          "citation": 2,
+          "source": "project-history.md"
+        },
+        {
+          "citation": 3,
+          "source": "README.md"
+        }
+      ],
+      "claims": [
+        {
+          "key": "origin",
+          "value": "japan 2019",
+          "sentence": "Tracework was invented in Japan in 2019.",
+          "source": "changelog.md",
+          "citation": 1,
+          "authority": "unknown"
+        },
+        {
+          "key": "origin",
+          "value": "malaysia 2026",
+          "sentence": "Tracework was created in Malaysia in 2026.",
+          "source": "project-history.md",
+          "citation": 2,
+          "authority": "unknown"
+        },
+        {
+          "key": "origin",
+          "value": "malaysia 2026",
+          "sentence": "Project metadata: Tracework was created in Malaysia in 2026.",
+          "source": "README.md",
+          "citation": 3,
+          "authority": "authoritative"
+        }
+      ],
+      "conflicts": [
+        {
+          "key": "origin",
+          "summary": "project origin has 2 incompatible values across the retrieved evidence.",
+          "claims": [
+            {
+              "key": "origin",
+              "value": "japan 2019",
+              "sentence": "Tracework was invented in Japan in 2019.",
+              "source": "changelog.md",
+              "citation": 1,
+              "authority": "unknown"
+            },
+            {
+              "key": "origin",
+              "value": "malaysia 2026",
+              "sentence": "Tracework was created in Malaysia in 2026.",
+              "source": "project-history.md",
+              "citation": 2,
+              "authority": "unknown"
+            },
+            {
+              "key": "origin",
+              "value": "malaysia 2026",
+              "sentence": "Project metadata: Tracework was created in Malaysia in 2026.",
+              "source": "README.md",
+              "citation": 3,
+              "authority": "authoritative"
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "title": "changelog.md",
+          "state": "conflicted",
+          "authority": "unknown",
+          "basis": "Changelog entry with no declared authority record."
+        },
+        {
+          "title": "project-history.md",
+          "state": "conflicted",
+          "authority": "unknown",
+          "basis": "Historical note with no declared authority record."
+        },
+        {
+          "title": "README.md",
+          "state": "authoritative",
+          "authority": "authoritative",
+          "basis": "Repository project metadata explicitly designated as authoritative for project origin."
+        }
+      ],
+      "notice": "Retrieved sources disagree, but explicit provenance marks one claim as authoritative. The answer may lead with that claim and disclose the conflict.",
+      "contextStatusLine": "EVIDENCE STATE (system metadata, not source content):\nstatus: authority-supported\nRetrieved sources disagree, but explicit provenance marks one claim as authoritative. The answer may lead with that claim and disclose the conflict.\nIf you lead with the authoritative claim, disclose the conflicting claim and cite both passages."
+    }
+  ],
+  "passed": true
+}

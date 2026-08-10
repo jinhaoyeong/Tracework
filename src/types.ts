@@ -2,6 +2,15 @@ export type SourceKind = 'note' | 'file' | 'sample'
 export type RetrievalEngine = 'hashed' | 'neural' | 'pgvector' | 'lexical' | 'hybrid' | 'rerank'
 export type LocalRetrievalEngine = 'hashed' | 'neural'
 
+export type ProvenanceOrigin = 'user-note' | 'indexed-file' | 'synthetic-fixture' | 'unknown'
+export type ProvenanceAuthority = 'unknown' | 'declared' | 'authoritative'
+
+export interface SourceProvenance {
+  origin: ProvenanceOrigin
+  authority: ProvenanceAuthority
+  basis: string
+}
+
 export interface NeuralEmbedding {
   vector: number[]
   model: string
@@ -26,6 +35,7 @@ export interface DocumentRecord {
   title: string
   source: string
   kind: SourceKind
+  provenance?: SourceProvenance
   content: string
   createdAt: string
   chunks: ChunkRecord[]

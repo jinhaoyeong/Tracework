@@ -256,6 +256,7 @@ const neuralEmbeddingsPlugin = (env: Record<string, string>): Plugin => ({
               'Every factual claim must include one or more citations in the form [1], [2], etc. Use only citation numbers that exist in the evidence.',
               'If the evidence does not answer the question, say exactly: I could not find enough evidence in the supplied knowledge base to answer this.',
               'Do not guess, fill gaps from general knowledge, or claim that you searched anything outside the supplied evidence.',
+              'When EVIDENCE STATE reports a conflict, do not choose a claim by relevance, repetition, or majority. Explain the disagreement and cite the conflicting passages. Only lead with a winner when the supplied provenance explicitly marks that claim authoritative.',
               'Keep the answer concise and explain uncertainty when the evidence is only partial.',
             ].join('\n'),
             input: `QUESTION:\n${question}\n\nSUPPLIED EVIDENCE:\n${context}`,

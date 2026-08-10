@@ -1,4 +1,4 @@
-import type { AnswerDraft, ChunkRecord, DocumentRecord, LocalRetrievalEngine, SearchResult, SourceKind } from '../types'
+import type { AnswerDraft, ChunkRecord, DocumentRecord, LocalRetrievalEngine, SearchResult, SourceKind, SourceProvenance } from '../types'
 
 const VECTOR_SIZE = 384
 const STOP_WORDS = new Set([
@@ -97,6 +97,7 @@ export const createDocument = (
   source: string,
   content: string,
   kind: SourceKind = 'note',
+  options: { provenance?: SourceProvenance } = {},
 ): DocumentRecord => {
   const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
   const chunks = chunkText(content).map((item, index): ChunkRecord => ({
@@ -115,6 +116,11 @@ export const createDocument = (
     title: title.trim() || 'Untitled note',
     source: source.trim() || 'pasted note',
     kind,
+    provenance: options.provenance ?? {
+      origin: kind === 'sample' ? 'synthetic-fixture' : kind === 'file' ? 'indexed-file' : 'user-note',
+      authority: 'unknown',
+      basis: 'No authority metadata was supplied.',
+    },
     content,
     createdAt: new Date().toISOString(),
     chunks,

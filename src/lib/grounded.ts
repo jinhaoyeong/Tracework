@@ -1,4 +1,5 @@
 import type { SearchResult } from '../types'
+import type { EvidenceAdjudication } from './adjudication'
 
 export type EvidenceStatus = 'strong' | 'partial' | 'insufficient'
 
@@ -35,6 +36,7 @@ export interface GroundedContext {
   approximateTokens: number
   embeddingModel: string | null
   embeddingDimensions: number | null
+  evidenceAdjudication?: EvidenceAdjudication
 }
 
 export interface GroundedAnswer {
@@ -240,7 +242,7 @@ const formatContextChunk = (citation: number, result: SearchResult, textBudget: 
 export const buildGroundedContext = (
   question: string,
   results: SearchResult[],
-  options: { retrievalEngine?: string; requestedTopK?: number; limit?: number } = {},
+  options: { retrievalEngine?: string; requestedTopK?: number; limit?: number; adjudication?: EvidenceAdjudication } = {},
 ): GroundedContext => {
   const limit = options.limit ?? DEFAULT_CONTEXT_LIMIT
   // Duplicate chunk ids would collide as React keys in the inspector and would
@@ -259,7 +261,19 @@ export const buildGroundedContext = (
     const { formatted, warnings } = formatContextChunk(index + 1, result, textBudget)
     return { citation: index + 1, result, formatted, warnings }
   })
-  const text = chunks.map((chunk) => chunk.formatted).join('\n\n')
+  const evidenceState = options.adjudication
+    ? [
+        'EVIDENCE STATE (system metadata, not source content):',
+        `status: ${options.adjudication.status}`,
+        options.adjudication.notice,
+        options.adjudication.status === 'conflicted'
+          ? 'Do not choose a winner by relevance, repetition, or majority. Report the disagreement and cite the conflicting passages.'
+          : options.adjudication.status === 'authority-supported'
+            ? 'If you lead with the authoritative claim, disclose the conflicting claim and cite both passages.'
+            : 'This state does not prove that any source is true.',
+      ].join('\n')
+    : ''
+  const text = [evidenceState, ...chunks.map((chunk) => chunk.formatted)].filter(Boolean).join('\n\n')
   const firstEmbedding = chunks.find((chunk) => sourceModel(chunk.result))?.result
 
   return {
@@ -272,6 +286,7 @@ export const buildGroundedContext = (
     approximateTokens: Math.ceil(text.length / 4),
     embeddingModel: firstEmbedding ? sourceModel(firstEmbedding) : null,
     embeddingDimensions: firstEmbedding ? sourceDimensions(firstEmbedding) : null,
+    evidenceAdjudication: options.adjudication,
   }
 }
 
@@ -361,6 +376,27 @@ export const buildInsufficientAnswer = (assessment: EvidenceAssessment): Grounde
   malformedCitationMarkers: [],
   model: null,
 })
+
+export const buildConflictAnswer = (adjudication: EvidenceAdjudication): GroundedAnswer => {
+  const claims = adjudication.conflicts
+    .flatMap((conflict) => conflict.claims)
+    .filter((claim, index, all) => all.findIndex((candidate) => candidate.id === claim.id) === index)
+  const citations = claims
+    .map((claim) => claim.result)
+    .filter((result, index, all) => all.findIndex((candidate) => candidate.chunk.id === result.chunk.id) === index)
+  const details = claims.map((claim) => `${claim.sourceTitle} states “${claim.value}” [${claim.citation}]`).join(' ')
+
+  return {
+    title: 'Evidence conflict / answer withheld',
+    body: `The available sources conflict about this question. ${details} No supplied provenance establishes which claim is authoritative, so Tracework will not choose a winner.`,
+    citations,
+    citationNumbers: claims.map((claim) => claim.citation),
+    validCitationNumbers: claims.map((claim) => claim.citation),
+    invalidCitationNumbers: [],
+    malformedCitationMarkers: [],
+    model: null,
+  }
+}
 
 /**
  * The exact sentence the generation route instructs the model to return when

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { buildSampleCorpus } from './data/sampleCorpus'
+import { buildPhase5cConflictCorpus } from './data/phase5cCorpus'
 import { Icon } from './components/Icon'
 import { buildAnswer, createDocument, formatBytes, searchDocuments, tokenize } from './lib/rag'
-import { buildGroundedContext, buildInsufficientAnswer, classifyGeneratedAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
+import { adjudicateEvidence, ensureConflictCoverage, type EvidenceAdjudication } from './lib/adjudication'
+import { buildConflictAnswer, buildGroundedContext, buildInsufficientAnswer, classifyGeneratedAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
 import { GenerationError, requestGroundedAnswer } from './lib/generation'
 import { buildLexicalIndex, searchLexical, toLexicalResults } from './lib/lexical'
 import { fuseRankings, RRF_K } from './lib/fusion'
@@ -40,7 +42,7 @@ interface PgvectorState {
 }
 
 type AnswerMode = 'retrieval' | 'grounded'
-type GenerationStatus = 'idle' | 'generating' | 'ready' | 'blocked' | 'refused' | 'error'
+type GenerationStatus = 'idle' | 'generating' | 'ready' | 'blocked' | 'conflicted' | 'refused' | 'error'
 
 interface GenerationState {
   status: GenerationStatus
@@ -158,6 +160,72 @@ function Phase5BList({
   )
 }
 
+function Phase5CPanel({
+  adjudication,
+  contextAdjudication,
+  onSelect,
+}: {
+  adjudication: EvidenceAdjudication
+  contextAdjudication: EvidenceAdjudication
+  onSelect: (chunkId: string) => void
+}) {
+  const statusLabel = adjudication.status === 'authority-supported'
+    ? 'authority supports one claim'
+    : adjudication.status === 'conflicted'
+      ? 'unresolved conflict'
+      : adjudication.status === 'clear'
+        ? 'no direct conflict found'
+        : 'claim state unassessed'
+
+  return (
+    <section className="phase5c-section" aria-labelledby="phase5c-title">
+      <div className="phase5c-heading">
+        <div>
+          <div className="section-marker"><span className="marker-line" /> phase 5C / evidence adjudication <span className="marker-line short" /></div>
+          <h2 id="phase5c-title">When sources disagree, show it.</h2>
+        </div>
+        <span className={`phase5c-badge is-${adjudication.status}`}>{statusLabel}</span>
+      </div>
+      <div className="phase5c-stat-grid">
+        <div><span>claims extracted</span><strong>{adjudication.claims.length}</strong><small>transparent patterns only</small></div>
+        <div><span>conflicts</span><strong>{adjudication.conflicts.length}</strong><small>{adjudication.conflicts.length ? 'cannot be collapsed into one fact' : 'none detected in this slice'}</small></div>
+        <div><span>authority records</span><strong>{adjudication.sources.filter((source) => source.provenance.authority === 'authoritative').length}</strong><small>explicit metadata only</small></div>
+        <div><span>context witnesses</span><strong>{contextAdjudication.claims.length}</strong><small>claims visible to grounding</small></div>
+      </div>
+      <p className={`phase5c-notice is-${adjudication.status}`} role="status">{adjudication.notice}</p>
+      <div className="phase5c-grid">
+        <div className="phase5c-column">
+          <div className="phase5c-column-heading"><h3>CLAIMS / OBSERVED</h3><span>{adjudication.claims.length ? `${adjudication.claims.length} signals` : 'empty'}</span></div>
+          {adjudication.claims.length ? <ul className="phase5c-claims">
+            {adjudication.claims.map((claim) => (
+              <li key={claim.id}>
+                <button type="button" onClick={() => onSelect(claim.chunkId)}>
+                  <span className="phase5c-claim-source">{claim.sourceTitle}</span>
+                  <strong>{claim.value}</strong>
+                  <small>{claim.predicate} · citation context is recalculated after selection</small>
+                </button>
+              </li>
+            ))}
+          </ul> : <div className="phase5c-empty">No supported claim shape was extracted. Unknown remains unknown.</div>}
+        </div>
+        <div className="phase5c-column">
+          <div className="phase5c-column-heading"><h3>SOURCES / PROVENANCE</h3><span>{adjudication.sources.length ? `${adjudication.sources.length} sources` : 'empty'}</span></div>
+          {adjudication.sources.length ? <ul className="phase5c-sources">
+            {adjudication.sources.map((source) => (
+              <li key={source.sourceId}>
+                <strong>{source.title}</strong>
+                <span className={`phase5c-source-state is-${source.state}`}>{source.state}</span>
+                <small>{source.provenance.authority} · {source.provenance.basis}</small>
+              </li>
+            ))}
+          </ul> : <div className="phase5c-empty">No retrieved source metadata is available.</div>}
+        </div>
+      </div>
+      <p className="grounded-debug-note">Phase 5C does not assign a trust score or let majority win. It records explicit provenance, exposes incompatible claims, and preserves conflict witnesses before grounding.</p>
+    </section>
+  )
+}
+
 function App() {
   const [documents, setDocuments] = useState<DocumentRecord[]>(loadDocuments)
   const [query, setQuery] = useState(INITIAL_QUERY)
@@ -242,7 +310,23 @@ function App() {
   const phase5bContextCandidates = pruningEnabled ? phase5bPruning.selected : phase5bRankedCandidates
   const phase5bContextResults = phase5bContextCandidates.map((candidate) => candidate.result)
   const phase5bRankedResults = phase5bRankedCandidates.map((candidate) => candidate.result)
-  const results = engine === 'rerank' ? phase5bContextResults : retrievalResults
+  const phase5cAnalysisResults = engine === 'rerank' ? phase5bRankedResults : retrievalResults
+  const phase5cAdjudication = useMemo(
+    () => adjudicateEvidence(activeQuery, phase5cAnalysisResults),
+    [activeQuery, phase5cAnalysisResults],
+  )
+  const phase5cBaseContextResults = engine === 'rerank' ? phase5bContextResults : retrievalResults
+  const phase5cContextResults = useMemo(
+    () => engine === 'rerank'
+      ? ensureConflictCoverage(phase5cAdjudication, phase5cBaseContextResults, pruningEnabled ? topK : undefined)
+      : phase5cBaseContextResults,
+    [engine, phase5cAdjudication, phase5cBaseContextResults, pruningEnabled, topK],
+  )
+  const results = phase5cContextResults
+  const phase5cContextAdjudication = useMemo(
+    () => adjudicateEvidence(activeQuery, results),
+    [activeQuery, results],
+  )
   const inspectableResults = engine === 'rerank' ? phase5bRankedResults : results
   const phase5bDecisionByChunkId = useMemo(
     () => new Map(phase5bPruning.decisions.map((decision) => [decision.candidate.result.chunk.id, decision])),
@@ -252,14 +336,15 @@ function App() {
   const evidenceAssessment = useMemo(() => evaluateEvidence(activeQuery, results), [activeQuery, results])
   const groundedPreviewContext = useMemo(() => buildGroundedContext(activeQuery, results, {
     retrievalEngine: engine === 'rerank' ? 'union-rerank' : engine,
-    requestedTopK: engine === 'rerank' ? phase5bContextResults.length : engine === 'pgvector' ? topK : 8,
-    limit: engine === 'rerank' ? phase5bContextResults.length : undefined,
-  }), [activeQuery, engine, phase5bContextResults.length, results, topK])
+    requestedTopK: engine === 'rerank' ? phase5cContextResults.length : engine === 'pgvector' ? topK : 8,
+    limit: engine === 'rerank' ? phase5cContextResults.length : undefined,
+    adjudication: phase5cContextAdjudication,
+  }), [activeQuery, engine, phase5cContextAdjudication, phase5cContextResults.length, results, topK])
   const contextForInspector: GroundedContext = groundedSession?.context ?? groundedPreviewContext
   const groundedAnswer = groundedSession?.answer ?? null
-  const groundedContextWasSent = groundedSession !== null && generationState.status !== 'blocked'
+  const groundedContextWasSent = groundedSession !== null && !['blocked', 'conflicted'].includes(generationState.status)
   const groundedContextStateLabel = groundedSession
-    ? generationState.status === 'blocked' ? 'generation skipped' : 'context sent'
+    ? generationState.status === 'blocked' ? 'generation skipped' : generationState.status === 'conflicted' ? 'conflict hold' : 'context sent'
     : 'context preview'
   const generationDebugLabel = generationState.status === 'idle'
     ? 'not called'
@@ -503,13 +588,15 @@ function App() {
   const runGroundedGeneration = async (
     nextQuery: string,
     retrievedResults: SearchResult[],
-    options: { retrievalEngine?: string; contextLimit?: number; requestedTopK?: number } = {},
+    options: { retrievalEngine?: string; contextLimit?: number; requestedTopK?: number; adjudication?: EvidenceAdjudication } = {},
   ) => {
     const assessment = evaluateEvidence(nextQuery, retrievedResults)
+    const adjudication = options.adjudication ?? adjudicateEvidence(nextQuery, retrievedResults)
     const context = buildGroundedContext(nextQuery, retrievedResults, {
       retrievalEngine: options.retrievalEngine ?? retrievedResults[0]?.engine ?? engine,
       requestedTopK: options.requestedTopK ?? (engine === 'pgvector' ? topK : 8),
       limit: options.contextLimit ?? 5,
+      adjudication,
     })
     const session: GroundedSession = { context, assessment, answer: null }
     setGroundedSession(session)
@@ -521,6 +608,17 @@ function App() {
         model: null,
         message: 'Generation skipped because the retrieved evidence is insufficient.',
       })
+      return
+    }
+
+    if (adjudication.status === 'conflicted') {
+      setGroundedSession({ ...session, answer: buildConflictAnswer(adjudication) })
+      setGenerationState({
+        status: 'conflicted',
+        model: null,
+        message: 'Generation held because the retrieved sources make incompatible claims without an authoritative provenance record.',
+      })
+      showNotice('info', 'Sources conflict. Tracework disclosed the disagreement instead of choosing a winner.')
       return
     }
 
@@ -606,7 +704,9 @@ function App() {
         const union = buildCandidateUnion({ dense, lexical, limit: candidateLimit })
         const ranked = rerank(nextQuery, union)
         const contextCandidates = pruningEnabled ? pruneCandidates(ranked, { maxChunks: topK }).selected : ranked
-        retrievedResults = contextCandidates.map((candidate) => candidate.result)
+        const baseContextResults = contextCandidates.map((candidate) => candidate.result)
+        const adjudication = adjudicateEvidence(nextQuery, ranked.map((candidate) => candidate.result))
+        retrievedResults = ensureConflictCoverage(adjudication, baseContextResults, pruningEnabled ? topK : undefined)
       }
     } else if (engine === 'pgvector' || compareMode) {
       retrievedResults = await runPgvectorRetrieval(nextQuery)
@@ -682,6 +782,23 @@ function App() {
     setDocuments((current) => [...buildSampleCorpus(), ...current])
     resetRetrievalState()
     showNotice('success', 'Three synthetic workshop sources added for the retrieval exercise.')
+  }
+
+  const handleLoadPhase5c = (includeAuthority = false) => {
+    const hasPhase5cSources = documents.some((document) => document.source.includes('phase 5C'))
+    const hasAuthorityRecord = documents.some((document) => document.source.includes('phase 5C') && document.provenance?.authority === 'authoritative')
+    if ((!includeAuthority && hasPhase5cSources) || (includeAuthority && hasAuthorityRecord)) {
+      showNotice('info', 'The Phase 5C conflict set is already in this index.')
+      return
+    }
+    const additions = includeAuthority
+      ? (hasPhase5cSources ? buildPhase5cConflictCorpus(true).filter((document) => document.provenance?.authority === 'authoritative') : buildPhase5cConflictCorpus(true))
+      : buildPhase5cConflictCorpus(false)
+    setDocuments((current) => [...additions, ...current])
+    resetRetrievalState()
+    showNotice('success', includeAuthority
+      ? 'The authoritative Phase 5C metadata record was added. Ask where Tracework was invented to inspect the resolution boundary.'
+      : 'Phase 5C conflict sources added. Ask where Tracework was invented to inspect the disagreement.')
   }
 
   const handleClear = () => {
@@ -827,6 +944,14 @@ function App() {
             <button className="text-button" type="button" onClick={handleLoadSamples}>
               <Icon name="spark" size={15} />
               load synthetic sources
+            </button>
+            <button className="text-button phase5c-load-button" type="button" onClick={() => handleLoadPhase5c(false)}>
+              <Icon name="target" size={15} />
+              load Phase 5C conflict set
+            </button>
+            <button className="text-button phase5c-load-button is-authority" type="button" onClick={() => handleLoadPhase5c(true)}>
+              <Icon name="check" size={15} />
+              add authority variant
             </button>
           </div>
 
@@ -1065,6 +1190,12 @@ function App() {
             <p className="grounded-debug-note">The reranker is a deterministic relevance experiment, not a source-trust, recency, or contradiction model. Use the inspector to see why a row moved from its union position to its new rank.</p>
           </section>}
 
+          {(engine === 'rerank' || answerMode === 'grounded') && <Phase5CPanel
+            adjudication={phase5cAdjudication}
+            contextAdjudication={phase5cContextAdjudication}
+            onSelect={setSelectedChunkId}
+          />}
+
           {answerMode === 'grounded' && <section className="grounded-debug-section" aria-labelledby="grounded-debug-title">
             <div className="grounded-debug-heading">
               <div>
@@ -1231,10 +1362,12 @@ function App() {
             </div>}
 
             <div className="inspector-section provenance-section">
-              <div className="inspector-label"><span>provenance</span><span>stable</span></div>
+              <div className="inspector-label"><span>provenance</span><span>{selectedResult.document.provenance?.authority ?? 'unknown'}</span></div>
               <dl>
                 <div><dt>document id</dt><dd>{selectedResult.document.id.slice(-8)}</dd></div>
                 <div><dt>chunk id</dt><dd>{String(selectedResult.chunk.index + 1).padStart(2, '0')} / {selectedResult.document.chunks.length}</dd></div>
+                <div><dt>origin</dt><dd>{selectedResult.document.provenance?.origin ?? 'unknown'}</dd></div>
+                <div><dt>authority basis</dt><dd>{selectedResult.document.provenance?.basis ?? 'not supplied'}</dd></div>
                 <div><dt>embedding</dt><dd>{selectedResult.engine === 'pgvector' ? `${selectedResult.embeddingModel ?? 'unknown'} / ${selectedResult.embeddingDimensions ?? PGVECTOR_DIMENSIONS}d` : selectedResult.engine === 'neural' && selectedResult.chunk.neuralEmbedding ? `${selectedResult.chunk.neuralEmbedding.model} / ${selectedResult.chunk.neuralEmbedding.dimensions}d` : `hashed-v1 / ${selectedResult.chunk.vector.length}d`}</dd></div>
                 {selectedResult.engine === 'pgvector' && <div><dt>database</dt><dd>{selectedResult.database ?? 'Supabase pgvector'}</dd></div>}
               </dl>
