@@ -806,6 +806,7 @@ function App() {
                     <span><strong>{chunk.result.document.title}</strong><small>{chunk.result.document.source} · chunk {String(chunk.result.chunk.index + 1).padStart(2, '0')} · similarity {chunk.result.score.toFixed(4)}{chunk.result.distance === undefined ? '' : ` · distance ${chunk.result.distance.toFixed(4)}`}</small></span>
                     <Icon name="arrow" size={15} />
                   </button>
+                  {chunk.warnings.length ? <div className="grounded-chunk-warning">source text was modified before sending: {chunk.warnings.join('; ')}</div> : null}
                   <pre>{chunk.formatted}</pre>
                 </div>
               )) : <div className="grounded-context-empty">No retrieved chunks are available. Generation will refuse to invent an answer.</div>}

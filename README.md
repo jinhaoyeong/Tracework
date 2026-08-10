@@ -130,13 +130,17 @@ Retrieval-augmented generation supplies selected passages in the model input at 
 
 `buildGroundedContext()` formats each selected result as a numbered evidence block containing its citation number, source, type, chunk offsets, similarity, distance, embedding model/dimensions, and exact text. The generation route receives that string, not every document in the browser index. An answer is grounded when its factual claims are supported by those supplied blocks and its markers map to the blocks the user can inspect.
 
+### Retrieved text is untrusted input
+
+Chunk text arrives from whatever the user indexed, so `buildGroundedContext()` treats it as hostile data before sending it. Lines that imitate an evidence block header are escaped, so a source cannot forge a sixth numbered block that the citation validator would reject and the inspector could never show. Instruction-shaped passages are redacted. Oversized chunks are trimmed to a shared character budget instead of failing the whole request. Every one of these edits is recorded on the chunk and shown in the inspector, so the context stays verbatim unless the UI says otherwise — a redaction that hides a document legitimately discussing prompt injection is a visible cost, not a silent one.
+
 ### Citations are not proof by themselves
 
 Tracework validates that citation markers point to retrieved chunks, but a valid `[1]` does not automatically mean the sentence is supported by chunk 1. Citation correctness still requires reading the cited passage. This is why clicking a citation opens the exact source chunk and why the context inspector shows the complete model input.
 
 ### Evidence sufficiency and refusal
 
-The UI calculates evidence state from observable retrieval data, not an invented model confidence percentage. A result score below `0.42` is **insufficient**. At least one result at or above `0.62` is **strong**; other usable results are **partial**. The calculation also reports the number of **candidate chunks above the evidence floor**, distinct sources among them, and a bounded coverage score. Candidate is not the same as supporting: the score threshold measures similarity only, so a chunk can clear the floor without containing anything that answers the question. Measuring real support is reranking work, not retrieval scoring. For insufficient evidence, Tracework skips generation and says that it could not find enough evidence in the knowledge base. Weak but plausible near-matches therefore do not become confident fabricated answers.
+The UI calculates evidence state from observable retrieval data, not an invented model confidence percentage. A result score below `0.42` is **insufficient**. A result at or above `0.62` is **strong** only when the candidate chunks span at least two distinct sources; a high score backed by a single source stays **partial**, because five near-identical chunks from one document are one claim restated rather than a corroborated one. Other usable results are **partial**. Scores are read as a maximum over the retrieved set rather than from the first row, so no engine's ordering is trusted, and non-finite scores are discarded instead of falling through the comparisons into `partial`. The calculation also reports the number of **candidate chunks above the evidence floor**, distinct sources among them, and a bounded coverage score. Candidate is not the same as supporting: the score threshold measures similarity only, so a chunk can clear the floor without containing anything that answers the question. Measuring real support is reranking work, not retrieval scoring. For insufficient evidence, Tracework skips generation and says that it could not find enough evidence in the knowledge base. Weak but plausible near-matches therefore do not become confident fabricated answers.
 
 ### Answered, refused, failed
 
@@ -163,6 +167,15 @@ npm.cmd run test:grounded
 npm.cmd run check
 npm.cmd run build
 ```
+
+The adversarial suite is separate, and reports every finding rather than stopping at the first:
+
+```powershell
+npm.cmd run stress:grounded
+npm.cmd run stress:grounded -- --strict
+```
+
+`docs/stress-test.md` documents both halves, including the live corpus for a credentialed run.
 
 The real generation smoke test still requires a valid `OPENAI_API_KEY`; until then, retrieval-only mode and the deterministic insufficient-evidence path remain fully usable.
 

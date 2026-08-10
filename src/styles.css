@@ -216,6 +216,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .grounded-context-chunk > button { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; border: 0; padding: 12px 13px; background: transparent; color: inherit; cursor: pointer; text-align: left; }
 .grounded-context-chunk > button:hover strong, .grounded-context-chunk > button:focus-visible strong { color: var(--vermilion-dark); }
 .grounded-context-chunk > button > span { color: var(--vermilion); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; }
+.grounded-chunk-warning { margin: 0 13px 10px; border-left: 2px solid var(--vermilion); padding: 6px 9px; background: #e8ddd7; color: var(--vermilion-dark); font-size: 10px; font-weight: 650; line-height: 1.45; }
 .grounded-context-chunk > button > span:nth-child(2) { min-width: 0; flex: 1; }
 .grounded-context-chunk > button strong { min-width: 0; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .grounded-context-chunk > button small { display: block; overflow: hidden; margin-top: 4px; color: #71807a; font-size: 9px; letter-spacing: 0.04em; text-overflow: ellipsis; white-space: nowrap; }
