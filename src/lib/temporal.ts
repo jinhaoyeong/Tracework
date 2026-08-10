@@ -24,7 +24,13 @@ export interface TemporalClaim {
   source: string
   sourceId: string
   chunkId: string
-  citation: number
+  /**
+   * Position in the result set this claim was extracted from — NOT a citation
+   * number. Real [1]/[2] markers are assigned only when the grounded context is
+   * built, because pruning, conflict coverage, temporal coverage, and
+   * reordering all change the final numbering.
+   */
+  sourceResultIndex: number
   sentence: string
   derivedFromText: true
   result: SearchResult
@@ -69,7 +75,26 @@ const dateFromSentence = (sentence: string): string | null => {
   // fixture. "January 2025 rates" is in scope; "From January 2025 onward"
   // is not a decided temporal trigger.
   const natural = sentence.match(new RegExp(`\\b${MONTH_PATTERN}\\s+(\\d{4})\\s+(?:rates?|pricing|schedule)\\b`, 'i'))
-  return natural ? monthYear(natural[1], natural[2]) : null
+  if (natural) return monthYear(natural[1], natural[2])
+
+  // Year only, e.g. "In 2024 the Team plan cost 40 USD". Narrow on purpose: a
+  // bare four-digit number elsewhere in a sentence is not a validity date.
+  const yearOnly = sentence.match(/\b(?:in|during|for)\s+(20\d{2})\b/i)
+  return yearOnly ? yearOnly[1] : null
+}
+
+/**
+ * A claim takes the date from its own sentence, or failing that the nearest
+ * preceding dated sentence. Taking the first date in the document and applying
+ * it to every claim produced deterministic but false validity: a document
+ * stating an old price and a new one gave both the older date, and Step 5's
+ * supersession test compares exactly those dates.
+ */
+const dateForClaimSentence = (sentenceDates: (string | null)[], index: number): string | null => {
+  for (let cursor = index; cursor >= 0; cursor -= 1) {
+    if (sentenceDates[cursor]) return sentenceDates[cursor]
+  }
+  return null
 }
 
 const priceFromSentence = (sentence: string) => {
@@ -139,10 +164,11 @@ export const extractTemporalClaims = (question: string, results: SearchResult[])
 
   results.forEach((result, resultIndex) => {
     const sentences = sentencesOf(result.chunk.text)
-    const validFrom = sentences.map(dateFromSentence).find(Boolean) ?? null
+    const sentenceDates = sentences.map(dateFromSentence)
     const relationCandidate = sentences.some((sentence) => Boolean(supersessionSentence(sentence)))
 
-    sentences.forEach((sentence) => {
+    sentences.forEach((sentence, sentenceIndex) => {
+      const validFrom = dateForClaimSentence(sentenceDates, sentenceIndex)
       const subject = subjectOfSentence(sentence)
       if (!subject) return
       const value = priceFromSentence(sentence)
@@ -163,7 +189,7 @@ export const extractTemporalClaims = (question: string, results: SearchResult[])
         source: result.document.title,
         sourceId: result.document.id,
         chunkId: result.chunk.id,
-        citation: resultIndex + 1,
+        sourceResultIndex: resultIndex,
         sentence,
         derivedFromText: true,
         result,

@@ -13,6 +13,7 @@
     "test:reranker": "node --experimental-strip-types scripts/test-reranker.mjs",
     "test:adjudication": "node --experimental-strip-types scripts/test-adjudication.mjs",
     "test:temporal": "node --experimental-strip-types scripts/test-temporal.mjs",
+    "test:temporal-normalization": "node --experimental-strip-types scripts/test-temporal-normalization.mjs",
     "eval:retrieval": "node --experimental-strip-types scripts/eval-retrieval.mjs",
     "eval:reranker": "node --experimental-strip-types scripts/eval-reranker.mjs",
     "eval:phase5c": "node --experimental-strip-types scripts/eval-phase5c.mjs",
