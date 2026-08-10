@@ -137,6 +137,16 @@ check('REF-4', 'MED', 'A refusal-shaped sentence about a DIFFERENT question is n
   }
 })
 
+check('REF-5', 'MED', 'A refusal phrased as "the evidence does not state X" is a refusal', () => {
+  // Observed live in Phase 5A, Q7 under lexical retrieval.
+  const observed = 'The supplied evidence does not state how many seats the team plan includes. It only says the plan costs $55 per seat [1].'
+  const result = classifyGeneratedAnswer(observed, baseContext)
+  return {
+    ok: result.outcome === 'refused',
+    detail: `outcome=${result.outcome} -> a substantive refusal is presented as a cited grounded answer`,
+  }
+})
+
 /* ------------------------------------------------------------------ scoring */
 
 check('SCO-1', 'HIGH', 'Evidence strength uses the best score present, not the first element', () => {

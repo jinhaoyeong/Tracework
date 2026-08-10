@@ -121,6 +121,13 @@ assert.equal(
 // opens by refusing stays a refusal, and its trailing claim is shown in the body
 // with no citations attached rather than being presented as validated evidence.
 assert.equal(isModelRefusal(`${MODEL_REFUSAL_SENTENCE} The flight cost 900 USD [1].`), true)
+// Refusal verbs beyond "answer": these wordings were observed live in Phase 5A.
+assert.equal(isModelRefusal('The supplied evidence does not state how many seats the team plan includes.'), true)
+assert.equal(isModelRefusal('The sources do not mention an annual discount for 2025.'), true)
+assert.equal(isModelRefusal("I don't have enough information in the supplied context to answer this."), true)
+// A plain cited claim is still not a refusal.
+assert.equal(isModelRefusal('The team plan costs 55 USD per seat per month [1].'), false)
+
 // A response that opens with the claim is never rescued into a refusal.
 assert.equal(isModelRefusal(`The flight cost 900 USD [1]. ${MODEL_REFUSAL_SENTENCE}`), false)
 

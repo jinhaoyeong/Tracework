@@ -387,7 +387,10 @@ const NORMALIZED_REFUSAL = normalizeRefusalText(MODEL_REFUSAL_SENTENCE)
  */
 const REFUSAL_PARAPHRASES = [
   /\b(could ?n[o']t|cannot|can'?t|do ?n[o']t|did ?n[o']t|unable to|is not|isn'?t|there is no)\b[^.]{0,60}\b(enough|sufficient|any)\b[^.]{0,30}\b(evidence|information|context|detail)/,
-  /\b(evidence|context|information)\b[^.]{0,40}\b(does not|does ?n[o']t|do not|do ?n[o']t|cannot|can'?t|fails? to)\b[^.]{0,25}\b(answer|address|cover|support)/,
+  // "state / say / specify / mention" matter as much as "answer": Phase 5A's Q7
+  // returned "The supplied evidence does not state how many seats..." — a
+  // refusal in substance that scored as an answered claim.
+  /\b(evidence|context|information|source|sources)\b[^.]{0,40}\b(does not|does ?n[o']t|do not|do ?n[o']t|cannot|can'?t|fails? to)\b[^.]{0,25}\b(answer|address|cover|support|state|say|specify|mention|indicate|include|contain|provide)/,
 ]
 
 /**
