@@ -145,26 +145,71 @@ explicit revision dates, "supersedes"/"replaces"/"effective from"/"starting
 Anything else yields `unassessed`, which must never be read as "no temporal
 relationship exists."
 
-## 5. Frozen test set
+## 5. Frozen test set — **FROZEN**
+
+Fixture text and expectations live in `scripts/fixtures/phase5d.mjs`, frozen
+before the extractor exists. Each case freezes the expected **derived facts**
+(subject, value, `validFrom`, `validUntil`, supersession relation, source), not
+only the final answer, so a failure localises to a stage rather than reading
+"T1 failed".
+
+Applicability is evaluated at `requestedPeriod ?? asOf`: a question may name its
+own period ("in 2024", "in February 2027"), and otherwise the injected `asOf`
+applies.
+
+### Supersession wording levels
+
+| level | text | expectation |
+| --- | --- | --- |
+| explicit | "This supersedes all earlier pricing." | must resolve |
+| natural | "The January 2025 rates replace what we published last year." | should resolve |
+| awkward | "From January 2025 onward, customers used the new Team rate; the previous schedule remains in the archive." | **must not resolve** |
+
+The awkward text is genuine human evidence of a version change that avoids every
+decided trigger. **Its `unassessed` result is frozen as the correct answer.**
+Widening the trigger list until it passes is the failure mode, not the fix.
+
+One conflict in the instructions was resolved deliberately: "The January 2025
+rates replace what we published last year" was proposed both as the awkward
+unresolved case and as a positive case. It is frozen as **positive**, because
+§4.5 already places "replaces" plus a date inside the decided trigger scope, and
+freezing it as unresolved would contradict the extraction contract. The awkward
+slot is filled by the trigger-free sentence instead.
+
+### The nine cases
 
 Fixtures and expectations are frozen **before** implementation. Cases 1–6 are
 yours; 7–9 I am adding because they target the failure modes this design is most
 likely to actually have.
 
-| # | case | question | expected |
-| --- | --- | --- | --- |
-| 1 | current | "What is the current Team plan price?" | $55, citing 2025 + the supersession sentence |
-| 2 | historical | "What did the Team plan cost in 2024?" | $40, citing 2024 |
-| 3 | unspecified | "How much is the Team plan?" | $55 — but see 6.2 |
-| 4 | newer doc, old claim | 2026 note mentions "the former $40 price" | must **not** supersede $55 |
-| 5 | two current claims | two authoritative sources, $55 vs $60, no supersession | Phase 5C conflict hold |
-| 6 | future price | 2026 notice: "starting January 2027 the price will be $65" | current → $55; "in February 2027" → $65 |
-| 7 | **superseding doc pruned** | current price, with `pricing-2025.md` ranked below the pruning cut | coverage restores it; answer $55, not $40 |
-| 8 | **supersession without a date** | "this supersedes earlier pricing" with no period anywhere | must not resolve; disclose rather than guess |
-| 9 | **newer authoritative vs older authoritative, same period** | both authoritative, both applicable | Phase 5C hold — authority does not break a temporal tie |
+| id | case | resolution | answer | reaches 5C |
+| --- | --- | --- | --- | --- |
+| T1 | current price, explicit supersession | resolved | 55 | no |
+| T2 | historical price for a named period | resolved | 40 | no |
+| T3 | unspecified time, evidenced currentness | resolved | 55 | no |
+| T4 | 2026 note mentioning the former 40 | resolved | 55, never 40 | no |
+| T5 | competing versions, no currentness evidence | **unresolved** | disclose | yes |
+| T6a | future price, asked before it takes effect | resolved | 55, never 65 | no |
+| T6b | future price, asked for its own period | resolved | 65 | no |
+| T7 | **superseding evidence pruned** | resolved | 55, never 40 | no |
+| T8 | version change, no decided trigger | **unassessed** | disclose | yes |
+| T9 | two authoritative same-period claims | **unresolved** | conflict hold | yes |
 
-Test 7 is the flagship. It is the direct analogue of the Phase 5C integration
-result, and given the measured ranking it is the likeliest real failure.
+Three of ten expectations are negative. A phase whose fixtures all pass by
+answering is a phase that has learned to answer, not to know when it cannot.
+
+**T7 is the flagship.** It is the direct analogue of the Phase 5C integration
+result, and given the measured ranking it is the likeliest real failure. Its
+variant includes the full 34-document padded corpus so the superseding source is
+pruned on merit against real competition. **Whether it is genuinely pruned must
+be verified during offline evaluation**; if it survives, add padding rather than
+hand-placing the source into context, which would test only the resolver and
+skip the integration path that matters.
+
+**T9 proves authority ≠ automatic winner.** Two authoritative sources, same
+subject, same period, no supersession between them: the temporal resolver cannot
+choose, so it must hand over to Phase 5C rather than letting authority break a
+tie it has no business breaking.
 
 ## 6. Settled decisions — **DECIDED**
 
