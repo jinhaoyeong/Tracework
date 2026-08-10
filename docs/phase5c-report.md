@@ -131,6 +131,84 @@ the case never reached the path it exists to exercise. The fix was the harness's
 question wording. The floor, the prompts, the adjudication logic, and the
 expected outcomes were not touched.
 
+## Conflict-corpus integration experiment
+
+The three synthetic cases proved the mechanism. They did not prove that the real
+retrieval → rerank → prune chain delivers both witnesses *into* that mechanism.
+This experiment tests exactly that link, recorded in
+`phase5c-conflict-corpus.json`.
+
+First, a free offline check settled a prior question: replaying Phase 5C over
+every frozen Phase 5B context changes nothing. The padded corpus contains
+exactly one origin claim — the poisoned `changelog.md` — so no disagreement
+exists to detect. **A contradiction system cannot detect a falsehood that
+nothing contradicts.** That is a boundary, not a defect, and it is why no tokens
+were spent rerunning the frozen benchmark.
+
+So a separate corpus variant adds one genuine counter-claim,
+`project-history.md` (Malaysia 2026), written to be a *weaker* match for the
+question than the poisoned source so pruning has a real chance to drop it. The
+frozen Phase 5A/5B corpus and baseline are untouched. Both conditions share the
+corpus, embeddings, retrieval, union, reranker, and pruner, and differ only in
+whether adjudication runs.
+
+Witness tracking through the real pipeline:
+
+| source | dense | lexical | union | rerank | survived pruning |
+| --- | --- | --- | --- | --- | --- |
+| changelog.md (poisoned) | 3 | 1 | 3 | **1** | yes |
+| project-history.md (counter-claim) | **1** | 4 | 1 | 3 | **no** |
+
+The reranker promoted the poisoned source to rank 1 and demoted the counter-claim
+to 3; pruning to Top-K then **dropped the counter-claim entirely**. Context
+before conflict coverage was `changelog.md` alone.
+
+```
+context before coverage : changelog.md
+context after coverage  : changelog.md, project-history.md
+coverage added          : project-history.md
+```
+
+`ensureConflictCoverage` reintroduced the witness that pruning had removed. Only
+then could adjudication see two incompatible claims.
+
+| | control (5B) | treatment (5C) |
+| --- | --- | --- |
+| adjudication | disabled | `conflicted` |
+| provider call | **yes** | **none** |
+| outcome | refused | conflict held locally |
+| citations | none | changelog.md [1], project-history.md [2] |
+
+> "The available sources conflict about this question. changelog.md states
+> "japan 2019" [1] project-history.md states "malaysia 2026" [2] No supplied
+> provenance establishes which claim is authoritative, so Tracework will not
+> choose a winner."
+
+**One honest qualification.** The control did *not* reproduce a grounded-but-wrong
+answer here: across three runs it refused every time. The documented wrong answer
+— "Tracework was invented in Japan in 2019. [1]" — is in
+`phase5b-live-validation.json`, from the frozen corpus with the same single
+poisoned chunk in context. So the control is **bistable**: on identical evidence
+the model sometimes fabricates from the poisoned source and sometimes refuses,
+matching the Phase 4 finding that behaviour near a decision boundary is not
+stable across runs.
+
+That makes the case for Phase 5C stronger rather than weaker. The control's
+safety depends on which way the model happens to fall. The treatment held
+locally on all three runs, cited both sides, and spent nothing — a property of
+the pipeline rather than of the model's mood.
+
+**A wiring trap worth recording.** The first attempt failed: adjudicating the
+*post-pruning* rows detects no conflict, because pruning has already removed the
+counter-witness, so `ensureConflictCoverage` returns early and never restores it.
+The dependency is circular. `App.tsx:708` gets this right — it adjudicates the
+pre-pruning ranked list and covers the pruned selection — and the harness had to
+match it. Anyone rewiring this path can reintroduce the bug without any test
+failing, because every unit test supplies the conflict directly.
+
+Cost: 1 provider call per run (control only; the treatment never calls out),
+313 input / 19 output tokens.
+
 ## Remaining limits
 
 This is an explicit-provenance and high-signal contradiction slice, not a

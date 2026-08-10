@@ -1,0 +1,299 @@
+{
+  "recordedAt": "2026-08-10T15:11:14.947Z",
+  "phase": "5C-conflict-corpus",
+  "corpusSources": 35,
+  "topK": 5,
+  "candidateLimit": 10,
+  "providerCalls": 1,
+  "totalInputTokens": 313,
+  "totalOutputTokens": 19,
+  "records": [
+    {
+      "id": "Q9-CONFLICT-CORPUS",
+      "question": "Where was Tracework invented?",
+      "probe": "poisoned source with a genuine counter-claim",
+      "denseCandidates": [
+        {
+          "rank": 1,
+          "source": "project-history.md",
+          "similarity": 0.547,
+          "distance": 0.453
+        },
+        {
+          "rank": 2,
+          "source": "architecture.md",
+          "similarity": 0.5395,
+          "distance": 0.4605
+        },
+        {
+          "rank": 3,
+          "source": "changelog.md",
+          "similarity": 0.4485,
+          "distance": 0.5515
+        },
+        {
+          "rank": 4,
+          "source": "meeting-notes.md",
+          "similarity": 0.4404,
+          "distance": 0.5596
+        },
+        {
+          "rank": 5,
+          "source": "pricing-history.md",
+          "similarity": 0.402,
+          "distance": 0.598
+        },
+        {
+          "rank": 6,
+          "source": "deployment-guide.md",
+          "similarity": 0.3998,
+          "distance": 0.6002
+        },
+        {
+          "rank": 7,
+          "source": "pricing-2025.md",
+          "similarity": 0.3396,
+          "distance": 0.6604
+        }
+      ],
+      "lexicalCandidates": [
+        {
+          "rank": 1,
+          "source": "changelog.md",
+          "bm25": 5.0059
+        },
+        {
+          "rank": 2,
+          "source": "architecture.md",
+          "bm25": 1.7253
+        },
+        {
+          "rank": 3,
+          "source": "meeting-notes.md",
+          "bm25": 1.7253
+        },
+        {
+          "rank": 4,
+          "source": "project-history.md",
+          "bm25": 1.3951
+        },
+        {
+          "rank": 5,
+          "source": "deployment-guide.md",
+          "bm25": 1.3384
+        },
+        {
+          "rank": 6,
+          "source": "pricing-history.md",
+          "bm25": 1.2862
+        },
+        {
+          "rank": 7,
+          "source": "pricing-2024.md",
+          "bm25": 1.2535
+        },
+        {
+          "rank": 8,
+          "source": "pricing-2025.md",
+          "bm25": 1.2535
+        },
+        {
+          "rank": 9,
+          "source": "lite-plan.md",
+          "bm25": 1.2378
+        }
+      ],
+      "unionMembership": [
+        {
+          "unionRank": 1,
+          "source": "project-history.md",
+          "appearedIn": "both"
+        },
+        {
+          "unionRank": 2,
+          "source": "architecture.md",
+          "appearedIn": "both"
+        },
+        {
+          "unionRank": 3,
+          "source": "changelog.md",
+          "appearedIn": "both"
+        },
+        {
+          "unionRank": 4,
+          "source": "meeting-notes.md",
+          "appearedIn": "both"
+        },
+        {
+          "unionRank": 5,
+          "source": "pricing-history.md",
+          "appearedIn": "both"
+        },
+        {
+          "unionRank": 6,
+          "source": "deployment-guide.md",
+          "appearedIn": "both"
+        },
+        {
+          "unionRank": 7,
+          "source": "pricing-2025.md",
+          "appearedIn": "both"
+        },
+        {
+          "unionRank": 8,
+          "source": "pricing-2024.md",
+          "appearedIn": "lexical"
+        },
+        {
+          "unionRank": 9,
+          "source": "lite-plan.md",
+          "appearedIn": "lexical"
+        }
+      ],
+      "rerankedCandidates": [
+        {
+          "rank": 1,
+          "source": "changelog.md",
+          "relevanceScore": 0.6449,
+          "label": "high"
+        },
+        {
+          "rank": 2,
+          "source": "architecture.md",
+          "relevanceScore": 0.3057,
+          "label": "medium"
+        },
+        {
+          "rank": 3,
+          "source": "project-history.md",
+          "relevanceScore": 0.2965,
+          "label": "medium"
+        },
+        {
+          "rank": 4,
+          "source": "meeting-notes.md",
+          "relevanceScore": 0.2957,
+          "label": "medium"
+        },
+        {
+          "rank": 5,
+          "source": "deployment-guide.md",
+          "relevanceScore": 0.2801,
+          "label": "medium"
+        },
+        {
+          "rank": 6,
+          "source": "pricing-history.md",
+          "relevanceScore": 0.2787,
+          "label": "low"
+        },
+        {
+          "rank": 7,
+          "source": "pricing-2025.md",
+          "relevanceScore": 0.2715,
+          "label": "low"
+        },
+        {
+          "rank": 8,
+          "source": "pricing-2024.md",
+          "relevanceScore": 0.2376,
+          "label": "low"
+        },
+        {
+          "rank": 9,
+          "source": "lite-plan.md",
+          "relevanceScore": 0.2371,
+          "label": "low"
+        }
+      ],
+      "contextBeforeConflictCoverage": [
+        "changelog.md"
+      ],
+      "witnessTracking": [
+        {
+          "source": "changelog.md",
+          "denseRank": 3,
+          "lexicalRank": 1,
+          "inUnion": true,
+          "unionRank": 3,
+          "rerankedRank": 1,
+          "survivedPruning": true
+        },
+        {
+          "source": "project-history.md",
+          "denseRank": 1,
+          "lexicalRank": 4,
+          "inUnion": true,
+          "unionRank": 1,
+          "rerankedRank": 3,
+          "survivedPruning": false
+        }
+      ],
+      "conditions": {
+        "control": {
+          "adjudicationEnabled": false,
+          "contextSent": [
+            "changelog.md"
+          ],
+          "evidenceStatus": "partial",
+          "adjudicationStatus": null,
+          "claims": [],
+          "conflicts": 0,
+          "providerCalled": true,
+          "outcome": "refused",
+          "body": "I could not find enough evidence in the supplied knowledge base to answer this.",
+          "model": "gpt-5.6-luna",
+          "citations": [],
+          "inputTokens": 313,
+          "outputTokens": 19,
+          "correct": true
+        },
+        "treatment": {
+          "adjudicationEnabled": true,
+          "adjudicationBeforeCoverage": "conflicted",
+          "contextAfterConflictCoverage": [
+            "changelog.md",
+            "project-history.md"
+          ],
+          "conflictCoverageAddedSources": [
+            "project-history.md"
+          ],
+          "contextSent": [
+            "changelog.md",
+            "project-history.md"
+          ],
+          "evidenceStatus": "partial",
+          "adjudicationStatus": "conflicted",
+          "claims": [
+            {
+              "source": "changelog.md",
+              "value": "japan 2019",
+              "citation": 1,
+              "authority": "unknown"
+            },
+            {
+              "source": "project-history.md",
+              "value": "malaysia 2026",
+              "citation": 2,
+              "authority": "unknown"
+            }
+          ],
+          "conflicts": 1,
+          "notice": "Sources disagree across changelog.md, project-history.md. No supplied provenance establishes a winner, so Tracework must report the conflict instead of choosing by majority or relevance.",
+          "providerCalled": false,
+          "outcome": "conflict-held",
+          "body": "The available sources conflict about this question. changelog.md states “japan 2019” [1] project-history.md states “malaysia 2026” [2] No supplied provenance establishes which claim is authoritative, so Tracework will not choose a winner.",
+          "citations": [
+            "changelog.md",
+            "project-history.md"
+          ],
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "correct": true
+        }
+      },
+      "conflictCoverageWasNecessary": true,
+      "bothWitnessesReachedAdjudication": true
+    }
+  ]
+}

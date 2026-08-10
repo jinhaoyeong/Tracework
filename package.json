@@ -15,6 +15,7 @@
     "eval:retrieval": "node --experimental-strip-types scripts/eval-retrieval.mjs",
     "eval:reranker": "node --experimental-strip-types scripts/eval-reranker.mjs",
     "eval:phase5c": "node --experimental-strip-types scripts/eval-phase5c.mjs",
+    "eval:conflict-corpus": "node --experimental-strip-types scripts/eval-conflict-corpus.mjs",
     "preview": "vite preview --configLoader runner"
   },
   "dependencies": {
