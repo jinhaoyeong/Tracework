@@ -155,3 +155,31 @@ npm.cmd run build
 ```
 
 The real generation smoke test still requires a valid `OPENAI_API_KEY`; until then, retrieval-only mode and the deterministic insufficient-evidence path remain fully usable.
+
+## Deploy the API routes to Vercel
+
+The files in `api/` are Vercel serverless functions. They provide the same server-side contracts as local Vite middleware for `/api/embed`, `/api/generate`, `/api/vector/sync`, `/api/vector/search`, and `/api/vector/delete`. The browser never receives the OpenAI or Supabase service-role keys.
+
+In the Vercel project settings, add these variables to the environments you deploy (`Production` and/or `Preview`):
+
+```text
+OPENAI_API_KEY=your-key-here
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+OPENAI_GENERATION_MODEL=gpt-5.6-luna
+OPENAI_REASONING_EFFORT=none
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-server-only-key
+```
+
+After saving environment variables, redeploy. Changing a Vercel variable does not update an already-built deployment until a new deployment is created. Do not use `VITE_` prefixes for these values.
+
+To test a deployed embedding route from PowerShell, keep the URL quoted and do not include a trailing space:
+
+```powershell
+$BaseUrl = "https://your-deployment.vercel.app"
+$embedBody = @{ input = @("Tracework uses pgvector for semantic retrieval.") } | ConvertTo-Json
+$embed = Invoke-RestMethod -Uri "$BaseUrl/api/embed" -Method Post -ContentType "application/json" -Body $embedBody
+[pscustomobject]@{ Model = $embed.model; Dimensions = $embed.dimensions; VectorLength = $embed.embeddings[0].Count }
+```
+
+The expected embedding result is `text-embedding-3-small`, `1536`, and `1536`. A `NOT_FOUND` response means the deployment does not contain the `api/` functions yet; redeploy the commit that added them. A `missing_api_key` or `missing_supabase_config` response means the route exists but its Vercel environment variables are not configured for that deployment.
