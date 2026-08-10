@@ -14,12 +14,15 @@ import { PGVECTOR_DIMENSIONS, PgvectorError, requestPgvectorDelete, requestPgvec
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
 
 const STORAGE_KEY = 'tracework.documents.v1'
-const INITIAL_QUERY = 'Where did I implement Japanese Pokémon card matching logic?'
+// Phrased for a visitor reading the demo, not for the author. Each one still
+// carries the terms that retrieve from the bundled sample corpus, so the trace
+// a first-time reader sees is a real one.
+const INITIAL_QUERY = 'Where does the Japanese Pokémon card matching logic live?'
 
 const examples = [
-  'Where did I implement Japanese Pokémon card matching logic?',
+  'Where does the Japanese Pokémon card matching logic live?',
   'What protects locked itinerary places from a planner proposal?',
-  'What should I measure before adding reranking?',
+  'What should you measure before adding reranking?',
 ]
 
 type NeuralStatus = 'idle' | 'indexing' | 'ready' | 'error'
