@@ -136,7 +136,17 @@ Tracework validates that citation markers point to retrieved chunks, but a valid
 
 ### Evidence sufficiency and refusal
 
-The UI calculates evidence state from observable retrieval data, not an invented model confidence percentage. A result score below `0.42` is **insufficient**. At least one result at or above `0.62` is **strong**; other usable results are **partial**. The calculation also reports the number of supporting chunks, distinct supporting sources, and a bounded coverage score. For insufficient evidence, Tracework skips generation and says that it could not find enough evidence in the knowledge base. Weak but plausible near-matches therefore do not become confident fabricated answers.
+The UI calculates evidence state from observable retrieval data, not an invented model confidence percentage. A result score below `0.42` is **insufficient**. At least one result at or above `0.62` is **strong**; other usable results are **partial**. The calculation also reports the number of **candidate chunks above the evidence floor**, distinct sources among them, and a bounded coverage score. Candidate is not the same as supporting: the score threshold measures similarity only, so a chunk can clear the floor without containing anything that answers the question. Measuring real support is reranking work, not retrieval scoring. For insufficient evidence, Tracework skips generation and says that it could not find enough evidence in the knowledge base. Weak but plausible near-matches therefore do not become confident fabricated answers.
+
+### Answered, refused, failed
+
+Generation has three distinct outcomes and they must not be collapsed:
+
+- **Answered** — the model made claims, so every claim must carry a citation marker that resolves to a supplied block.
+- **Refused** — the model reported that the evidence does not answer the question. A refusal makes no claim, so it requires no citations, and it is a successful safety outcome rather than an error.
+- **Failed** — a provider, network, or malformed-output problem, or a claim returned with no citations or with markers pointing outside the supplied evidence.
+
+`classifyGeneratedAnswer()` in `src/lib/grounded.ts` decides which of the three occurred, and only the third is reported as a generation failure.
 
 ### Failure diagnosis
 

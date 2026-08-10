@@ -3,7 +3,10 @@ import {
   attachValidatedCitations,
   buildGroundedContext,
   buildInsufficientAnswer,
+  classifyGeneratedAnswer,
   evaluateEvidence,
+  isModelRefusal,
+  MODEL_REFUSAL_SENTENCE,
   validateCitations,
 } from '../src/lib/grounded.ts'
 
@@ -45,7 +48,7 @@ const strongResults = [
 
 const strong = evaluateEvidence('What does Tracework use for database vector search?', strongResults)
 assert.equal(strong.status, 'strong')
-assert.equal(strong.supportingChunkCount, 2)
+assert.equal(strong.candidateChunksAboveFloor, 2)
 assert.equal(strong.distinctSourceCount, 2)
 
 const context = buildGroundedContext('What does Tracework use for database vector search?', strongResults, {
@@ -78,5 +81,56 @@ assert.equal(weak.status, 'insufficient')
 const refusal = buildInsufficientAnswer(weak)
 assert.match(refusal.body, /couldn't find enough evidence/i)
 assert.deepEqual(refusal.citations, [])
+
+// Regression: partial evidence, model refuses, no citations. Tracework used to
+// report "Generation failed" here because it required citations on every
+// generated response. A correct refusal is a safety outcome, not an error.
+const partialResults = [
+  makeResult({ id: 'partial-1', score: 0.47, text: 'The Tokyo planner lists neighbourhoods worth visiting in spring.' }),
+  makeResult({ id: 'partial-2', sourceId: 'source-b', title: 'planner.md', score: 0.44, text: 'Travel notes mention train passes and walking routes.' }),
+]
+
+const partial = evaluateEvidence('How much did the flight cost?', partialResults)
+assert.equal(partial.status, 'partial')
+assert.equal(partial.candidateChunksAboveFloor, 2)
+
+const partialContext = buildGroundedContext('How much did the flight cost?', partialResults, {
+  retrievalEngine: 'neural',
+  requestedTopK: 5,
+})
+
+const refused = classifyGeneratedAnswer(MODEL_REFUSAL_SENTENCE, partialContext, { model: 'test-model' })
+assert.equal(refused.outcome, 'refused')
+assert.deepEqual(refused.answer.citations, [])
+assert.deepEqual(refused.answer.invalidCitationNumbers, [])
+assert.equal(refused.answer.model, 'test-model')
+assert.match(refused.answer.title, /refused/i)
+assert.notEqual(refused.outcome, 'unusable')
+
+// The refusal survives markdown emphasis, casing, and a trailing caveat.
+assert.equal(isModelRefusal(`**${MODEL_REFUSAL_SENTENCE}**`), true)
+assert.equal(isModelRefusal(MODEL_REFUSAL_SENTENCE.toUpperCase()), true)
+assert.equal(
+  classifyGeneratedAnswer(`${MODEL_REFUSAL_SENTENCE} The retrieved chunks cover neighbourhoods, not costs.`, partialContext).outcome,
+  'refused',
+)
+
+// A cited claim is never a refusal, even if it quotes the refusal sentence.
+assert.equal(isModelRefusal(`${MODEL_REFUSAL_SENTENCE} The flight cost 900 USD [1].`), false)
+
+// An uncited claim is still a genuine generation failure.
+const uncited = classifyGeneratedAnswer('The flight cost 900 USD.', partialContext)
+assert.equal(uncited.outcome, 'unusable')
+assert.match(uncited.reason, /without citing any evidence/i)
+
+// An out-of-range citation marker is still a genuine generation failure.
+const badMarker = classifyGeneratedAnswer('The flight cost 900 USD [7].', partialContext)
+assert.equal(badMarker.outcome, 'unusable')
+assert.match(badMarker.reason, /\[7\]/)
+
+// A properly cited answer is answered, not refused.
+const answered = classifyGeneratedAnswer('Spring neighbourhoods are listed in the planner [1].', partialContext)
+assert.equal(answered.outcome, 'answered')
+assert.equal(answered.answer.citations.length, 1)
 
 console.log('grounded RAG tests passed')

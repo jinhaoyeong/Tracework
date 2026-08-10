@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import { buildSampleCorpus } from './data/sampleCorpus'
 import { Icon } from './components/Icon'
 import { buildAnswer, createDocument, formatBytes, searchDocuments, tokenize } from './lib/rag'
-import { attachValidatedCitations, buildGroundedContext, buildInsufficientAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
+import { buildGroundedContext, buildInsufficientAnswer, classifyGeneratedAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
 import { GenerationError, requestGroundedAnswer } from './lib/generation'
 import { NeuralEmbeddingError, requestNeuralEmbeddings } from './lib/semantic'
 import { PGVECTOR_DIMENSIONS, PgvectorError, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
@@ -37,7 +37,7 @@ interface PgvectorState {
 }
 
 type AnswerMode = 'retrieval' | 'grounded'
-type GenerationStatus = 'idle' | 'generating' | 'ready' | 'blocked' | 'error'
+type GenerationStatus = 'idle' | 'generating' | 'ready' | 'blocked' | 'refused' | 'error'
 
 interface GenerationState {
   status: GenerationStatus
@@ -422,26 +422,29 @@ function App() {
     setGenerationState({ status: 'generating', model: null, message: 'Sending the exact retrieved context to the generation model...' })
     try {
       const response = await requestGroundedAnswer(context)
-      const generatedAnswer = attachValidatedCitations(response.answer, context, {
+      const classified = classifyGeneratedAnswer(response.answer, context, {
         model: response.model,
         inputTokens: response.inputTokens,
         outputTokens: response.outputTokens,
         totalTokens: response.totalTokens,
       })
-      if (!generatedAnswer.citations.length || generatedAnswer.invalidCitationNumbers.length) {
-        throw new GenerationError(
-          'invalid_citations',
-          generatedAnswer.invalidCitationNumbers.length
-            ? `The generation model cited unavailable evidence markers: ${generatedAnswer.invalidCitationNumbers.map((number) => `[${number}]`).join(', ')}.`
-            : 'The generation model returned an answer without valid evidence citations.',
-        )
+
+      // An unusable response is a real generation failure. A refusal is not:
+      // the model judged the evidence inadequate, which is the outcome the
+      // grounding rules are asking for, so it must not require citations.
+      if (classified.outcome === 'unusable') {
+        throw new GenerationError('invalid_citations', classified.reason)
       }
-      setGroundedSession({ ...session, answer: generatedAnswer })
+
+      setGroundedSession({ ...session, answer: classified.answer })
       setGenerationState({
-        status: 'ready',
+        status: classified.outcome === 'refused' ? 'refused' : 'ready',
         model: response.model,
-        message: `Grounded answer returned with ${generatedAnswer.citations.length} validated citation${generatedAnswer.citations.length === 1 ? '' : 's'}.`,
+        message: classified.reason,
       })
+      if (classified.outcome === 'refused') {
+        showNotice('info', 'The model refused to answer from the retrieved evidence. Nothing was invented.')
+      }
     } catch (error) {
       const message = error instanceof GenerationError
         ? error.message
@@ -760,7 +763,7 @@ function App() {
             <div className="answer-layout">
               <div className="answer-copy">
                 <div className="answer-count">{answerMode === 'grounded' ? 'grounded answer' : 'retrieval draft'} / {String(visibleCitations.length).padStart(2, '0')}</div>
-                <div className={`evidence-badge is-${evidenceAssessment.status}`}><span /> evidence / {evidenceAssessment.status}<small>best {Math.round(evidenceAssessment.bestScore * 100)}% · {evidenceAssessment.supportingChunkCount} supporting</small></div>
+                <div className={`evidence-badge is-${evidenceAssessment.status}`}><span /> evidence / {evidenceAssessment.status}<small>best {Math.round(evidenceAssessment.bestScore * 100)}% · {evidenceAssessment.candidateChunksAboveFloor} candidate</small></div>
                 <h2 id="answer-title">{visibleAnswerTitle}</h2>
                 <p className={answerMode === 'grounded' ? 'grounded-answer-body' : undefined}>{visibleAnswerBody}</p>
               </div>
@@ -807,7 +810,7 @@ function App() {
                 </div>
               )) : <div className="grounded-context-empty">No retrieved chunks are available. Generation will refuse to invent an answer.</div>}
             </div>
-            <p className="grounded-debug-note">{groundedContextWasSent ? 'This is the exact context snapshot supplied to the generation route.' : groundedSession ? 'Generation was skipped because the evidence was insufficient; this is the context that was evaluated.' : 'Preview only: these chunks will be sent after you press retrieve in grounded answer mode.'} Evidence status is calculated from observable retrieval scores, supporting chunk count, and distinct source count; it is not an LLM confidence percentage.</p>
+            <p className="grounded-debug-note">{groundedContextWasSent ? 'This is the exact context snapshot supplied to the generation route.' : groundedSession ? 'Generation was skipped because the evidence was insufficient; this is the context that was evaluated.' : 'Preview only: these chunks will be sent after you press retrieve in grounded answer mode.'} Evidence status is calculated from observable retrieval scores, the number of candidate chunks above the evidence floor, and distinct source count; it is not an LLM confidence percentage, and it does not yet measure whether a candidate chunk answers the question.</p>
           </section>}
 
           {compareMode && <section className="comparison-section" aria-labelledby="comparison-title">
