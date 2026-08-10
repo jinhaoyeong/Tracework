@@ -7,6 +7,7 @@
     "dev": "vite --configLoader runner",
     "build": "tsc -b && vite build --configLoader runner",
     "check": "tsc --noEmit -p tsconfig.app.json",
+    "test:grounded": "node --experimental-strip-types scripts/test-grounded.mjs",
     "preview": "vite preview --configLoader runner"
   },
   "dependencies": {

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import { buildSampleCorpus } from './data/sampleCorpus'
 import { Icon } from './components/Icon'
 import { buildAnswer, createDocument, formatBytes, searchDocuments, tokenize } from './lib/rag'
+import { attachValidatedCitations, buildGroundedContext, buildInsufficientAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
+import { GenerationError, requestGroundedAnswer } from './lib/generation'
 import { NeuralEmbeddingError, requestNeuralEmbeddings } from './lib/semantic'
 import { PGVECTOR_DIMENSIONS, PgvectorError, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
@@ -31,6 +33,15 @@ interface PgvectorState {
   database: string | null
   candidateCount: number
   topK: number
+  message: string | null
+}
+
+type AnswerMode = 'retrieval' | 'grounded'
+type GenerationStatus = 'idle' | 'generating' | 'ready' | 'blocked' | 'error'
+
+interface GenerationState {
+  status: GenerationStatus
+  model: string | null
   message: string | null
 }
 
@@ -118,6 +129,9 @@ function App() {
   const [pgvectorState, setPgvectorState] = useState<PgvectorState>({ status: 'idle', database: null, candidateCount: 0, topK: 5, message: null })
   const [topK, setTopK] = useState(5)
   const [sourceKindFilter, setSourceKindFilter] = useState<SourceKind | 'all'>('all')
+  const [answerMode, setAnswerMode] = useState<AnswerMode>('retrieval')
+  const [generationState, setGenerationState] = useState<GenerationState>({ status: 'idle', model: null, message: null })
+  const [groundedSession, setGroundedSession] = useState<GroundedSession | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const neuralIndexPromiseRef = useRef<Promise<DocumentRecord[]> | null>(null)
 
@@ -142,6 +156,36 @@ function App() {
   const neuralResults = useMemo(() => searchDocuments(documents, activeQuery, { engine: 'neural', queryVector: neuralQueryVector ?? undefined }), [documents, activeQuery, neuralQueryVector])
   const results = engine === 'neural' ? neuralResults : engine === 'pgvector' ? pgvectorResults : hashedResults
   const answer = useMemo(() => buildAnswer(activeQuery, results), [activeQuery, results])
+  const evidenceAssessment = useMemo(() => evaluateEvidence(activeQuery, results), [activeQuery, results])
+  const groundedPreviewContext = useMemo(() => buildGroundedContext(activeQuery, results, {
+    retrievalEngine: engine,
+    requestedTopK: engine === 'pgvector' ? topK : 8,
+  }), [activeQuery, engine, results, topK])
+  const contextForInspector: GroundedContext = groundedSession?.context ?? groundedPreviewContext
+  const groundedAnswer = groundedSession?.answer ?? null
+  const groundedContextWasSent = groundedSession !== null && generationState.status !== 'blocked'
+  const groundedContextStateLabel = groundedSession
+    ? generationState.status === 'blocked' ? 'generation skipped' : 'context sent'
+    : 'context preview'
+  const generationDebugLabel = generationState.status === 'idle'
+    ? 'not called'
+    : `${generationState.model ?? 'server model'} / ${generationState.status}`
+  const visibleCitations = answerMode === 'grounded' ? groundedAnswer?.citations ?? [] : answer.citations
+  const visibleCitationNumbers = answerMode === 'grounded'
+    ? groundedAnswer?.validCitationNumbers ?? []
+    : answer.citations.map((_citation, index) => index + 1)
+  const visibleAnswerTitle = answerMode === 'retrieval'
+    ? answer.title
+    : groundedAnswer?.title
+      ?? (generationState.status === 'generating' ? 'Building a grounded answer' : generationState.status === 'error' ? 'Generation failed' : 'Grounded answer not run')
+  const visibleAnswerBody = answerMode === 'retrieval'
+    ? answer.body
+    : groundedAnswer?.body
+      ?? (generationState.status === 'generating'
+        ? 'The model is receiving the exact retrieved context shown below.'
+        : generationState.status === 'error'
+          ? generationState.message ?? 'The generation stage failed before an answer was returned.'
+          : 'Choose grounded answer mode and run a question to send retrieved evidence to the generation model.')
   const selectedResult = results.find((result) => result.chunk.id === selectedChunkId) ?? results[0]
   const chunkCount = documents.reduce((total, document) => total + document.chunks.length, 0)
   const wordCount = documents.reduce((total, document) => total + tokenize(document.content).length, 0)
@@ -179,22 +223,38 @@ function App() {
     setPgvectorState({ status: 'idle', database: null, candidateCount: 0, topK, message: null })
   }
 
+  const resetGroundedState = () => {
+    setGroundedSession(null)
+    setGenerationState({ status: 'idle', model: null, message: null })
+  }
+
   const resetRetrievalState = () => {
     resetNeuralState()
     resetPgvectorState()
+    resetGroundedState()
   }
 
-  const indexNeuralDocuments = async (currentDocuments: DocumentRecord[]) => {
+  const indexNeuralDocuments = async (
+    currentDocuments: DocumentRecord[],
+    expectedModel: string,
+    expectedDimensions: number,
+  ) => {
     if (neuralIndexPromiseRef.current) return neuralIndexPromiseRef.current
 
-    const pendingChunks = currentDocuments.flatMap((document) => document.chunks.filter((chunk) => !chunk.neuralEmbedding))
+    const pendingChunks = currentDocuments.flatMap((document) => document.chunks.filter((chunk) => {
+      const embedding = chunk.neuralEmbedding
+      return !embedding
+        || embedding.model !== expectedModel
+        || embedding.dimensions !== expectedDimensions
+        || !Array.isArray(embedding.vector)
+        || embedding.vector.length !== expectedDimensions
+    }))
     if (!pendingChunks.length) {
-      const existingModel = currentDocuments.flatMap((document) => document.chunks).find((chunk) => chunk.neuralEmbedding)?.neuralEmbedding?.model ?? null
       setNeuralState((current) => ({
         status: 'ready',
-        model: current.model ?? existingModel,
+        model: current.model ?? expectedModel,
         progress: 100,
-        message: 'All indexed chunks already have neural vectors.',
+        message: `All indexed chunks use ${expectedModel} / ${expectedDimensions}d.`,
       }))
       return currentDocuments
     }
@@ -234,6 +294,12 @@ function App() {
             }
           }),
         }))
+        if (response.model !== expectedModel || response.dimensions !== expectedDimensions) {
+          throw new NeuralEmbeddingError(
+            'embedding_contract_mismatch',
+            `The chunk embeddings use ${response.model} / ${response.dimensions}d, but the query uses ${expectedModel} / ${expectedDimensions}d.`,
+          )
+        }
         setDocuments(updatedDocuments)
         setNeuralState({
           status: 'ready',
@@ -259,26 +325,35 @@ function App() {
 
   const prepareNeuralQuery = async (nextQuery: string) => {
     setNeuralQueryVector(null)
-    const indexedDocuments = await indexNeuralDocuments(documents)
     setNeuralState((current) => ({ ...current, status: 'indexing', progress: 100, message: 'Embedding query...' }))
     const response = await requestNeuralEmbeddings([nextQuery])
     const queryVector = response.vectors[0]
     if (!queryVector) throw new NeuralEmbeddingError('empty_vector', 'The embedding provider returned no query vector.')
+    if (response.dimensions !== PGVECTOR_DIMENSIONS) {
+      throw new NeuralEmbeddingError(
+        'invalid_dimensions',
+        `Tracework requires ${PGVECTOR_DIMENSIONS}-dimensional embeddings for local/database comparison; the provider returned ${response.dimensions}d.`,
+      )
+    }
+    const indexedDocuments = await indexNeuralDocuments(documents, response.model, response.dimensions)
     setNeuralQueryVector(queryVector)
     setNeuralState({ status: 'ready', model: response.model, progress: 100, message: `Neural query ready / ${response.model}` })
     return { indexedDocuments, queryVector, response }
   }
 
-  const runNeuralRetrieval = async (nextQuery: string) => {
+  const runNeuralRetrieval = async (nextQuery: string): Promise<SearchResult[] | null> => {
     try {
-      await prepareNeuralQuery(nextQuery)
+      const { indexedDocuments, queryVector } = await prepareNeuralQuery(nextQuery)
+      const nextResults = searchDocuments(indexedDocuments, nextQuery, { engine: 'neural', queryVector })
       setActiveQuery(nextQuery)
+      return nextResults
     } catch (error) {
       const message = error instanceof NeuralEmbeddingError
         ? error.message
         : 'Neural retrieval failed before the query could be compared.'
       setNeuralState((current) => ({ ...current, status: 'error', message }))
       showNotice('error', message)
+      return null
     }
   }
 
@@ -325,7 +400,59 @@ function App() {
     })
   }
 
-  const runPgvectorRetrieval = async (nextQuery: string, nextTopK = topK, nextFilter: SourceKind | 'all' = sourceKindFilter) => {
+  const runGroundedGeneration = async (nextQuery: string, retrievedResults: SearchResult[]) => {
+    const assessment = evaluateEvidence(nextQuery, retrievedResults)
+    const context = buildGroundedContext(nextQuery, retrievedResults, {
+      retrievalEngine: retrievedResults[0]?.engine ?? engine,
+      requestedTopK: engine === 'pgvector' ? topK : 8,
+    })
+    const session: GroundedSession = { context, assessment, answer: null }
+    setGroundedSession(session)
+
+    if (assessment.status === 'insufficient') {
+      setGroundedSession({ ...session, answer: buildInsufficientAnswer(assessment) })
+      setGenerationState({
+        status: 'blocked',
+        model: null,
+        message: 'Generation skipped because the retrieved evidence is insufficient.',
+      })
+      return
+    }
+
+    setGenerationState({ status: 'generating', model: null, message: 'Sending the exact retrieved context to the generation model...' })
+    try {
+      const response = await requestGroundedAnswer(context)
+      const generatedAnswer = attachValidatedCitations(response.answer, context, {
+        model: response.model,
+        inputTokens: response.inputTokens,
+        outputTokens: response.outputTokens,
+        totalTokens: response.totalTokens,
+      })
+      if (!generatedAnswer.citations.length || generatedAnswer.invalidCitationNumbers.length) {
+        throw new GenerationError(
+          'invalid_citations',
+          generatedAnswer.invalidCitationNumbers.length
+            ? `The generation model cited unavailable evidence markers: ${generatedAnswer.invalidCitationNumbers.map((number) => `[${number}]`).join(', ')}.`
+            : 'The generation model returned an answer without valid evidence citations.',
+        )
+      }
+      setGroundedSession({ ...session, answer: generatedAnswer })
+      setGenerationState({
+        status: 'ready',
+        model: response.model,
+        message: `Grounded answer returned with ${generatedAnswer.citations.length} validated citation${generatedAnswer.citations.length === 1 ? '' : 's'}.`,
+      })
+    } catch (error) {
+      const message = error instanceof GenerationError
+        ? error.message
+        : 'The generation stage failed before a grounded answer was returned.'
+      setGenerationState((current) => ({ ...current, status: 'error', message }))
+      showNotice('error', message)
+    }
+  }
+
+  const runPgvectorRetrieval = async (nextQuery: string, nextTopK = topK, nextFilter: SourceKind | 'all' = sourceKindFilter): Promise<SearchResult[] | null> => {
+    resetGroundedState()
     setPgvectorResults([])
     setPgvectorState((current) => ({ ...current, status: 'syncing', topK: nextTopK, message: 'Preparing neural vectors for database sync...' }))
     try {
@@ -334,7 +461,8 @@ function App() {
       const sync = await requestPgvectorSync(indexedDocuments)
       setPgvectorState((current) => ({ ...current, status: 'searching', database: sync.database, message: `Searching ${sync.syncedChunks} stored chunks...` }))
       const search = await requestPgvectorSearch(queryVector, { limit: nextTopK, sourceKind: nextFilter })
-      setPgvectorResults(mapPgvectorResults(search.results, indexedDocuments, search.database, nextQuery))
+      const nextResults = mapPgvectorResults(search.results, indexedDocuments, search.database, nextQuery)
+      setPgvectorResults(nextResults)
       setActiveQuery(nextQuery)
       setPgvectorState({
         status: 'ready',
@@ -343,6 +471,7 @@ function App() {
         topK: search.topK,
         message: `${search.results.length} result${search.results.length === 1 ? '' : 's'} returned / ${response.model}`,
       })
+      return nextResults
     } catch (error) {
       const message = error instanceof NeuralEmbeddingError || error instanceof PgvectorError
         ? error.message
@@ -350,19 +479,28 @@ function App() {
       if (error instanceof NeuralEmbeddingError) setNeuralState((current) => ({ ...current, status: 'error', message }))
       setPgvectorState((current) => ({ ...current, status: 'error', message }))
       showNotice('error', message)
+      return null
     }
   }
 
-  const runRetrieval = (nextQuery: string) => {
+  const runRetrieval = async (nextQuery: string, shouldGenerate = false) => {
+    resetGroundedState()
+    if (shouldGenerate && compareMode) {
+      showNotice('info', 'Choose one retrieval engine before generating so the evidence-to-answer path stays unambiguous.')
+      shouldGenerate = false
+    }
+
+    let retrievedResults: SearchResult[] | null = null
     if (engine === 'pgvector' || compareMode) {
-      void runPgvectorRetrieval(nextQuery)
-      return
+      retrievedResults = await runPgvectorRetrieval(nextQuery)
+    } else if (engine === 'neural') {
+      retrievedResults = await runNeuralRetrieval(nextQuery)
+    } else {
+      retrievedResults = searchDocuments(documents, nextQuery, { engine: 'hashed' })
+      setActiveQuery(nextQuery)
     }
-    if (engine === 'neural') {
-      void runNeuralRetrieval(nextQuery)
-      return
-    }
-    setActiveQuery(nextQuery)
+
+    if (shouldGenerate && retrievedResults) await runGroundedGeneration(nextQuery, retrievedResults)
   }
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -372,7 +510,7 @@ function App() {
       showNotice('info', 'Ask a specific question so the index has something to retrieve.')
       return
     }
-    runRetrieval(nextQuery)
+    void runRetrieval(nextQuery, answerMode === 'grounded')
   }
 
   const handleIndexNote = (event: FormEvent<HTMLFormElement>) => {
@@ -436,14 +574,15 @@ function App() {
 
   const handleExample = (example: string) => {
     setQuery(example)
-    runRetrieval(example)
+    void runRetrieval(example, answerMode === 'grounded')
   }
 
   const handleEngineChange = (nextEngine: RetrievalEngine) => {
     setEngine(nextEngine)
     setCompareMode(false)
+    resetGroundedState()
     if (nextEngine === 'hashed') {
-      resetRetrievalState()
+      setActiveQuery(activeQuery)
       return
     }
     if (nextEngine === 'pgvector') {
@@ -453,9 +592,15 @@ function App() {
     void runNeuralRetrieval(activeQuery)
   }
 
+  const handleAnswerModeChange = (nextMode: AnswerMode) => {
+    setAnswerMode(nextMode)
+    resetGroundedState()
+  }
+
   const handleCompare = () => {
     setEngine('neural')
     setCompareMode(true)
+    resetGroundedState()
     void runPgvectorRetrieval(activeQuery)
   }
 
@@ -475,6 +620,7 @@ function App() {
 
   const selectComparisonResult = (nextEngine: RetrievalEngine, chunkId: string) => {
     setEngine(nextEngine)
+    resetGroundedState()
     setSelectedChunkId(chunkId)
   }
 
@@ -585,12 +731,20 @@ function App() {
           <section className="answer-sheet" aria-labelledby="answer-title">
             <div className="sheet-topline">
               <div className="signal-label"><span className="signal-dot" /> retrieval lab</div>
-              <div className="engine-controls" role="group" aria-label="Retrieval engine">
-                <span className="engine-label">engine</span>
-                <button className={`engine-option ${engine === 'hashed' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('hashed')}>hashed baseline</button>
-                <button className={`engine-option ${engine === 'neural' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('neural')}>local neural</button>
-                <button className={`engine-option ${engine === 'pgvector' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('pgvector')}>pgvector</button>
-                <button className={`compare-button ${compareMode ? 'is-active' : ''}`} type="button" onClick={handleCompare} disabled={neuralState.status === 'indexing' || ['syncing', 'searching'].includes(pgvectorState.status)}>compare</button>
+              <div className="sheet-controls">
+                <div className="engine-controls" role="group" aria-label="Retrieval engine">
+                  <span className="engine-label">engine</span>
+                  <button className={`engine-option ${engine === 'hashed' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('hashed')}>hashed baseline</button>
+                  <button className={`engine-option ${engine === 'neural' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('neural')}>local neural</button>
+                  <button className={`engine-option ${engine === 'pgvector' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('pgvector')}>pgvector</button>
+                  <button className={`compare-button ${compareMode ? 'is-active' : ''}`} type="button" onClick={handleCompare} disabled={neuralState.status === 'indexing' || ['syncing', 'searching'].includes(pgvectorState.status)}>compare</button>
+                </div>
+                <span className="control-divider" aria-hidden="true" />
+                <div className="answer-mode-controls" role="group" aria-label="Answer mode">
+                  <span className="engine-label">answer</span>
+                  <button className={`engine-option ${answerMode === 'retrieval' ? 'is-active' : ''}`} type="button" onClick={() => handleAnswerModeChange('retrieval')}>retrieval only</button>
+                  <button className={`engine-option ${answerMode === 'grounded' ? 'is-active' : ''}`} type="button" onClick={() => handleAnswerModeChange('grounded')}>grounded answer</button>
+                </div>
               </div>
             </div>
             <div className="neural-status-row" role="status" aria-live="polite">
@@ -605,21 +759,56 @@ function App() {
             </div>
             <div className="answer-layout">
               <div className="answer-copy">
-                <div className="answer-count">answer / {String(answer.citations.length).padStart(2, '0')}</div>
-                <h2 id="answer-title">{answer.title}</h2>
-                <p>{answer.body}</p>
+                <div className="answer-count">{answerMode === 'grounded' ? 'grounded answer' : 'retrieval draft'} / {String(visibleCitations.length).padStart(2, '0')}</div>
+                <div className={`evidence-badge is-${evidenceAssessment.status}`}><span /> evidence / {evidenceAssessment.status}<small>best {Math.round(evidenceAssessment.bestScore * 100)}% · {evidenceAssessment.supportingChunkCount} supporting</small></div>
+                <h2 id="answer-title">{visibleAnswerTitle}</h2>
+                <p className={answerMode === 'grounded' ? 'grounded-answer-body' : undefined}>{visibleAnswerBody}</p>
               </div>
               <div className="citation-stack" aria-label="Answer sources">
-                {answer.citations.length ? answer.citations.map((result, index) => (
+                {visibleCitations.length ? visibleCitations.map((result, index) => (
                   <button className="citation-line" key={result.chunk.id} type="button" onClick={() => setSelectedChunkId(result.chunk.id)}>
-                    <span className="citation-number">[{index + 1}]</span>
+                    <span className="citation-number">[{visibleCitationNumbers[index] ?? index + 1}]</span>
                     <span><strong>{result.document.title}</strong><small>chunk {String(result.chunk.index + 1).padStart(2, '0')} · {Math.round(result.score * 100)}% match</small></span>
+                    <span className="citation-extra-meta"><small>{result.document.source} Â· {result.document.kind}</small><small>similarity {result.score.toFixed(4)} Â· distance {result.distance === undefined ? 'n/a' : result.distance.toFixed(4)}</small><small>{result.embeddingModel ?? result.chunk.neuralEmbedding?.model ?? 'local'} / {result.embeddingDimensions ?? result.chunk.neuralEmbedding?.dimensions ?? result.chunk.vector.length}d</small></span>
                     <Icon name="arrow" size={16} />
                   </button>
-                )) : <div className="citation-empty">Results will leave a visible source trail here.</div>}
+                )) : <div className="citation-empty">{answerMode === 'grounded' ? 'Validated citations will appear here after generation.' : 'Results will leave a visible source trail here.'}</div>}
               </div>
             </div>
           </section>
+
+          {answerMode === 'grounded' && <section className="grounded-debug-section" aria-labelledby="grounded-debug-title">
+            <div className="grounded-debug-heading">
+              <div>
+                <div className="section-marker"><span className="marker-line" /> grounded pipeline / context <span className="marker-line short" /></div>
+                <h2 id="grounded-debug-title">What the model actually sees.</h2>
+              </div>
+              <span className={`grounded-debug-state is-${groundedContextWasSent ? 'sent' : groundedSession ? 'blocked' : 'preview'}`}>{groundedContextStateLabel}</span>
+            </div>
+            <div className="grounded-debug-grid">
+              <div className="grounded-debug-query"><span>question</span><strong>{contextForInspector.question}</strong></div>
+              <div><span>knowledge base</span><strong>{documents.length} sources / {chunkCount} chunks</strong></div>
+              <div><span>retrieved</span><strong>{results.length} chunks</strong></div>
+              <div><span>sent to LLM</span><strong>{groundedContextWasSent ? contextForInspector.chunks.length : 'not yet'}</strong></div>
+              <div><span>context size</span><strong>{contextForInspector.characters.toLocaleString()} chars / ~{contextForInspector.approximateTokens.toLocaleString()} tokens</strong></div>
+              <div><span>evidence status</span><strong className={`evidence-text is-${evidenceAssessment.status}`}>{evidenceAssessment.status}</strong></div>
+              <div><span>embedding</span><strong>{contextForInspector.embeddingModel ?? 'local / unknown'}{contextForInspector.embeddingDimensions ? ` / ${contextForInspector.embeddingDimensions}d` : ''}</strong></div>
+              <div><span>generation</span><strong>{generationDebugLabel}</strong></div>
+            </div>
+            <div className="grounded-context-list">
+              {contextForInspector.chunks.length ? contextForInspector.chunks.map((chunk) => (
+                <div className="grounded-context-chunk" key={chunk.result.chunk.id}>
+                  <button type="button" onClick={() => setSelectedChunkId(chunk.result.chunk.id)}>
+                    <span className="citation-number">[{chunk.citation}]</span>
+                    <span><strong>{chunk.result.document.title}</strong><small>{chunk.result.document.source} · chunk {String(chunk.result.chunk.index + 1).padStart(2, '0')} · similarity {chunk.result.score.toFixed(4)}{chunk.result.distance === undefined ? '' : ` · distance ${chunk.result.distance.toFixed(4)}`}</small></span>
+                    <Icon name="arrow" size={15} />
+                  </button>
+                  <pre>{chunk.formatted}</pre>
+                </div>
+              )) : <div className="grounded-context-empty">No retrieved chunks are available. Generation will refuse to invent an answer.</div>}
+            </div>
+            <p className="grounded-debug-note">{groundedContextWasSent ? 'This is the exact context snapshot supplied to the generation route.' : groundedSession ? 'Generation was skipped because the evidence was insufficient; this is the context that was evaluated.' : 'Preview only: these chunks will be sent after you press retrieve in grounded answer mode.'} Evidence status is calculated from observable retrieval scores, supporting chunk count, and distinct source count; it is not an LLM confidence percentage.</p>
+          </section>}
 
           {compareMode && <section className="comparison-section" aria-labelledby="comparison-title">
             <div className="comparison-heading">
