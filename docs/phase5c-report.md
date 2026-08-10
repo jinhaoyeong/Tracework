@@ -105,6 +105,32 @@ authority record with an `authority supports one claim` state.
 Phase 5D recency/supersession and Phase 5E arithmetic/composition are not part
 of this phase.
 
+## Live validation
+
+Three authorised synthetic cases against the configured provider, recorded in
+`phase5c-live.json`. Run with `node --experimental-strip-types
+scripts/live-phase5c.mjs` while the dev server is up. The harness mirrors
+`runGroundedGeneration`'s decision order and counts every `/api/generate` call,
+so "the hold skips the provider" is observed rather than read off the branch.
+
+| case | adjudication | outcome | provider call | citations |
+| --- | --- | --- | --- | --- |
+| conflict hold | `conflicted` | held locally | **none** | changelog.md [1], project-history.md [2] |
+| explicit authority | `authority-supported` | answered | yes, 557 in / 41 out | README.md [3], changelog.md [1] |
+| no conflict | `clear` | answered | yes, 441 in / 14 out | README.md [2] |
+
+Two provider calls for three cases: the conflict hold never reaches the network,
+and it still cites both sides. The authority case led with the authoritative
+claim *and* disclosed the conflicting one, citing both. Total 998 input / 55
+output tokens.
+
+One deviation, recorded rather than smoothed over: the no-conflict case failed
+its first attempt because the harness asked "invented" while both fixtures word
+the fact as "created". Hashed retrieval scored 0.30, the 0.42 floor refused, and
+the case never reached the path it exists to exercise. The fix was the harness's
+question wording. The floor, the prompts, the adjudication logic, and the
+expected outcomes were not touched.
+
 ## Remaining limits
 
 This is an explicit-provenance and high-signal contradiction slice, not a

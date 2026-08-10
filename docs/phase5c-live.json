@@ -1,0 +1,167 @@
+{
+  "recordedAt": "2026-08-10T14:53:18.709Z",
+  "phase": "5C-live",
+  "generationModel": "gpt-5.6-luna",
+  "totalProviderCalls": 2,
+  "totalInputTokens": 998,
+  "totalOutputTokens": 55,
+  "passed": true,
+  "records": [
+    {
+      "id": "CASE-1-CONFLICT-HOLD",
+      "label": "Conflict hold",
+      "question": "Where was Tracework invented?",
+      "sources": [
+        "changelog.md",
+        "project-history.md"
+      ],
+      "evidenceStatus": "partial",
+      "adjudicationStatus": "conflicted",
+      "expected": {
+        "adjudication": "conflicted",
+        "outcome": "conflict-held",
+        "providerCalled": false
+      },
+      "claims": [
+        {
+          "source": "changelog.md",
+          "value": "japan 2019",
+          "citation": 1,
+          "authority": "unknown"
+        },
+        {
+          "source": "project-history.md",
+          "value": "malaysia 2026",
+          "citation": 2,
+          "authority": "unknown"
+        }
+      ],
+      "conflicts": 1,
+      "notice": "Sources disagree across changelog.md, project-history.md. No supplied provenance establishes a winner, so Tracework must report the conflict instead of choosing by majority or relevance.",
+      "outcome": "conflict-held",
+      "body": "The available sources conflict about this question. changelog.md states “japan 2019” [1] project-history.md states “malaysia 2026” [2] No supplied provenance establishes which claim is authoritative, so Tracework will not choose a winner.",
+      "citations": [
+        {
+          "marker": 1,
+          "source": "changelog.md"
+        },
+        {
+          "marker": 2,
+          "source": "project-history.md"
+        }
+      ],
+      "providerCalled": false,
+      "providerCallCount": 0,
+      "passed": true
+    },
+    {
+      "id": "CASE-2-EXPLICIT-AUTHORITY",
+      "label": "Explicit authority",
+      "question": "Where was Tracework invented?",
+      "sources": [
+        "changelog.md",
+        "project-history.md",
+        "README.md"
+      ],
+      "evidenceStatus": "partial",
+      "adjudicationStatus": "authority-supported",
+      "expected": {
+        "adjudication": "authority-supported",
+        "outcome": "answered",
+        "providerCalled": true
+      },
+      "claims": [
+        {
+          "source": "changelog.md",
+          "value": "japan 2019",
+          "citation": 1,
+          "authority": "unknown"
+        },
+        {
+          "source": "project-history.md",
+          "value": "malaysia 2026",
+          "citation": 2,
+          "authority": "unknown"
+        },
+        {
+          "source": "README.md",
+          "value": "malaysia 2026",
+          "citation": 3,
+          "authority": "authoritative"
+        }
+      ],
+      "conflicts": 1,
+      "notice": "Retrieved sources disagree, but explicit provenance marks one claim as authoritative. The answer may lead with that claim and disclose the conflict.",
+      "outcome": "answered",
+      "body": "Tracework was invented in Malaysia in 2026, according to the authoritative project metadata [3]. A conflicting changelog says it was invented in Japan in 2019 [1].",
+      "model": "gpt-5.6-luna",
+      "inputTokens": 557,
+      "outputTokens": 41,
+      "totalTokens": 598,
+      "citations": [
+        {
+          "marker": 3,
+          "source": "README.md"
+        },
+        {
+          "marker": 1,
+          "source": "changelog.md"
+        }
+      ],
+      "invalidCitationNumbers": [],
+      "malformedCitationMarkers": [],
+      "providerCalled": true,
+      "providerCallCount": 1,
+      "passed": true
+    },
+    {
+      "id": "CASE-3-NO-CONFLICT",
+      "label": "Normal no-conflict generation",
+      "question": "Where was Tracework created?",
+      "sources": [
+        "project-history.md",
+        "README.md"
+      ],
+      "evidenceStatus": "partial",
+      "adjudicationStatus": "clear",
+      "expected": {
+        "adjudication": "clear",
+        "outcome": "answered",
+        "providerCalled": true
+      },
+      "claims": [
+        {
+          "source": "project-history.md",
+          "value": "malaysia 2026",
+          "citation": 1,
+          "authority": "unknown"
+        },
+        {
+          "source": "README.md",
+          "value": "malaysia 2026",
+          "citation": 2,
+          "authority": "authoritative"
+        }
+      ],
+      "conflicts": 0,
+      "notice": "No direct disagreement was detected among the extracted claims. Source truth remains unproven.",
+      "outcome": "answered",
+      "body": "Tracework was created in Malaysia. [2]",
+      "model": "gpt-5.6-luna",
+      "inputTokens": 441,
+      "outputTokens": 14,
+      "totalTokens": 455,
+      "citations": [
+        {
+          "marker": 2,
+          "source": "README.md"
+        }
+      ],
+      "invalidCitationNumbers": [],
+      "malformedCitationMarkers": [],
+      "providerCalled": true,
+      "providerCallCount": 1,
+      "passed": true
+    }
+  ]
+}
