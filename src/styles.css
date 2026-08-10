@@ -101,10 +101,17 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .signal-dot { width: 6px; height: 6px; background: #ed816d; box-shadow: none; }
 .method-label { color: #aebbb6; font-weight: 650; }
 .engine-controls { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
-.engine-label { color: #84938d; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
-.sheet-controls { display: flex; align-items: center; justify-content: flex-end; gap: 11px; flex-wrap: wrap; }
+.engine-label { flex: 0 0 auto; color: #84938d; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+/* Engine and answer are separate rows, each right-aligned, rather than one
+   wrapping line. The engine set has grown every phase — six plus compare now —
+   so a single line stopped fitting, which pushed the answer group onto a second
+   line and stranded the divider at the end of the first one. Rows keep the two
+   groups intact and their right edges aligned however many engines exist. */
+.sheet-controls { display: grid; grid-auto-flow: row; justify-items: end; align-items: center; gap: 7px; }
 .answer-mode-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.control-divider { width: 1px; height: 22px; background: #50605a; }
+/* Meaningless once the groups are stacked, and it rendered as a stray mark at
+   the end of the wrapped line. */
+.control-divider { display: none; }
 .engine-option, .compare-button { border: 1px solid #50605a; padding: 5px 7px; background: transparent; color: #b8c4bf; cursor: pointer; font-size: 9px; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; }
 .engine-option:hover, .engine-option:focus-visible { border-color: var(--paper); color: var(--paper); }
 .engine-option.is-active { border-color: var(--paper); background: var(--paper); color: var(--ink); }
