@@ -216,7 +216,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .grounded-context-chunk > button { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; border: 0; padding: 12px 13px; background: transparent; color: inherit; cursor: pointer; text-align: left; }
 .grounded-context-chunk > button:hover strong, .grounded-context-chunk > button:focus-visible strong { color: var(--vermilion-dark); }
 .grounded-context-chunk > button > span { color: var(--vermilion); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; }
-.retrieval-explain-section { margin-top: 20px; border: 1px solid var(--line-strong); padding: 20px; background: var(--paper); }
+/* Matches the phase5b/phase5c section pattern so the panels align on every
+   width, and so the section does not spend 40px of a phone's width on its own
+   padding inside a workbench that is already padded. */
+.retrieval-explain-section { max-width: 900px; margin: 0 auto 48px; border-top: 1px solid var(--line-strong); padding-top: 19px; }
 .retrieval-explain-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-bottom: 13px; border: 1px solid var(--line-strong); background: #c3cfca; }
 .retrieval-column { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 13px; background: #e4ebe7; }
 .retrieval-column h3 { margin: 0 0 3px; color: #62736d; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
@@ -227,6 +230,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .retrieval-rank { flex: 0 0 auto; color: var(--vermilion); font-size: 10px; font-weight: 800; }
 .retrieval-empty { color: #8a9893; font-size: 10px; line-height: 1.5; }
 @media (max-width: 900px) { .retrieval-explain-grid { grid-template-columns: 1fr; } }
+
+/* The heading stacking and h2 sizing come from the shared .grounded-debug-heading
+   rules further down; only what is specific to this section is repeated here. */
+@media (max-width: 580px) {
+  .retrieval-explain-section { margin-bottom: 39px; }
+  .grounded-debug-state { white-space: normal; }
+  /* The RRF breakdown is a long formula; let it wrap rather than force the
+     column wider than the screen. */
+  .retrieval-row small { overflow-wrap: anywhere; }
+}
 .grounded-chunk-warning { margin: 0 13px 10px; border-left: 2px solid var(--vermilion); padding: 6px 9px; background: #e8ddd7; color: var(--vermilion-dark); font-size: 10px; font-weight: 650; line-height: 1.45; }
 .grounded-context-chunk > button > span:nth-child(2) { min-width: 0; flex: 1; }
 .grounded-context-chunk > button strong { min-width: 0; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
@@ -332,6 +345,10 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
 }
 
 @media (max-width: 580px) {
+  /* iOS Safari zooms the whole page when a field smaller than 16px takes focus,
+     which shifts the layout on every tap into the search box and leaves the
+     page scrolled sideways. 16px is the threshold, not a design choice. */
+  input, textarea, select { font-size: 16px; }
   .topbar { padding-top: max(18px, env(safe-area-inset-top)); padding-bottom: 14px; }
   .topbar-status { align-items: center; min-height: 44px; font-size: 9px; gap: 7px; }
   .status-divider { display: none; }
@@ -348,7 +365,7 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
   .intro-copy { margin-top: 19px; font-size: 13px; }
   .query-form { align-items: stretch; flex-wrap: wrap; gap: 8px; padding: 12px; }
   .query-form > svg { margin-top: 5px; }
-  .query-form input { flex-basis: calc(100% - 42px); min-height: 29px; font-size: 13px; }
+  .query-form input { flex-basis: calc(100% - 42px); min-height: 34px; }
   .query-form button { width: 100%; min-height: 44px; justify-content: space-between; }
   .example-row { align-items: start; flex-direction: column; gap: 7px; }
   .example-row > span { margin: 0; }
@@ -485,6 +502,8 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
   .phase5b-heading h2 { font-size: 27px; }
   .phase5b-badge { align-self: start; }
   .phase5b-controls { grid-template-columns: 1fr; }
+  .phase5b-controls select { min-height: 44px; }
+  .phase5b-badge { white-space: normal; }
   .phase5b-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .phase5b-list { max-height: 250px; }
   .phase5b-rejection-log button { align-items: start; flex-direction: column; gap: 3px; }
