@@ -53,7 +53,7 @@ const main = async () => {
   log(`Tracework live acceptance run against ${BASE}\n`)
 
   // 1. Index the corpus with the app's own chunker.
-  const documents = CORPUS.map(([title, content]) => createDocument(title, title, content, 'note'))
+  const documents = CORPUS.map(([title, content]) => createDocument(title, title, content, 'note', { id: `fixture-${title}` }))
   const allChunks = documents.flatMap((document) => document.chunks)
   log(`corpus: ${documents.length} sources / ${allChunks.length} chunks`)
 

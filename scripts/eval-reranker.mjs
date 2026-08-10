@@ -14,7 +14,8 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { createDocument, searchDocuments, tokenize } from '../src/lib/rag.ts'
 import { buildLexicalIndex, searchLexical, toLexicalResults } from '../src/lib/lexical.ts'
 import { fuseRankings, RRF_K } from '../src/lib/fusion.ts'
-import { buildGroundedContext, classifyGeneratedAnswer, evaluateEvidence } from '../src/lib/grounded.ts'
+import { buildConflictAnswer, buildGroundedContext, classifyGeneratedAnswer, evaluateEvidence } from '../src/lib/grounded.ts'
+import { adjudicateEvidence, ensureConflictCoverage } from '../src/lib/adjudication.ts'
 import { buildCandidateUnion, pruneCandidates, rerank } from '../src/lib/reranker.ts'
 import { CORE_CORPUS, PADDED_CORPUS } from './fixtures/stress-corpus.mjs'
 import { DEV_QUESTIONS, EVAL_QUESTIONS } from './fixtures/phase5b.mjs'
@@ -27,6 +28,9 @@ const offline = process.argv.includes('--offline')
 const liveGeneration = process.argv.includes('--live-generation')
 const phase5bOnly = process.argv.includes('--phase5b-only')
 const useCoreCorpus = process.argv.includes('--core')
+// --adjudicate turns Phase 5C on. Without it this harness reproduces the frozen
+// Phase 5B control exactly, so the two runs differ only by adjudication.
+const withAdjudication = process.argv.includes('--adjudicate')
 const idsArgument = process.argv.find((argument) => argument.startsWith('--ids='))
 const corpusSpec = useCoreCorpus ? CORE_CORPUS : PADDED_CORPUS
 const corpusLabel = useCoreCorpus ? 'core' : 'padded'
@@ -160,12 +164,36 @@ const generationIsCorrect = (spec, classified) => {
 }
 
 const generateFor = async (spec, name, rows) => {
-  const assessment = evaluateEvidence(spec.question, rows)
-  const context = buildGroundedContext(spec.question, rows, {
+  // Phase 5C is opt-in so the Phase 5B control stays byte-identical by default.
+  // The order below mirrors App.tsx runGroundedGeneration exactly: evidence
+  // floor first, then the conflict hold, then generation.
+  const adjudication = withAdjudication ? adjudicateEvidence(spec.question, rows) : null
+  const selectedRows = adjudication ? ensureConflictCoverage(adjudication, rows, rows.length) : rows
+  const contextAdjudication = adjudication ? adjudicateEvidence(spec.question, selectedRows) : undefined
+  const assessment = evaluateEvidence(spec.question, selectedRows)
+  const context = buildGroundedContext(spec.question, selectedRows, {
     retrievalEngine: name,
-    requestedTopK: rows.length,
-    limit: rows.length,
+    requestedTopK: selectedRows.length,
+    limit: selectedRows.length,
+    adjudication: contextAdjudication,
   })
+
+  if (adjudication && assessment.status !== 'insufficient' && adjudication.status === 'conflicted') {
+    const held = buildConflictAnswer(adjudication)
+    return {
+      outcome: 'conflict-held',
+      // A disclosed, cited disagreement is the correct outcome for a question
+      // whose evidence genuinely conflicts; it is never a fabricated answer.
+      correct: spec.behavior === 'refuse' || spec.behavior === 'either',
+      evidence: assessment.status,
+      adjudicationStatus: adjudication.status,
+      body: held.body,
+      citations: held.validCitationNumbers.map((number) => context.chunks[number - 1]?.result.document.title ?? 'out of range'),
+      inputTokens: 0,
+      outputTokens: 0,
+    }
+  }
+
   if (assessment.status === 'insufficient') {
     return {
       outcome: 'refused',
@@ -226,7 +254,7 @@ const main = async () => {
   console.log(`Phase 5B candidate union + reranker benchmark / ${corpusLabel} corpus / ${runMode} / generation ${withGeneration ? 'on' : 'off'}`)
   console.log(`questions: ${DEV_QUESTIONS.length} DEV + ${EVAL_QUESTIONS.length} frozen EVAL / dense+lexical Top-${CANDIDATE_N} / context Top-${TOP_K}\n`)
 
-  const documents = corpusSpec.map(([title, content]) => createDocument(title, title, content, 'note'))
+  const documents = corpusSpec.map(([title, content]) => createDocument(title, title, content, 'note', { id: `fixture-${title}` }))
   const allChunks = documents.flatMap((document) => document.chunks)
   const documentsByTitle = new Map(documents.map((document) => [document.title, document]))
   console.log(`corpus: ${documents.length} sources / ${allChunks.length} chunks`)
@@ -430,7 +458,7 @@ const main = async () => {
     },
     generation: withGeneration ? { inputTokens: generationInput, outputTokens: generationOutput, totalTokens: generationInput + generationOutput } : null,
   }
-  const out = process.env.TRACEWORK_OUT ?? `docs/phase5b-${corpusLabel}${offline ? '-offline' : ''}${withGeneration ? '-generated' : ''}.json`
+  const out = process.env.TRACEWORK_OUT ?? `docs/phase5${withAdjudication ? 'c' : 'b'}-${corpusLabel}${offline ? '-offline' : ''}${withGeneration ? '-generated' : ''}${withAdjudication ? '-adjudicated' : ''}.json`
   writeFileSync(out, `${JSON.stringify({ summary, records }, null, 2)}\n`)
 
   console.log('\n                         R@1       R@5       MRR       relevant/context')

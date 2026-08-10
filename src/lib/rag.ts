@@ -97,9 +97,13 @@ export const createDocument = (
   source: string,
   content: string,
   kind: SourceKind = 'note',
-  options: { provenance?: SourceProvenance } = {},
+  options: { provenance?: SourceProvenance; id?: string } = {},
 ): DocumentRecord => {
-  const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+  // Chunk ids are the last tie-breaker in ranking and fusion, so random ids make
+  // marginal ties resolve differently on every run. Benchmarks pass a stable id
+  // to keep a before/after comparison free of noise that belongs to neither
+  // side; the app keeps the random id, which must stay unique per capture.
+  const id = options.id ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
   const chunks = chunkText(content).map((item, index): ChunkRecord => ({
     id: `${id}-chunk-${index + 1}`,
     documentId: id,

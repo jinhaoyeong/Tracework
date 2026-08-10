@@ -58,7 +58,7 @@ const summarise = (rows) => rows.map((row, index) => ({
 const main = async () => {
   console.log(`Phase 5A retrieval benchmark / ${corpusLabel} corpus / generation ${withGeneration ? 'on' : 'off'}\n`)
 
-  const documents = corpusSpec.map(([title, content]) => createDocument(title, title, content, 'note'))
+  const documents = corpusSpec.map(([title, content]) => createDocument(title, title, content, 'note', { id: `fixture-${title}` }))
   const allChunks = documents.flatMap((document) => document.chunks)
   console.log(`corpus: ${documents.length} sources / ${allChunks.length} chunks`)
 
