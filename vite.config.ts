@@ -196,6 +196,9 @@ const neuralEmbeddingsPlugin = (env: Record<string, string>): Plugin => ({
           embeddings: ordered,
           model: payload.model ?? model,
           dimensions,
+          // Passed through so evaluation artifacts can report embedding cost
+          // separately from generation cost rather than omitting it.
+          usage: payload.usage,
         })
       } catch (error) {
         sendJson(response, 500, {

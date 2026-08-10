@@ -256,6 +256,9 @@ export const handleEmbedding = async (request: VercelRequestLike, response: Verc
       embeddings: ordered,
       model: payload.model ?? model,
       dimensions,
+      // Passed through so evaluation artifacts can report embedding cost
+      // separately from generation cost rather than omitting it.
+      usage: payload.usage,
     })
   } catch (error) {
     sendJson(response, error instanceof InvalidRequestBodyError ? 400 : 500, {

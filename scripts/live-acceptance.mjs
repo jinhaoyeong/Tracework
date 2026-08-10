@@ -16,8 +16,10 @@ import { writeFileSync } from 'node:fs'
 import { createDocument, tokenize } from '../src/lib/rag.ts'
 import { buildGroundedContext, classifyGeneratedAnswer, evaluateEvidence } from '../src/lib/grounded.ts'
 import { CORE_CORPUS, PADDED_CORPUS, QUESTIONS } from './fixtures/stress-corpus.mjs'
+import { createUsageTracker } from './usage.mjs'
 
 const BASE = process.env.TRACEWORK_BASE_URL ?? 'http://localhost:5173'
+const usageTracker = createUsageTracker()
 const TOP_K = 5
 // --padded runs the same questions against the padded benchmark corpus, which
 // is the dense-only control that Phase 5 must be compared against.
@@ -35,6 +37,7 @@ const post = async (path, body) => {
     error.code = payload?.error?.code ?? `http_${response.status}`
     throw error
   }
+  usageTracker.record(path, body, payload)
   return payload
 }
 
@@ -287,10 +290,14 @@ const main = async () => {
     },
   }
 
+  // Generation and embedding cost are billed separately and move
+  // independently, so the artifact reports them separately.
+  summary.usage = usageTracker.summary()
   writeFileSync(process.env.TRACEWORK_OUT ?? 'docs/phase4-baseline.json', `${JSON.stringify({ summary, records }, null, 2)}\n`)
   log(`\n${summary.generation.passed}/${records.length} questions passed`)
   log(`recall@1 ${summary.retrieval.recallAt1}/${scored.length} · recall@5 ${summary.retrieval.recallAt5}/${scored.length}`)
   log(`tokens in/out ${summary.tokens.generationInput}/${summary.tokens.generationOutput}`)
+  console.log(usageTracker.line())
   log('baseline written to docs/phase4-baseline.json')
 }
 

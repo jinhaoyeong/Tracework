@@ -14,8 +14,10 @@ import { buildLexicalIndex, searchLexical, toLexicalResults } from '../src/lib/l
 import { fuseRankings, RRF_K } from '../src/lib/fusion.ts'
 import { buildGroundedContext, classifyGeneratedAnswer, evaluateEvidence } from '../src/lib/grounded.ts'
 import { CORE_CORPUS, PADDED_CORPUS, QUESTIONS } from './fixtures/stress-corpus.mjs'
+import { createUsageTracker } from './usage.mjs'
 
 const BASE = process.env.TRACEWORK_BASE_URL ?? 'http://localhost:5173'
+const usageTracker = createUsageTracker()
 const TOP_K = 5
 const CANDIDATE_K = 10
 const withGeneration = process.argv.includes('--generate')
@@ -32,6 +34,7 @@ const post = async (path, body) => {
     error.code = payload?.error?.code ?? `http_${response.status}`
     throw error
   }
+  usageTracker.record(path, body, payload)
   return payload
 }
 
@@ -254,6 +257,9 @@ const main = async () => {
   }
 
   const out = process.env.TRACEWORK_OUT ?? `docs/phase5a-${corpusLabel}${withGeneration ? '-generated' : ''}.json`
+  // Generation and embedding cost are billed separately and move
+  // independently, so the artifact reports them separately.
+  summary.usage = usageTracker.summary()
   writeFileSync(out, `${JSON.stringify({ summary, records }, null, 2)}\n`)
 
   console.log(`\n            Recall@1  Recall@5   MRR     avg relevant in Top-${TOP_K}`)
@@ -274,6 +280,7 @@ const main = async () => {
     q8Rank: records.find((record) => record.id === 'Q8').kSweep[k].expectedRank,
   }]))
   writeFileSync(out, `${JSON.stringify({ summary, records }, null, 2)}\n`)
+  console.log(usageTracker.line())
   console.log(`written to ${out}`)
 }
 

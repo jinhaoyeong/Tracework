@@ -19,8 +19,10 @@ import { buildCandidateUnion, pruneCandidates, rerank } from '../src/lib/reranke
 import { adjudicateEvidence, ensureConflictCoverage } from '../src/lib/adjudication.ts'
 import { buildConflictAnswer, buildGroundedContext, classifyGeneratedAnswer, evaluateEvidence } from '../src/lib/grounded.ts'
 import { CONFLICT_CORPUS, CONFLICT_QUESTIONS } from './fixtures/conflict-corpus.mjs'
+import { createUsageTracker } from './usage.mjs'
 
 const BASE = process.env.TRACEWORK_BASE_URL ?? 'http://localhost:5173'
+const usageTracker = createUsageTracker()
 const TOP_K = 5
 const CANDIDATE_N = 10
 let providerCalls = 0
@@ -36,6 +38,7 @@ const post = async (path, body) => {
     error.code = payload?.error?.code ?? `http_${response.status}`
     throw error
   }
+  usageTracker.record(path, body, payload)
   return payload
 }
 
@@ -252,8 +255,12 @@ const main = async () => {
     totalOutputTokens: records.reduce((total, record) => total + record.conditions.control.outputTokens + record.conditions.treatment.outputTokens, 0),
     records,
   }
+  // Generation and embedding cost are billed separately and move
+  // independently, so the artifact reports them separately.
+  output.usage = usageTracker.summary()
   writeFileSync('docs/phase5c-conflict-corpus.json', `${JSON.stringify(output, null, 2)}\n`)
   console.log(`\nprovider calls: ${providerCalls} · tokens ${output.totalInputTokens} in / ${output.totalOutputTokens} out`)
+  console.log(usageTracker.line())
   console.log('written to docs/phase5c-conflict-corpus.json')
 }
 

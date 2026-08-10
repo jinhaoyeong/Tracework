@@ -19,8 +19,10 @@ import { adjudicateEvidence, ensureConflictCoverage } from '../src/lib/adjudicat
 import { buildCandidateUnion, pruneCandidates, rerank } from '../src/lib/reranker.ts'
 import { CORE_CORPUS, PADDED_CORPUS } from './fixtures/stress-corpus.mjs'
 import { DEV_QUESTIONS, EVAL_QUESTIONS } from './fixtures/phase5b.mjs'
+import { createUsageTracker } from './usage.mjs'
 
 const BASE = process.env.TRACEWORK_BASE_URL ?? 'http://localhost:5173'
+const usageTracker = createUsageTracker()
 const TOP_K = 5
 const CANDIDATE_N = 10
 const withGeneration = process.argv.includes('--generate')
@@ -66,6 +68,7 @@ const post = async (path, body) => {
     error.code = payload?.error?.code ?? `http_${response.status}`
     throw error
   }
+  usageTracker.record(path, body, payload)
   return payload
 }
 
@@ -459,6 +462,9 @@ const main = async () => {
     generation: withGeneration ? { inputTokens: generationInput, outputTokens: generationOutput, totalTokens: generationInput + generationOutput } : null,
   }
   const out = process.env.TRACEWORK_OUT ?? `docs/phase5${withAdjudication ? 'c' : 'b'}-${corpusLabel}${offline ? '-offline' : ''}${withGeneration ? '-generated' : ''}${withAdjudication ? '-adjudicated' : ''}.json`
+  // Generation and embedding cost are billed separately and move
+  // independently, so the artifact reports them separately.
+  summary.usage = usageTracker.summary()
   writeFileSync(out, `${JSON.stringify({ summary, records }, null, 2)}\n`)
 
   console.log('\n                         R@1       R@5       MRR       relevant/context')
@@ -469,6 +475,7 @@ const main = async () => {
   console.log(`\nunion present: ${summary.union.expectedSourcePresent}/${summary.union.expectedSourcePresentDenominator}; average candidates: ${summary.union.averageCandidates}`)
   console.log(`rerank vs dense: ${improvements.rerankVsDense.improved} improved, ${improvements.rerankVsDense.worsened} worsened, ${improvements.rerankVsDense.unchanged} unchanged`)
   console.log(`prune vs rerank: ${improvements.pruneVsRerank.improved} improved, ${improvements.pruneVsRerank.worsened} worsened, ${improvements.pruneVsRerank.unchanged} unchanged`)
+  console.log(usageTracker.line())
   console.log(`written to ${out}`)
 }
 
