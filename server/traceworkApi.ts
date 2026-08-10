@@ -496,37 +496,3 @@ export const handleVectorDelete = async (request: VercelRequestLike, response: V
     sendServerError(response, error, 'The vector database could not delete these sources.')
   }
 }
-
-type LegacyRouteHandler = (request: VercelRequestLike, response: VercelResponseLike) => Promise<void>
-
-// Vercel's current non-framework runtime invokes api files through a Web Handler.
-// Keep the route logic in a small Node-shaped adapter so it remains easy to compare
-// with the local Vite middleware while still returning a standard Response in production.
-export const createVercelFetchHandler = (handler: LegacyRouteHandler) => ({
-  async fetch(request: Request) {
-    let status = 200
-    let payload: unknown = { error: { code: 'empty_response', message: 'The API route returned no response.' } }
-    const response: VercelResponseLike = {
-      status(statusCode) {
-        status = statusCode
-        return this
-      },
-      json(value) {
-        payload = value
-      },
-    }
-
-    try {
-      const body = request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.text()
-      await handler({ method: request.method, body }, response)
-    } catch {
-      status = 500
-      payload = { error: { code: 'route_runtime_error', message: 'The Tracework API route failed before producing a response.' } }
-    }
-
-    return new Response(JSON.stringify(payload), {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  },
-})
