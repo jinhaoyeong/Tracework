@@ -11,6 +11,9 @@ import { buildLexicalIndex, searchLexical, toLexicalResults } from './lib/lexica
 import { fuseRankings, RRF_K } from './lib/fusion'
 import { buildCandidateUnion, DEFAULT_PHASE5B_CANDIDATE_LIMIT, DEFAULT_PHASE5B_CONTEXT_LIMIT, pruneCandidates, rerank, type RankedCandidate } from './lib/reranker'
 import { NeuralEmbeddingError, requestNeuralEmbeddings } from './lib/semantic'
+import { extractTemporalClaims } from './lib/temporal'
+import { normalizeTemporalExtraction } from './lib/temporalNormalization'
+import { ensureTemporalCoverage, temporalCoverageWitnessChunkIds } from './lib/temporalCoverage'
 import { PGVECTOR_DIMENSIONS, PgvectorError, SHARED_WRITES_DISABLED, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
 
@@ -331,12 +334,34 @@ function App() {
     () => adjudicateEvidence(activeQuery, phase5cAnalysisResults),
     [activeQuery, phase5cAnalysisResults],
   )
+  const phase5dNormalization = useMemo(
+    () => normalizeTemporalExtraction(extractTemporalClaims(activeQuery, phase5cAnalysisResults)),
+    [activeQuery, phase5cAnalysisResults],
+  )
+  const phase5dWitnessChunkIds = useMemo(
+    () => temporalCoverageWitnessChunkIds(phase5dNormalization),
+    [phase5dNormalization],
+  )
   const phase5cBaseContextResults = engine === 'rerank' ? phase5bContextResults : retrievalResults
   const phase5cContextResults = useMemo(
-    () => engine === 'rerank'
-      ? ensureConflictCoverage(phase5cAdjudication, phase5cBaseContextResults, pruningEnabled ? topK : undefined)
-      : phase5cBaseContextResults,
-    [engine, phase5cAdjudication, phase5cBaseContextResults, pruningEnabled, topK],
+    () => {
+      if (engine !== 'rerank') return phase5cBaseContextResults
+      // Temporal coverage comes first because resolution is upstream of Phase
+      // 5C. Conflict coverage then protects those restored temporal witnesses
+      // while preserving its own disagreement witnesses as well.
+      const temporalCovered = ensureTemporalCoverage(
+        phase5dNormalization,
+        phase5cBaseContextResults,
+        pruningEnabled ? topK : undefined,
+      )
+      return ensureConflictCoverage(
+        phase5cAdjudication,
+        temporalCovered,
+        pruningEnabled ? topK : undefined,
+        phase5dWitnessChunkIds,
+      )
+    },
+    [engine, phase5cAdjudication, phase5cBaseContextResults, phase5dNormalization, phase5dWitnessChunkIds, pruningEnabled, topK],
   )
   const results = phase5cContextResults
   const phase5cContextAdjudication = useMemo(
@@ -740,7 +765,19 @@ function App() {
         const contextCandidates = pruningEnabled ? pruneCandidates(ranked, { maxChunks: topK }).selected : ranked
         const baseContextResults = contextCandidates.map((candidate) => candidate.result)
         const adjudication = adjudicateEvidence(nextQuery, ranked.map((candidate) => candidate.result))
-        retrievedResults = ensureConflictCoverage(adjudication, baseContextResults, pruningEnabled ? topK : undefined)
+        const temporalNormalization = normalizeTemporalExtraction(extractTemporalClaims(nextQuery, ranked.map((candidate) => candidate.result)))
+        const temporalWitnessIds = temporalCoverageWitnessChunkIds(temporalNormalization)
+        const temporalCovered = ensureTemporalCoverage(
+          temporalNormalization,
+          baseContextResults,
+          pruningEnabled ? topK : undefined,
+        )
+        retrievedResults = ensureConflictCoverage(
+          adjudication,
+          temporalCovered,
+          pruningEnabled ? topK : undefined,
+          temporalWitnessIds,
+        )
       }
     } else if (engine === 'pgvector' || compareMode) {
       retrievedResults = await runPgvectorRetrieval(nextQuery)

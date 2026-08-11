@@ -56,6 +56,8 @@ export interface TemporalNormalization {
   question: string
   claims: NormalizedClaim[]
   relations: ExpandedRelation[]
+  /** Extraction uncertainty remains visible after normalization. */
+  unassessedReasons: string[]
   unresolved: Array<{ claimId: string; source: string; reason: string }>
 }
 
@@ -216,6 +218,7 @@ export const normalizeTemporalExtraction = (extraction: TemporalExtraction): Tem
     question: extraction.question,
     claims,
     relations,
+    unassessedReasons: extraction.unassessedReasons,
     unresolved: [...subjectUnresolved, ...unresolved],
   }
 }

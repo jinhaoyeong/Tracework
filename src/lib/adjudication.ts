@@ -234,6 +234,7 @@ export const ensureConflictCoverage = (
   adjudication: EvidenceAdjudication,
   selected: SearchResult[],
   maxChunks?: number,
+  protectedChunkIds: ReadonlySet<string> = new Set(),
 ): SearchResult[] => {
   if (adjudication.status !== 'conflicted' || !adjudication.conflicts.length) return selected
 
@@ -242,6 +243,7 @@ export const ensureConflictCoverage = (
     .flatMap((conflict) => conflict.claims.map((claim) => claim.result))
     .filter((result, index, all) => all.findIndex((candidate) => candidate.chunk.id === result.chunk.id) === index)
   const witnessIds = new Set(witnessResults.map((result) => result.chunk.id))
+  const preservedIds = new Set([...witnessIds, ...protectedChunkIds])
 
   witnessResults.forEach((witness) => {
     if (output.some((result) => result.chunk.id === witness.chunk.id)) return
@@ -249,7 +251,7 @@ export const ensureConflictCoverage = (
       output.push(witness)
       return
     }
-    const removableIndex = [...output].reverse().findIndex((result) => !witnessIds.has(result.chunk.id))
+    const removableIndex = [...output].reverse().findIndex((result) => !preservedIds.has(result.chunk.id))
     if (removableIndex >= 0) output.splice(output.length - 1 - removableIndex, 1, witness)
   })
 
