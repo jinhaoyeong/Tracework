@@ -1,4 +1,5 @@
 import { buildSynthesisInspector, type SynthesisInspectorModel } from '../lib/synthesisInspector'
+import type { SynthesisGenerationReportModel } from '../lib/synthesisAnswerView'
 import type { SynthesisPreparationResult } from '../lib/synthesisOrchestrator'
 
 const statusLabel = (value: string) => value.replace(/-/g, ' ')
@@ -75,18 +76,7 @@ const SynthesisFacetDetails = ({ facet }: { facet: SynthesisInspectorModel['face
  * read from the Step 10A result, so a deterministic hold can be told apart from
  * a request that was made and came back badly cited.
  */
-export interface SynthesisGenerationReport {
-  status: string
-  requests: number
-  providerCalled: boolean
-  model: string | null
-  contextCharacters: number | null
-  contextBudget: number
-  evidenceReferences: number | null
-  validCitationCount: number
-  invalidCitationMarkers: string[]
-  message: string | null
-}
+export type SynthesisGenerationReport = SynthesisGenerationReportModel
 
 const GenerationReport = ({ report }: { report: SynthesisGenerationReport }) => (
   <details className="synthesis-inspector-nested synthesis-inspector-generation" open>

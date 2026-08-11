@@ -349,13 +349,32 @@ export const handleEmbedding = async (request: VercelRequestLike, response: Verc
   }
 }
 
-export const handleGeneration = async (request: VercelRequestLike, response: VercelResponseLike) => {
+/**
+ * Injected dependencies for the generation route.
+ *
+ * The deployed function passes nothing and reads process.env with the global
+ * fetch, exactly as before. The Vite dev middleware passes its own loadEnv
+ * result, because Vite does not put .env.local values on process.env. Tests
+ * pass a fake key and a fake fetch, which is what makes the guards that must run
+ * *before* a provider call provable without a real credential.
+ */
+export interface GenerationDependencies {
+  env?: RuntimeEnv
+  fetchImpl?: typeof fetch
+}
+
+export const handleGeneration = async (
+  request: VercelRequestLike,
+  response: VercelResponseLike,
+  dependencies: GenerationDependencies = {},
+) => {
   if (request.method !== 'POST') {
     sendMethodNotAllowed(response, '/api/generate')
     return
   }
 
-  const env = runtimeEnv()
+  const env = dependencies.env ?? runtimeEnv()
+  const fetchImpl = dependencies.fetchImpl ?? fetch
   const apiKey = env.OPENAI_API_KEY?.trim()
   if (!apiKey) {
     sendJson(response, 503, {
@@ -399,7 +418,7 @@ export const handleGeneration = async (request: VercelRequestLike, response: Ver
     const reasoningEffort = env.OPENAI_REASONING_EFFORT?.trim() || 'none'
     let upstream: Response
     try {
-      upstream = await fetch('https://api.openai.com/v1/responses', {
+      upstream = await fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${apiKey}`,

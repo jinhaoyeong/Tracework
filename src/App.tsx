@@ -24,7 +24,9 @@ import { normalizeTemporalExtraction } from './lib/temporalNormalization'
 import { assessQueryRelevance, planTemporalCoverage, temporalCoverageWitnessChunkIds, temporalGate, type TemporalCoverageReport, type TemporalQueryRelevance } from './lib/temporalCoverage'
 import { parseRequestedPeriod, readRequestedPeriods, resolveTemporalNormalization, type TemporalResolution } from './lib/temporalResolution'
 import { PGVECTOR_DIMENSIONS, PgvectorError, SHARED_WRITES_DISABLED, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
-import { SynthesisInspector, type SynthesisGenerationReport } from './components/SynthesisInspector'
+import { SynthesisInspector } from './components/SynthesisInspector'
+import { SynthesisAnswerCitations } from './components/SynthesisAnswerCitations'
+import { IDLE_SYNTHESIS_GENERATION, buildSynthesisAnswerView, type SynthesisGenerationSurfaceState } from './lib/synthesisAnswerView'
 import { classifyQueryScope } from './lib/synthesisScope'
 import { prepareSynthesis, type SynthesisPreparationResult } from './lib/synthesisOrchestrator'
 import { planQueryExecution, resetPlanForQuerySurface } from './lib/queryRoute'
@@ -68,29 +70,6 @@ interface GenerationState {
   status: GenerationStatus
   model: string | null
   message: string | null
-}
-
-/**
- * Broad-generation state. `requests` and `providerCalled` are copied from the
- * Step 10A result rather than inferred from the status, so the inspector reports
- * what actually happened at the boundary instead of the UI's guess about it.
- */
-interface SynthesisGenerationState {
-  status: 'idle' | 'generating' | SynthesisGenerationResult['status']
-  result: SynthesisGenerationResult | null
-  context: SynthesisGenerationContext | null
-  requests: number
-  providerCalled: boolean
-  message: string | null
-}
-
-const IDLE_SYNTHESIS_GENERATION: SynthesisGenerationState = {
-  status: 'idle',
-  result: null,
-  context: null,
-  requests: 0,
-  providerCalled: false,
-  message: null,
 }
 
 const loadDocuments = (): DocumentRecord[] => {
@@ -295,7 +274,7 @@ function App() {
   const [generationState, setGenerationState] = useState<GenerationState>({ status: 'idle', model: null, message: null })
   const [groundedSession, setGroundedSession] = useState<GroundedSession | null>(null)
   const [synthesisPreparation, setSynthesisPreparation] = useState<SynthesisPreparationResult | null>(null)
-  const [synthesisGeneration, setSynthesisGeneration] = useState<SynthesisGenerationState>(IDLE_SYNTHESIS_GENERATION)
+  const [synthesisGeneration, setSynthesisGeneration] = useState<SynthesisGenerationSurfaceState>(IDLE_SYNTHESIS_GENERATION)
   // The clock is read here, once, at the UI boundary. Everything downstream
   // receives an immutable value; the resolver never calls Date.now() itself.
   const [asOf, setAsOf] = useState(() => new Date().toISOString().slice(0, 10))
@@ -455,15 +434,8 @@ function App() {
     ? 'not called'
     : `${generationState.model ?? 'server model'} / ${generationState.status}`
   const synthesisActive = synthesisPreparation?.route === 'synthesis'
-  const synthesisResult = synthesisGeneration.result
-  /**
-   * Only citations the Step 10A validator resolved against the packet reach the
-   * citation rail. An unusable answer keeps its body visible for inspection but
-   * contributes no sources, because its markers did not resolve.
-   */
-  const synthesisCitedReferences = synthesisResult?.status === 'answered'
-    ? synthesisResult.citations
-    : []
+  const synthesisView = buildSynthesisAnswerView(synthesisPreparation, synthesisGeneration)
+  const synthesisCitedReferences = synthesisView.citations
   const visibleCitations = synthesisActive
     ? []
     : answerMode === 'grounded'
@@ -474,66 +446,14 @@ function App() {
     : answerMode === 'grounded'
       ? groundedAnswer?.validCitationNumbers ?? []
       : answer.citations.map((_citation, index) => index + 1)
-  const synthesisAnswerTitle = () => {
-    if (synthesisGeneration.status === 'generating') return 'Writing the broad answer'
-    switch (synthesisResult?.status) {
-      case 'answered': return `${synthesisCitedReferences.length} cited ${synthesisCitedReferences.length === 1 ? 'source' : 'sources'} / broad answer`
-      case 'model-refusal': return 'Evidence insufficient / model refused'
-      case 'deterministic-refusal': return 'Synthesis needs missing metrics'
-      case 'deterministic-hold': return 'Synthesis is on conflict hold'
-      case 'deterministic-partial': return 'Synthesis is incomplete / answer withheld'
-      case 'context-too-large': return 'Synthesis packet is too large to send'
-      case 'unusable': return 'Broad generation returned unusable citations'
-      case 'generation-failure': return 'Broad generation failed'
-      default:
-        return synthesisPreparation?.coverage?.disposition === 'refuse-unsupported'
-          ? 'Synthesis needs missing metrics'
-          : synthesisPreparation?.coverage?.disposition === 'hold-for-conflict'
-            ? 'Synthesis is on conflict hold'
-            : 'Synthesis evidence is ready'
-    }
-  }
-  const synthesisAnswerBody = () => {
-    if (synthesisGeneration.status === 'generating') {
-      return synthesisGeneration.message ?? 'The validated packet is being sent as a single generation request.'
-    }
-    if (!synthesisResult) {
-      return synthesisPreparation?.coverage?.disposition === 'answer'
-        ? 'The deterministic broad-synthesis pipeline prepared a structured evidence packet. Switch to grounded answer mode to generate prose from it.'
-        : synthesisPreparation?.coverage?.dispositionReason ?? 'The deterministic broad-synthesis pipeline could not establish a complete answer.'
-    }
-    if (synthesisResult.status === 'answered' || synthesisResult.status === 'model-refusal' || synthesisResult.status === 'unusable') {
-      return synthesisResult.body
-    }
-    return synthesisResult.reason
-  }
-  const synthesisGenerationReport: SynthesisGenerationReport | null = synthesisGeneration.status === 'idle'
-    ? null
-    : {
-        status: synthesisGeneration.status,
-        requests: synthesisGeneration.requests,
-        providerCalled: synthesisGeneration.providerCalled,
-        model: synthesisResult && 'metadata' in synthesisResult ? synthesisResult.metadata.model ?? null : null,
-        contextCharacters: synthesisGeneration.context?.characters ?? null,
-        contextBudget: MAX_SYNTHESIS_CONTEXT_CHARACTERS,
-        evidenceReferences: synthesisGeneration.context?.references.length ?? null,
-        validCitationCount: synthesisCitedReferences.length,
-        invalidCitationMarkers: synthesisResult?.status === 'unusable'
-          ? [
-              ...synthesisResult.malformedCitationMarkers.map((token) => `[${token}]`),
-              ...synthesisResult.invalidCitationNumbers.map((number) => `[${number}]`),
-            ]
-          : [],
-        message: synthesisGeneration.message,
-      }
   const visibleAnswerTitle = synthesisActive
-    ? synthesisAnswerTitle()
+    ? synthesisView.title
     : answerMode === 'retrieval'
     ? answer.title
     : groundedAnswer?.title
       ?? (generationState.status === 'generating' ? 'Building a grounded answer' : generationState.status === 'error' ? 'Generation failed' : 'Grounded answer not run')
   const visibleAnswerBody = synthesisActive
-    ? synthesisAnswerBody()
+    ? synthesisView.body
     : answerMode === 'retrieval'
     ? answer.body
     : groundedAnswer?.body
@@ -1437,19 +1357,7 @@ function App() {
               </div>
               <div className="citation-stack" aria-label="Answer sources">
                 {synthesisActive ? (
-                  synthesisCitedReferences.length ? synthesisCitedReferences.map((citation) => (
-                    <button className="citation-line" key={citation.chunkId} type="button" onClick={() => setSelectedChunkId(citation.chunkId)}>
-                      <span className="citation-number">[{citation.citation}]</span>
-                      <span><strong>{citation.documentTitle}</strong><small>packet reference {String(citation.citation).padStart(2, '0')} · {citation.chunkId}</small></span>
-                      <Icon name="arrow" size={16} />
-                    </button>
-                  )) : <div className="citation-empty">{
-                    synthesisGeneration.status === 'generating'
-                      ? 'Validated citations will appear once the single generation request returns.'
-                      : synthesisResult
-                        ? 'No citation resolved against the packet, so none is presented as a source.'
-                        : 'The structured synthesis packet is inspectable below; citations appear after generation.'
-                  }</div>
+                  <SynthesisAnswerCitations view={synthesisView} onSelectChunk={setSelectedChunkId} />
                 ) : visibleCitations.length ? visibleCitations.map((result, index) => (
                   <button className="citation-line" key={result.chunk.id} type="button" onClick={() => setSelectedChunkId(result.chunk.id)}>
                     <span className="citation-number">[{visibleCitationNumbers[index] ?? index + 1}]</span>
@@ -1462,7 +1370,7 @@ function App() {
             </div>
           </section>
 
-          <SynthesisInspector preparation={synthesisPreparation} generation={synthesisGenerationReport} />
+          <SynthesisInspector preparation={synthesisPreparation} generation={synthesisView.report} />
 
           {showMethodHelp && (
             <section className="method-help method-help-external" id="method-help" aria-labelledby="method-help-title">
