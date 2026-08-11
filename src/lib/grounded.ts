@@ -193,7 +193,7 @@ const neutralizeInjectedInstructions = (text: string) => {
  * generation route. Trimming here means an oversized chunk costs some evidence
  * rather than failing the whole request with context_too_large.
  */
-const MAX_CONTEXT_CHARACTERS = 24000
+export const MAX_CONTEXT_CHARACTERS = 24000
 
 const truncateChunkText = (text: string, budget: number) => {
   if (text.length <= budget) return { text, truncatedCharacters: 0 }
@@ -204,24 +204,36 @@ const truncateChunkText = (text: string, budget: number) => {
   }
 }
 
-const formatContextChunk = (citation: number, result: SearchResult, textBudget: number) => {
-  const model = sourceModel(result) ?? 'unknown'
-  const dimensions = sourceDimensions(result) ?? 'unknown'
-  const distance = result.distance === undefined ? 'n/a' : result.distance.toFixed(4)
+/**
+ * Everything that happens to a retrieved chunk's text before it is sent, in one
+ * place. The broad-synthesis path (Phase 5E Step 10A) formats its own evidence
+ * blocks but must not re-implement forgery escaping, injection neutralisation,
+ * or budget trimming, because a second copy would drift from this one.
+ */
+export const prepareEvidenceText = (raw: string, budget: number): { text: string; warnings: string[] } => {
   const warnings: string[] = []
 
-  const escaped = escapeForgedBlockHeaders(result.chunk.text)
-  if (escaped !== result.chunk.text) warnings.push('escaped a line that imitated an evidence block header')
+  const escaped = escapeForgedBlockHeaders(raw)
+  if (escaped !== raw) warnings.push('escaped a line that imitated an evidence block header')
 
   const { text: neutralized, redactionCount } = neutralizeInjectedInstructions(escaped)
   if (redactionCount) {
     warnings.push(`redacted ${redactionCount} instruction-shaped passage${redactionCount === 1 ? '' : 's'}`)
   }
 
-  const { text: content, truncatedCharacters } = truncateChunkText(neutralized, textBudget)
+  const { text, truncatedCharacters } = truncateChunkText(neutralized, budget)
   if (truncatedCharacters) {
     warnings.push(`trimmed ${truncatedCharacters.toLocaleString()} characters to fit the context budget`)
   }
+
+  return { text, warnings }
+}
+
+const formatContextChunk = (citation: number, result: SearchResult, textBudget: number) => {
+  const model = sourceModel(result) ?? 'unknown'
+  const dimensions = sourceDimensions(result) ?? 'unknown'
+  const distance = result.distance === undefined ? 'n/a' : result.distance.toFixed(4)
+  const { text: content, warnings } = prepareEvidenceText(result.chunk.text, textBudget)
 
   const formatted = [
     `[${citation}] ${result.document.title}`,
