@@ -22,6 +22,7 @@
     "test:phase5e-scope": "node --experimental-strip-types scripts/test-phase5e-scope.mjs",
     "test:phase5e-discovery": "node --experimental-strip-types scripts/test-phase5e-discovery.mjs",
     "test:phase5e-retrieval": "node --experimental-strip-types scripts/test-phase5e-retrieval.mjs",
+    "test:phase5e-reasoning": "node --experimental-strip-types scripts/test-phase5e-reasoning.mjs",
     "eval:retrieval": "node --experimental-strip-types scripts/eval-retrieval.mjs",
     "eval:reranker": "node --experimental-strip-types scripts/eval-reranker.mjs",
     "eval:phase5c": "node --experimental-strip-types scripts/eval-phase5c.mjs",
