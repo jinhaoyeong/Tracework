@@ -20,6 +20,7 @@
     "test:meridian": "node --experimental-strip-types scripts/test-meridian.mjs",
     "test:phase5e-fixtures": "node --experimental-strip-types scripts/test-phase5e-fixtures.mjs",
     "test:phase5e-scope": "node --experimental-strip-types scripts/test-phase5e-scope.mjs",
+    "test:phase5e-discovery": "node --experimental-strip-types scripts/test-phase5e-discovery.mjs",
     "eval:retrieval": "node --experimental-strip-types scripts/eval-retrieval.mjs",
     "eval:reranker": "node --experimental-strip-types scripts/eval-reranker.mjs",
     "eval:phase5c": "node --experimental-strip-types scripts/eval-phase5c.mjs",
