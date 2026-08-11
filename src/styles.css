@@ -697,3 +697,61 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
   .phase5c-badge { align-self: start; white-space: normal; }
   .phase5c-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Phase 5E deterministic preparation inspector. It exposes breadth and
+   evidence budgets without placing raw corpus text in the default view. */
+.synthesis-inspector-section { max-width: 900px; margin: 0 auto 48px; border-top: 1px solid var(--line-strong); padding-top: 19px; }
+.synthesis-inspector-heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 13px; }
+.synthesis-inspector-heading .section-marker { margin-bottom: 11px; }
+.synthesis-inspector-heading h2 { margin: 0; font-size: 30px; letter-spacing: -0.06em; line-height: 1; }
+.synthesis-inspector-badge, .synthesis-inspector-status { border: 1px solid #aebcb7; padding: 5px 6px; color: #62736d; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.synthesis-inspector-badge.is-answer, .synthesis-inspector-status.is-covered { border-color: #8ca9a0; color: var(--teal); }
+.synthesis-inspector-badge.is-refuse-unsupported, .synthesis-inspector-badge.is-hold-for-conflict, .synthesis-inspector-status.is-conflicted, .synthesis-inspector-status.is-unsupported { border-color: #b49d91; color: var(--vermilion-dark); }
+.synthesis-inspector-badge.is-partial-with-disclosure, .synthesis-inspector-status.is-partially-covered { border-color: #b9aa74; color: #756431; }
+.synthesis-inspector-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-bottom: 13px; border: 1px solid var(--line-strong); background: #c3cfca; }
+.synthesis-inspector-stat-grid > div, .synthesis-inspector-budget > div { display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 12px 13px; background: #d8e1dd; }
+.synthesis-inspector-stat-grid span, .synthesis-inspector-budget span, .synthesis-inspector-subgrid span { color: #71807a; font-size: 9px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; }
+.synthesis-inspector-stat-grid strong { color: var(--ink); font-size: 17px; letter-spacing: -0.03em; line-height: 1.1; }
+.synthesis-inspector-stat-grid small { color: #71807a; font-size: 9px; line-height: 1.4; }
+.synthesis-inspector-budget { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; margin-bottom: 13px; border: 1px solid var(--line-strong); background: #c3cfca; }
+.synthesis-inspector-budget > div { padding: 10px 9px; background: #e4ebe7; }
+.synthesis-inspector-budget strong { overflow-wrap: anywhere; color: var(--ink); font-size: 12px; }
+.synthesis-inspector-notice { margin: 0 0 13px; border-left: 3px solid var(--teal); padding: 10px 12px; background: #d8e6e2; color: #315e5a; font-size: 11px; line-height: 1.5; }
+.synthesis-inspector-notice.is-refuse-unsupported, .synthesis-inspector-notice.is-hold-for-conflict { border-color: var(--vermilion-dark); background: #e8ddd7; color: var(--vermilion-dark); }
+.synthesis-inspector-notice.is-partial-with-disclosure { border-color: #9b8744; background: #eee8d4; color: #756431; }
+.synthesis-inspector-plan { margin-bottom: 13px; }
+.synthesis-inspector-facets { display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--line-strong); background: #c3cfca; }
+.synthesis-inspector-facet { background: #e4ebe7; }
+.synthesis-inspector-facet > summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; list-style-position: inside; padding: 11px 12px; }
+.synthesis-inspector-facet > summary:hover, .synthesis-inspector-nested > summary:hover { background: #d8e6e2; }
+.synthesis-inspector-summary-label { display: inline-flex; flex-direction: column; gap: 3px; min-width: 0; }
+.synthesis-inspector-summary-label strong { color: var(--ink); font-size: 12px; }
+.synthesis-inspector-summary-label small { color: #71807a; font-size: 9px; }
+.synthesis-inspector-facet-body { border-top: 1px solid #c3cfca; padding: 12px; }
+.synthesis-inspector-subgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px 12px; }
+.synthesis-inspector-subgrid > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.synthesis-inspector-subgrid strong { overflow-wrap: anywhere; color: var(--ink); font-size: 10px; line-height: 1.4; }
+.synthesis-inspector-nested { margin-top: 10px; border: 1px solid #c3cfca; background: #eef2ef; }
+.synthesis-inspector-nested > summary { cursor: pointer; padding: 8px 10px; color: #53645e; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.synthesis-inspector-nested > p { margin: 0; padding: 8px 10px; color: #62736d; font-size: 10px; line-height: 1.45; }
+.synthesis-inspector-nested > ul { margin: 0; border-top: 1px solid #c3cfca; padding: 0; list-style: none; }
+.synthesis-inspector-nested li { display: flex; flex-direction: column; gap: 3px; border-bottom: 1px solid #d1dad6; padding: 8px 10px; color: #62736d; font-size: 10px; line-height: 1.4; }
+.synthesis-inspector-nested li:last-child { border-bottom: 0; }
+.synthesis-inspector-nested li strong { color: var(--ink); font-size: 10px; }
+.synthesis-inspector-nested code { overflow-wrap: anywhere; color: var(--vermilion-dark); font: 10px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.synthesis-inspector-empty { color: #71807a; font-style: italic; }
+.synthesis-inspector-warning { margin: 10px 0 0; border-left: 3px solid var(--vermilion-dark); padding: 8px 10px; background: #e8ddd7; color: var(--vermilion-dark); font-size: 10px; line-height: 1.45; }
+.synthesis-inspector-rejected { border-color: #b49d91; background: #f0e6e1; }
+
+@media (max-width: 900px) {
+  .synthesis-inspector-budget { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 580px) {
+  .synthesis-inspector-section { margin-bottom: 39px; }
+  .synthesis-inspector-heading { align-items: start; flex-direction: column; gap: 9px; }
+  .synthesis-inspector-heading h2 { font-size: 27px; }
+  .synthesis-inspector-badge { align-self: start; }
+  .synthesis-inspector-stat-grid, .synthesis-inspector-subgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .synthesis-inspector-budget { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

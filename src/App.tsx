@@ -17,6 +17,10 @@ import { normalizeTemporalExtraction } from './lib/temporalNormalization'
 import { assessQueryRelevance, planTemporalCoverage, temporalCoverageWitnessChunkIds, temporalGate, type TemporalCoverageReport, type TemporalQueryRelevance } from './lib/temporalCoverage'
 import { parseRequestedPeriod, readRequestedPeriods, resolveTemporalNormalization, type TemporalResolution } from './lib/temporalResolution'
 import { PGVECTOR_DIMENSIONS, PgvectorError, SHARED_WRITES_DISABLED, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
+import { SynthesisInspector } from './components/SynthesisInspector'
+import { classifyQueryScope } from './lib/synthesisScope'
+import { prepareSynthesis, type SynthesisPreparationResult } from './lib/synthesisOrchestrator'
+import { resetPlanForQuerySurface } from './lib/queryRoute'
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
 
 const STORAGE_KEY = 'tracework.documents.v1'
@@ -260,6 +264,7 @@ function App() {
   const [showMethodHelp, setShowMethodHelp] = useState(false)
   const [generationState, setGenerationState] = useState<GenerationState>({ status: 'idle', model: null, message: null })
   const [groundedSession, setGroundedSession] = useState<GroundedSession | null>(null)
+  const [synthesisPreparation, setSynthesisPreparation] = useState<SynthesisPreparationResult | null>(null)
   // The clock is read here, once, at the UI boundary. Everything downstream
   // receives an immutable value; the resolver never calls Date.now() itself.
   const [asOf, setAsOf] = useState(() => new Date().toISOString().slice(0, 10))
@@ -418,15 +423,30 @@ function App() {
   const generationDebugLabel = generationState.status === 'idle'
     ? 'not called'
     : `${generationState.model ?? 'server model'} / ${generationState.status}`
-  const visibleCitations = answerMode === 'grounded' ? groundedAnswer?.citations ?? [] : answer.citations
+  const synthesisActive = synthesisPreparation?.route === 'synthesis'
+  const visibleCitations = synthesisActive
+    ? []
+    : answerMode === 'grounded'
+      ? groundedAnswer?.citations ?? []
+      : answer.citations
   const visibleCitationNumbers = answerMode === 'grounded'
     ? groundedAnswer?.validCitationNumbers ?? []
     : answer.citations.map((_citation, index) => index + 1)
-  const visibleAnswerTitle = answerMode === 'retrieval'
+  const visibleAnswerTitle = synthesisActive
+    ? synthesisPreparation?.coverage?.disposition === 'refuse-unsupported'
+      ? 'Synthesis needs missing metrics'
+      : synthesisPreparation?.coverage?.disposition === 'hold-for-conflict'
+        ? 'Synthesis is on conflict hold'
+        : 'Synthesis evidence is ready'
+    : answerMode === 'retrieval'
     ? answer.title
     : groundedAnswer?.title
       ?? (generationState.status === 'generating' ? 'Building a grounded answer' : generationState.status === 'error' ? 'Generation failed' : 'Grounded answer not run')
-  const visibleAnswerBody = answerMode === 'retrieval'
+  const visibleAnswerBody = synthesisActive
+    ? synthesisPreparation?.coverage?.disposition === 'answer'
+      ? 'The deterministic broad-synthesis pipeline prepared a structured evidence packet. Final prose generation is intentionally not called in Phase 5E Step 9.'
+      : synthesisPreparation?.coverage?.dispositionReason ?? 'The deterministic broad-synthesis pipeline could not establish a complete answer.'
+    : answerMode === 'retrieval'
     ? answer.body
     : groundedAnswer?.body
       ?? (generationState.status === 'generating'
@@ -486,10 +506,21 @@ function App() {
     setGenerationState({ status: 'idle', model: null, message: null })
   }
 
-  const resetRetrievalState = () => {
+  const resetFocusedRetrievalState = () => {
     resetNeuralState()
     resetPgvectorState()
     resetGroundedState()
+  }
+
+  const resetRetrievalState = () => {
+    resetFocusedRetrievalState()
+    setSynthesisPreparation(null)
+  }
+
+  const resetForQuerySurface = (route: 'focused' | 'synthesis') => {
+    const plan = resetPlanForQuerySurface(route)
+    if (plan.clearFocusedRetrieval) resetFocusedRetrievalState()
+    if (plan.clearSynthesisPreparation) setSynthesisPreparation(null)
   }
 
   const indexNeuralDocuments = async (
@@ -874,7 +905,30 @@ function App() {
       showNotice('info', 'Ask a specific question so the index has something to retrieve.')
       return
     }
-    void runRetrieval(nextQuery, answerMode === 'grounded')
+    void runQuestion(nextQuery, answerMode === 'grounded')
+  }
+
+  const runQuestion = async (nextQuery: string, shouldGenerate = false) => {
+    const scope = classifyQueryScope(nextQuery)
+    if (scope.mode === 'synthesis') {
+      resetForQuerySurface('synthesis')
+      const preparation = prepareSynthesis(nextQuery, documents, { asOf })
+      setActiveQuery(nextQuery)
+      setSynthesisPreparation(preparation)
+      if (preparation.route === 'focused') {
+        await runRetrieval(nextQuery, shouldGenerate)
+        return
+      }
+      showNotice(
+        preparation.coverage?.disposition === 'answer' ? 'info' : 'error',
+        preparation.coverage?.disposition === 'answer'
+          ? 'Broad evidence is prepared locally. Final prose generation has not been called.'
+          : preparation.coverage?.dispositionReason ?? 'Broad synthesis needs an evidence disclosure.',
+      )
+      return
+    }
+    resetForQuerySurface('focused')
+    await runRetrieval(nextQuery, shouldGenerate)
   }
 
   const handleIndexNote = (event: FormEvent<HTMLFormElement>) => {
@@ -986,7 +1040,7 @@ function App() {
 
   const handleExample = (example: string) => {
     setQuery(example)
-    void runRetrieval(example, answerMode === 'grounded')
+    void runQuestion(example, answerMode === 'grounded')
   }
 
   const handleEngineChange = (nextEngine: RetrievalEngine) => {
@@ -1239,10 +1293,12 @@ function App() {
                     <span className="citation-extra-meta"><small>{result.document.source} Â· {result.document.kind}</small><small>similarity {result.score.toFixed(4)} Â· distance {result.distance === undefined ? 'n/a' : result.distance.toFixed(4)}</small><small>{result.embeddingModel ?? result.chunk.neuralEmbedding?.model ?? 'local'} / {result.embeddingDimensions ?? result.chunk.neuralEmbedding?.dimensions ?? result.chunk.vector.length}d</small></span>
                     <Icon name="arrow" size={16} />
                   </button>
-                )) : <div className="citation-empty">{answerMode === 'grounded' ? 'Validated citations will appear here after generation.' : 'Results will leave a visible source trail here.'}</div>}
+                )) : <div className="citation-empty">{synthesisActive ? 'The structured synthesis packet is inspectable below; final citations will be added during generation.' : answerMode === 'grounded' ? 'Validated citations will appear here after generation.' : 'Results will leave a visible source trail here.'}</div>}
             </div>
             </div>
           </section>
+
+          <SynthesisInspector preparation={synthesisPreparation} />
 
           {showMethodHelp && (
             <section className="method-help method-help-external" id="method-help" aria-labelledby="method-help-title">
