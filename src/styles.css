@@ -35,6 +35,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .brand-name { font-size: 19px; font-weight: 750; letter-spacing: -0.055em; line-height: 1; }
 .brand-subtitle { color: var(--muted); font-size: 10px; letter-spacing: 0.13em; text-transform: uppercase; }
 .topbar-status { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.topbar-work-label { color: var(--teal); font-weight: 800; }
+.topbar-index-count { color: var(--muted); }
 .live-dot, .signal-dot, .notice-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--vermilion); box-shadow: 0 0 0 3px rgba(200, 73, 53, 0.13); }
 .status-divider { width: 1px; height: 16px; margin: 0 4px; background: var(--line-strong); }
 .clear-button { margin-left: 13px; padding: 5px 0; border: 0; border-bottom: 1px solid currentColor; background: none; color: var(--muted); cursor: pointer; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -95,32 +97,40 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .example-row button { border: 0; border-bottom: 1px solid #b9c4c0; padding: 2px 0; background: transparent; color: #5c6a65; cursor: pointer; font-size: 10px; text-align: left; }
 .example-row button:hover { border-color: var(--vermilion); color: var(--vermilion-dark); }
 
-.answer-sheet { max-width: 900px; margin: 0 auto 48px; border: 1px solid var(--ink); background: #e6ebe8; }
-.sheet-topline { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; border-bottom: 1px solid var(--ink); padding: 10px 15px; background: var(--ink); color: var(--paper); }
+.answer-sheet { max-width: 900px; margin: 0 auto 32px; border: 1px solid var(--ink); background: #e6ebe8; }
+/* The lab identity and guide action share the top row; the two decisions form
+   one deliberate shelf beneath them. Explanatory content stays outside the
+   instrument surface when the guide is opened. */
+.sheet-topline { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 18px; border-bottom: 1px solid var(--ink); padding: 12px 15px 13px; background: var(--ink); color: var(--paper); }
 .signal-label, .method-label { display: flex; align-items: center; gap: 9px; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
 .signal-dot { width: 6px; height: 6px; background: #ed816d; box-shadow: none; }
 .method-label { color: #aebbb6; font-weight: 650; }
 .engine-controls { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
 .engine-label { flex: 0 0 auto; color: #84938d; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
-/* Engine and answer are separate rows, each right-aligned, rather than one
-   wrapping line. The engine set has grown every phase — six plus compare now —
-   so a single line stopped fitting, which pushed the answer group onto a second
-   line and stranded the divider at the end of the first one. Rows keep the two
-   groups intact and their right edges aligned however many engines exist. */
-.sheet-controls { display: grid; grid-auto-flow: row; justify-items: end; align-items: center; gap: 7px; }
-.answer-mode-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-/* Meaningless once the groups are stacked, and it rendered as a stray mark at
-   the end of the wrapped line. */
-.control-divider { display: none; }
+/* One identity row and one compact control shelf keep the instrument legible.
+   The flexible engine group gives the answer decision a stable home instead of
+   turning each setting into a competing full-width row. */
+.sheet-controls { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; justify-content: center; gap: 11px; min-width: 0; padding-top: 10px; border-top: 1px solid rgba(199, 207, 204, 0.2); }
+.engine-controls { flex: 0 1 auto; min-width: 0; justify-content: center; }
+.answer-mode-controls { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; flex-wrap: nowrap; }
+/* The divider is a visual seam between search method and answer behavior. */
+.control-divider { display: block; flex: 0 0 1px; width: 1px; height: 20px; background: #50605a; }
+.mobile-control-selects { display: none; }
+.mobile-control-select { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mobile-control-select > span { color: #aebbb6; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.mobile-control-select select { width: 100%; min-height: 42px; border: 1px solid #50605a; border-radius: 0; padding: 0 10px; background: #1f2c29; color: var(--paper); font-size: 11px; font-weight: 750; }
+.mobile-control-select select:focus-visible { outline-color: var(--vermilion); }
+.mobile-compare-button { display: none; }
 .engine-option, .compare-button { border: 1px solid #50605a; padding: 5px 7px; background: transparent; color: #b8c4bf; cursor: pointer; font-size: 9px; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; }
 .engine-option:hover, .engine-option:focus-visible { border-color: var(--paper); color: var(--paper); }
 .engine-option.is-active { border-color: var(--paper); background: var(--paper); color: var(--ink); }
 .compare-button { border-color: var(--vermilion); color: #ef9b8b; }
 .compare-button:hover:not(:disabled), .compare-button.is-active { background: var(--vermilion); color: #fff8f4; }
 .compare-button:disabled { cursor: wait; opacity: 0.55; }
-.method-help-toggle { justify-self: end; min-height: 27px; border: 0; border-bottom: 1px solid #50605a; padding: 3px 0 2px; background: transparent; color: #ef9b8b; cursor: pointer; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.method-help-toggle { grid-column: 2; grid-row: 1; justify-self: end; align-self: center; white-space: nowrap; min-height: 27px; border: 0; border-bottom: 1px solid #50605a; padding: 3px 0 2px; background: transparent; color: #ef9b8b; cursor: pointer; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
 .method-help-toggle:hover, .method-help-toggle:focus-visible, .method-help-toggle.is-active { border-color: var(--paper); color: var(--paper); }
-.method-help { border-bottom: 1px solid var(--line-strong); padding: 16px 15px 15px; background: #d8e1dd; color: var(--ink); }
+.method-help { padding: 16px 15px 15px; background: #d8e1dd; color: var(--ink); }
+.method-help-external { max-width: 900px; margin: 0 auto 48px; border: 1px solid var(--line-strong); }
 .method-help-heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 12px; }
 .method-help-kicker, .method-help-label { color: var(--teal); font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
 .method-help h2 { margin: 5px 0 0; font-size: 22px; letter-spacing: -0.05em; line-height: 1; }
@@ -160,6 +170,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .library-list li.is-indexed .library-item-action:hover:not(:disabled) { color: var(--vermilion-dark); }
 .library-note { margin: 11px 0 0; color: #71807a; font-size: 10px; line-height: 1.5; }
 .neural-status-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; border-bottom: 1px solid var(--line-strong); padding: 8px 15px; background: #d8e1dd; }
+.neural-status-row .method-label { color: #315e5a; font-weight: 750; }
 .neural-state-label { color: #66756f; font-size: 9px; font-weight: 750; letter-spacing: 0.04em; text-align: right; }
 .neural-state-label.is-indexing { color: var(--vermilion-dark); }
 .neural-state-label.is-syncing, .neural-state-label.is-searching { color: var(--blue); }
@@ -420,17 +431,17 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
   .example-row { align-items: start; flex-direction: column; gap: 7px; }
   .example-row > span { margin: 0; }
   .example-row button { min-height: 44px; padding: 10px 0; }
-  .answer-sheet { margin-bottom: 39px; }
-  .sheet-topline { align-items: start; flex-direction: column; gap: 6px; }
-  .sheet-controls { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; gap: 9px; }
-  .sheet-controls .engine-controls, .sheet-controls .answer-mode-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; justify-content: stretch; }
-  .sheet-controls .engine-label { grid-column: 1 / -1; }
-  .sheet-controls .answer-mode-controls .engine-label { grid-column: 1 / -1; }
-  .control-divider { display: none; }
-  .engine-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; justify-content: stretch; }
-  .engine-label { grid-column: 1 / -1; }
-  .engine-option, .compare-button { width: 100%; min-width: 0; min-height: 44px; padding-left: 4px; padding-right: 4px; }
-  .method-help-toggle { justify-self: start; min-height: 44px; padding: 10px 0; }
+  .answer-sheet { margin-bottom: 32px; }
+  /* Mobile uses native selects so the lab stays a short decision surface rather
+     than turning every engine into a full-width tile. */
+  .sheet-topline { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 12px; }
+  .sheet-controls { grid-column: 1 / -1; grid-row: 2; display: flex; flex-direction: column; align-items: stretch; width: 100%; gap: 9px; }
+  .sheet-controls .engine-controls, .sheet-controls .answer-mode-controls, .control-divider { display: none; }
+  .mobile-control-selects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; width: 100%; }
+  .mobile-control-select select { min-height: 44px; }
+  .mobile-compare-button { display: inline-flex; grid-column: 1 / -1; width: 100%; min-height: 44px; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 10px; }
+  .method-help-toggle { justify-self: end; min-height: 44px; padding: 10px 0; }
+  .method-help-external { margin-bottom: 39px; }
   .method-help { padding: 14px 13px 13px; }
   .method-help-heading { align-items: start; flex-direction: column; gap: 7px; }
   .method-help h2 { font-size: 21px; }

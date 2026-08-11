@@ -26,9 +26,9 @@ const STORAGE_KEY = 'tracework.documents.v1'
 const INITIAL_QUERY = 'Where does the Japanese Pokémon card matching logic live?'
 
 const examples = [
-  'Where does the Japanese Pokémon card matching logic live?',
-  'What protects locked itinerary places from a planner proposal?',
-  'What should you measure before adding reranking?',
+  'How does the card matcher work?',
+  'What does the planner protect?',
+  'Why compare rankers?',
 ]
 
 type NeuralStatus = 'idle' | 'indexing' | 'ready' | 'error'
@@ -1069,12 +1069,12 @@ function App() {
             <span className="brand-subtitle">personal knowledge brain</span>
           </span>
         </a>
-        <div className="topbar-status">
+        <div className="topbar-status" aria-label="Knowledge base and index status">
           <span className="live-dot" aria-hidden="true" />
-          <span>local index</span>
+          <span className="topbar-work-label">knowledge base</span>
           <span className="status-divider" aria-hidden="true" />
-          <span>{documents.length} sources / {chunkCount} chunks</span>
-          <button className="clear-button" type="button" onClick={handleClear} disabled={!documents.length}>clear index</button>
+          <span className="topbar-index-count">{documents.length} sources / {chunkCount} passages</span>
+          <button className="clear-button" type="button" onClick={handleClear} disabled={!documents.length}>clear this index</button>
         </div>
       </header>
 
@@ -1153,7 +1153,7 @@ function App() {
               <button type="submit">retrieve <Icon name="arrow" size={17} /></button>
             </form>
             <div className="example-row" aria-label="Example questions">
-              <span>try a trace</span>
+              <span>try a question</span>
               {examples.map((example) => <button key={example} type="button" onClick={() => handleExample(example)}>{example}</button>)}
             </div>
           </section>
@@ -1164,10 +1164,12 @@ function App() {
               <div className="sheet-controls">
                 <div className="engine-controls" role="group" aria-label="Retrieval engine">
                   <span className="engine-label">engine</span>
-                  <button className={`engine-option ${engine === 'hashed' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('hashed')}>hashed baseline</button>
+                  {/* Short labels keep all seven engines plus compare on one
+                      line; the full names are in the status strip and guide. */}
+                  <button className={`engine-option ${engine === 'hashed' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('hashed')} title="hashed baseline">hashed</button>
                   <button className={`engine-option ${engine === 'neural' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('neural')}>local neural</button>
                   <button className={`engine-option ${engine === 'pgvector' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('pgvector')}>pgvector</button>
-                  <button className={`engine-option ${engine === 'lexical' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('lexical')}>lexical bm25</button>
+                  <button className={`engine-option ${engine === 'lexical' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('lexical')} title="lexical bm25">bm25</button>
                   <button className={`engine-option ${engine === 'hybrid' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('hybrid')}>hybrid rrf</button>
                   <button className={`engine-option ${engine === 'rerank' ? 'is-active' : ''}`} type="button" onClick={() => handleEngineChange('rerank')}>union rerank</button>
                   <button className={`compare-button ${compareMode ? 'is-active' : ''}`} type="button" onClick={handleCompare} disabled={neuralState.status === 'indexing' || ['syncing', 'searching'].includes(pgvectorState.status)}>compare</button>
@@ -1178,40 +1180,40 @@ function App() {
                   <button className={`engine-option ${answerMode === 'retrieval' ? 'is-active' : ''}`} type="button" onClick={() => handleAnswerModeChange('retrieval')}>retrieval only</button>
                   <button className={`engine-option ${answerMode === 'grounded' ? 'is-active' : ''}`} type="button" onClick={() => handleAnswerModeChange('grounded')}>grounded answer</button>
                 </div>
-                <button
-                  className={`method-help-toggle ${showMethodHelp ? 'is-active' : ''}`}
-                  type="button"
-                  aria-expanded={showMethodHelp}
-                  aria-controls="method-help"
-                  onClick={() => setShowMethodHelp((visible) => !visible)}
-                >
-                  {showMethodHelp ? 'close guide' : 'how this works'}
-                </button>
+                <div className="mobile-control-selects" aria-label="Compact retrieval controls">
+                  <label className="mobile-control-select">
+                    <span>engine</span>
+                    <select value={engine} onChange={(event) => handleEngineChange(event.target.value as RetrievalEngine)}>
+                      <option value="hashed">hashed baseline</option>
+                      <option value="neural">local neural</option>
+                      <option value="pgvector">pgvector</option>
+                      <option value="lexical">BM25 lexical</option>
+                      <option value="hybrid">hybrid RRF</option>
+                      <option value="rerank">union rerank</option>
+                    </select>
+                  </label>
+                  <label className="mobile-control-select">
+                    <span>answer</span>
+                    <select value={answerMode} onChange={(event) => handleAnswerModeChange(event.target.value as AnswerMode)}>
+                      <option value="retrieval">retrieval only</option>
+                      <option value="grounded">grounded answer</option>
+                    </select>
+                  </label>
+                  <button className="compare-button mobile-compare-button" type="button" onClick={handleCompare} disabled={neuralState.status === 'indexing' || ['syncing', 'searching'].includes(pgvectorState.status)}>
+                    {compareMode ? 'comparison active' : 'compare engines'}
+                  </button>
+                </div>
               </div>
+              <button
+                className={`method-help-toggle ${showMethodHelp ? 'is-active' : ''}`}
+                type="button"
+                aria-expanded={showMethodHelp}
+                aria-controls="method-help"
+                onClick={() => setShowMethodHelp((visible) => !visible)}
+              >
+                {showMethodHelp ? 'close guide' : 'how this works'}
+              </button>
             </div>
-            {showMethodHelp && (
-              <section className="method-help" id="method-help" aria-labelledby="method-help-title">
-                <div className="method-help-heading">
-                  <div>
-                    <div className="method-help-kicker">guide / two decisions</div>
-                    <h2 id="method-help-title">Search first. Answer second.</h2>
-                  </div>
-                  <span className="method-help-rule">engine → evidence / answer → response</span>
-                </div>
-                <div className="method-help-grid">
-                  <div className="method-help-item">
-                    <span className="method-help-label">engine / how to find</span>
-                    <p>Chooses how Tracework searches. Hashed is the fast local baseline; neural and pgvector search by meaning; BM25 matches exact terms; hybrid combines rankings; Union Rerank keeps both candidate pools before selecting passages.</p>
-                  </div>
-                  <div className="method-help-item">
-                    <span className="method-help-label">answer / what happens next</span>
-                    <p>Retrieval only shows the evidence. Grounded answer sends the selected context to the model for a cited response, with refusal behavior when the evidence is not sufficient.</p>
-                  </div>
-                </div>
-                <p className="method-help-note">For inspection, pair any engine with Retrieval Only. For the current end-to-end path, try Union Rerank + Grounded Answer.</p>
-                <p className="method-help-note">Browser engines stay on this device. Pgvector searches the shared Supabase library once configured, so sources synced there can be retrieved from another device.</p>
-              </section>
-            )}
             <div className="neural-status-row" role="status" aria-live="polite">
               <span className="method-label">{engine === 'pgvector' ? 'pgvector / database cosine search' : engine === 'neural' ? 'local neural / semantic similarity' : engine === 'lexical' ? 'lexical / bm25 over title, path, and body' : engine === 'hybrid' ? `hybrid / reciprocal rank fusion of ${denseSourceLabel} + bm25` : engine === 'rerank' ? 'phase 5B / dense + lexical union / relevance-only rerank' : 'baseline / hashed vector + term overlap'}</span>
               <span className={`neural-state-label is-${activeStatus}`}>
@@ -1238,9 +1240,33 @@ function App() {
                     <Icon name="arrow" size={16} />
                   </button>
                 )) : <div className="citation-empty">{answerMode === 'grounded' ? 'Validated citations will appear here after generation.' : 'Results will leave a visible source trail here.'}</div>}
-              </div>
+            </div>
             </div>
           </section>
+
+          {showMethodHelp && (
+            <section className="method-help method-help-external" id="method-help" aria-labelledby="method-help-title">
+              <div className="method-help-heading">
+                <div>
+                  <div className="method-help-kicker">guide / two decisions</div>
+                  <h2 id="method-help-title">Search first. Answer second.</h2>
+                </div>
+                <span className="method-help-rule">engine → evidence / answer → response</span>
+              </div>
+              <div className="method-help-grid">
+                <div className="method-help-item">
+                  <span className="method-help-label">engine / how to find</span>
+                  <p>Chooses how Tracework searches. Hashed is the fast local baseline; neural and pgvector search by meaning; BM25 matches exact terms; hybrid combines rankings; Union Rerank keeps both candidate pools before selecting passages.</p>
+                </div>
+                <div className="method-help-item">
+                  <span className="method-help-label">answer / what happens next</span>
+                  <p>Retrieval only shows the evidence. Grounded answer sends the selected context to the model for a cited response, with refusal behavior when the evidence is not sufficient.</p>
+                </div>
+              </div>
+              <p className="method-help-note">For inspection, pair any engine with Retrieval Only. For the current end-to-end path, try Union Rerank + Grounded Answer.</p>
+              <p className="method-help-note">Browser engines stay on this device. Pgvector searches the shared Supabase library once configured, so sources synced there can be retrieved from another device.</p>
+            </section>
+          )}
 
           {(engine === 'lexical' || engine === 'hybrid') && <section className="retrieval-explain-section" aria-labelledby="retrieval-explain-title">
             <div className="grounded-debug-heading">
