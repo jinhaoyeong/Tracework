@@ -1,6 +1,9 @@
 import type { SearchResult } from '../types'
 import type { EvidenceAdjudication } from './adjudication'
 import type { TemporalHoldReason, TemporalResolution } from './temporalResolution'
+import { FOCUSED_CONTEXT_CHARACTER_LIMIT, MODEL_REFUSAL_SENTENCE } from './generationContract.ts'
+
+export { MODEL_REFUSAL_SENTENCE } from './generationContract.ts'
 
 export type EvidenceStatus = 'strong' | 'partial' | 'insufficient'
 
@@ -193,7 +196,7 @@ const neutralizeInjectedInstructions = (text: string) => {
  * generation route. Trimming here means an oversized chunk costs some evidence
  * rather than failing the whole request with context_too_large.
  */
-export const MAX_CONTEXT_CHARACTERS = 24000
+export const MAX_CONTEXT_CHARACTERS = FOCUSED_CONTEXT_CHARACTER_LIMIT
 
 const truncateChunkText = (text: string, budget: number) => {
   if (text.length <= budget) return { text, truncatedCharacters: 0 }
@@ -459,13 +462,6 @@ export const buildTemporalHoldAnswer = (
     model: null,
   }
 }
-
-/**
- * The exact sentence the generation route instructs the model to return when
- * the supplied evidence does not answer the question. Keep this string in sync
- * with the server instructions in vite.config.ts.
- */
-export const MODEL_REFUSAL_SENTENCE = 'I could not find enough evidence in the supplied knowledge base to answer this.'
 
 const normalizeRefusalText = (value: string) =>
   value

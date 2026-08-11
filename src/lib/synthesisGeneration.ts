@@ -10,13 +10,19 @@ import type {
 } from './facetCoverage.ts'
 import type { SynthesisPreparedFacet, SynthesisRoute } from './synthesisOrchestrator.ts'
 import {
-  MAX_CONTEXT_CHARACTERS,
-  MODEL_REFUSAL_SENTENCE,
   isModelRefusal,
   prepareEvidenceText,
   validateCitations,
   type GroundedContext,
 } from './grounded.ts'
+import {
+  MODEL_REFUSAL_SENTENCE,
+  SYNTHESIS_CONTEXT_CHARACTER_LIMIT,
+  SYNTHESIS_EVIDENCE_CHARACTER_LIMIT,
+  SYNTHESIS_GENERATION_INSTRUCTIONS,
+} from './generationContract.ts'
+
+export { SYNTHESIS_GENERATION_INSTRUCTIONS } from './generationContract.ts'
 
 /**
  * Phase 5E Step 10A: the broad-synthesis generation boundary.
@@ -136,7 +142,7 @@ export interface SynthesisGenerationMetadata {
  * purpose: an evidence block is an evidence block, and a chunk should not
  * become more quotable by arriving through the broad route.
  */
-export const MAX_SYNTHESIS_EVIDENCE_CHARACTERS = MAX_CONTEXT_CHARACTERS
+export const MAX_SYNTHESIS_EVIDENCE_CHARACTERS = SYNTHESIS_EVIDENCE_CHARACTER_LIMIT
 
 /**
  * The total serialized budget for a broad generation request.
@@ -156,7 +162,7 @@ export const MAX_SYNTHESIS_EVIDENCE_CHARACTERS = MAX_CONTEXT_CHARACTERS
  * Trimming here would delete an exception or a temporal disclosure that Step 8
  * had already relied on when it declared the answer safe.
  */
-export const MAX_SYNTHESIS_CONTEXT_CHARACTERS = 36000
+export const MAX_SYNTHESIS_CONTEXT_CHARACTERS = SYNTHESIS_CONTEXT_CHARACTER_LIMIT
 
 export type SynthesisGenerationResult =
   | {
@@ -276,25 +282,12 @@ export interface SynthesisGenerationOptions {
 
 /* -------------------------------------------------------------- instructions */
 
-export const SYNTHESIS_REFUSAL_SENTENCE = MODEL_REFUSAL_SENTENCE
-
 /**
- * The generator's whole contract. It is stated once, kept next to the context
- * builder so the two cannot drift, and repeated verbatim into the request.
+ * The generator's whole contract lives in generationContract.ts so the text
+ * embedded in this context and the text the transport sends as system
+ * instructions are one string, not two that drift.
  */
-export const SYNTHESIS_GENERATION_INSTRUCTIONS = [
-  'You are writing one broad answer from a validated evidence packet.',
-  '',
-  '1. Answer only from the supplied evidence. Do not use outside knowledge.',
-  '2. Preserve the distinction between current claims and historical, superseded, or proposed claims. Never present a claim listed as not current as though it were current.',
-  '3. Preserve every exception listed under a facet. Do not generalise an exception away.',
-  '4. Never invent a numeric value. Any figure you state must appear verbatim in the supplied evidence.',
-  '5. Cite every factual claim with the supplied markers, written as [n]. Group markers as [1, 2] when several apply.',
-  '6. Only cite numbers that appear in the EVIDENCE section below. Do not cite anything that was not supplied.',
-  '7. Disclose the uncertainty the packet records: unresolved conflicts, temporal notices, and unsatisfied evidence obligations.',
-  '',
-  `If the supplied evidence does not answer the question, reply with exactly: ${SYNTHESIS_REFUSAL_SENTENCE}`,
-].join('\n')
+export const SYNTHESIS_REFUSAL_SENTENCE = MODEL_REFUSAL_SENTENCE
 
 /* --------------------------------------------------------- context building */
 

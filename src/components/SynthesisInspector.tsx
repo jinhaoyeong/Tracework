@@ -70,7 +70,51 @@ const SynthesisFacetDetails = ({ facet }: { facet: SynthesisInspectorModel['face
   </details>
 )
 
-export function SynthesisInspector({ preparation }: { preparation: SynthesisPreparationResult | null }) {
+/**
+ * What the generation boundary actually did. Request count and provider flag are
+ * read from the Step 10A result, so a deterministic hold can be told apart from
+ * a request that was made and came back badly cited.
+ */
+export interface SynthesisGenerationReport {
+  status: string
+  requests: number
+  providerCalled: boolean
+  model: string | null
+  contextCharacters: number | null
+  contextBudget: number
+  evidenceReferences: number | null
+  validCitationCount: number
+  invalidCitationMarkers: string[]
+  message: string | null
+}
+
+const GenerationReport = ({ report }: { report: SynthesisGenerationReport }) => (
+  <details className="synthesis-inspector-nested synthesis-inspector-generation" open>
+    <summary>generation boundary</summary>
+    <div className="synthesis-inspector-budget">
+      <div><span>status</span><strong>{statusLabel(report.status)}</strong></div>
+      <div><span>generation requests</span><strong>{report.requests}</strong></div>
+      <div><span>provider called</span><strong>{report.providerCalled ? 'yes' : 'no'}</strong></div>
+      <div><span>model</span><strong>{report.model ?? 'none'}</strong></div>
+      <div><span>context characters</span><strong>{report.contextCharacters === null ? 'not built' : report.contextCharacters.toLocaleString()}</strong></div>
+      <div><span>context budget</span><strong>{report.contextBudget.toLocaleString()}</strong></div>
+      <div><span>evidence references</span><strong>{report.evidenceReferences ?? 'none'}</strong></div>
+      <div><span>valid citations</span><strong>{report.validCitationCount}</strong></div>
+    </div>
+    {report.invalidCitationMarkers.length
+      ? <p className="synthesis-inspector-warning">Rejected markers: {report.invalidCitationMarkers.join(', ')}</p>
+      : null}
+    {report.message ? <p>{report.message}</p> : null}
+    <p className="synthesis-inspector-empty">
+      Citation validation confirms every marker resolves to supplied packet evidence. It does not prove the cited passage entails the sentence citing it.
+    </p>
+  </details>
+)
+
+export function SynthesisInspector({ preparation, generation }: {
+  preparation: SynthesisPreparationResult | null
+  generation?: SynthesisGenerationReport | null
+}) {
   if (!preparation) return null
   const model = buildSynthesisInspector(preparation)
   const isFocused = model.route === 'focused'
@@ -89,7 +133,7 @@ export function SynthesisInspector({ preparation }: { preparation: SynthesisPrep
         <div><span>initial mode</span><strong>{model.initialMode}</strong><small>{model.classifierReason}</small></div>
         <div><span>scope refinement</span><strong>{statusLabel(model.scopeRefinement)}</strong><small>{model.routeReason}</small></div>
         <div><span>selected / runtime facets</span><strong>{model.discoveredFacetCount} / {model.runtimeFacetCount}</strong><small>{model.requirements.length} requirements / {model.coveredFacetCount} covered / {model.partialFacetCount} partial / {model.unsupportedFacetCount} unsupported / {model.conflictedFacetCount} conflicted</small></div>
-        <div><span>provider called</span><strong>no</strong><small>deterministic preparation only</small></div>
+        <div><span>provider called</span><strong>{generation?.providerCalled ? 'yes' : 'no'}</strong><small>{generation ? `${generation.requests} generation request${generation.requests === 1 ? '' : 's'}` : 'deterministic preparation only'}</small></div>
       </div>
 
       <div className="synthesis-inspector-budget">
@@ -106,9 +150,13 @@ export function SynthesisInspector({ preparation }: { preparation: SynthesisPrep
         {isFocused
           ? 'This request returned to the existing focused QA path. No broad synthesis context was built.'
           : model.disposition === 'answer'
-            ? 'The structured synthesis packet is ready. Final prose generation has not been called.'
+            ? generation
+              ? `The structured synthesis packet is ready. ${generation.requests === 1 ? 'One generation request was made from it.' : 'No generation request was made.'}`
+              : 'The structured synthesis packet is ready. Final prose generation has not been called.'
             : model.dispositionReason}
       </p>
+
+      {generation ? <GenerationReport report={generation} /> : null}
 
       <details className="synthesis-inspector-nested synthesis-inspector-plan">
         <summary>classifier and requirement plan</summary>

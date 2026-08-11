@@ -28,6 +28,7 @@
     "test:phase5e-nimbus": "node --experimental-strip-types scripts/test-phase5e-nimbus.mjs",
     "test:phase5e-pipeline": "node --experimental-strip-types scripts/test-phase5e-pipeline.mjs",
     "test:phase5e-generation": "node --experimental-strip-types scripts/test-phase5e-generation.mjs",
+    "test:phase5e-transport": "node --experimental-strip-types scripts/test-phase5e-transport.mjs",
     "test:phase5e-state-boundary": "node --experimental-strip-types scripts/test-phase5e-state-boundary.mjs",
     "eval:retrieval": "node --experimental-strip-types scripts/eval-retrieval.mjs",
     "eval:reranker": "node --experimental-strip-types scripts/eval-reranker.mjs",
