@@ -45,6 +45,8 @@ export interface DiscoveredFacetCandidate {
   normalizedSubject: string
   parentId: string | null
   aliases: string[]
+  /** Lexical companions observed near structural evidence in the corpus. */
+  lexicalAliases: string[]
   occurrenceCount: number
   chunkIds: string[]
   signals: FacetDiscoverySignal[]
@@ -69,6 +71,7 @@ interface CandidateAccumulator {
   normalizedSubject: string
   parentId: string | null
   aliases: Set<string>
+  lexicalAliases: Map<string, number>
   chunkIds: Set<string>
   signals: Set<FacetDiscoverySignal>
   obligationChunks: Map<FacetObligationKind, Set<string>>
@@ -81,6 +84,33 @@ const CURRENT_LANGUAGE = /\b(?:current|currently|newly approved|available|remain
 const EXCEPTION_LANGUAGE = /\b(?:except|exception|only|not literally universal|did not apply|did not qualify|unlimited|special arrangement|rather than)\b/i
 const CHANGE_LANGUAGE = /\b(?:changed?|increased?|decreased?|introduced|ended|replaced?|superseded?|proposed?|approved|renewed|became permanent|from .+ onward)\b/i
 const APPLICABILITY_LANGUAGE = /\b(?:appl(?:y|ied|ies|icable)|eligible|available|qualif(?:y|ied|ies)|included|receive[ds]?)\b/i
+
+// Structural cues are generic. Nearby corpus words become lexical companions
+// so domain-specific term relationships are learned from evidence rather than
+// encoded here.
+const LEXICAL_CUE_WORDS = new Set([
+  'allow', 'allowed', 'allows', 'allowance', 'allowances', 'applicable', 'approved',
+  'available', 'benefit', 'benefits', 'called', 'change', 'changed', 'current',
+  'eligible', 'eligibility', 'ended', 'except', 'exception', 'feature', 'included',
+  'includes', 'introduced', 'known', 'limitation', 'only', 'policies', 'policy',
+  'proposed', 'provided', 'provides', 'qualifies', 'qualified', 'qualify', 'rather',
+  'received', 'receives', 'replaced', 'rule', 'special', 'unlimited',
+])
+const LEXICAL_STOP_WORDS = new Set([
+  'a', 'about', 'actually', 'also', 'although', 'an', 'and', 'another', 'any', 'apparently',
+  'applied', 'are', 'as', 'at', 'be', 'because', 'been', 'being', 'beginning', 'by',
+  'can', 'containing', 'could', 'describing', 'did', 'first', 'for', 'from', 'had', 'he', 'her', 'hers', 'his', 'however',
+  'in', 'is', 'it', 'its', 'later', 'may', 'more', 'most', 'not', 'of', 'old', 'on', 'one',
+  'or', 'other', 'our', 'over', 'per', 'that', 'the', 'their', 'them', 'they', 'this',
+  'than', 'those', 'to', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen',
+  'eighteen', 'nineteen', 'twenty', 'thirty', 'forty', 'fifty', 'hundred', 'thousand',
+  'was', 'were', 'which', 'who', 'with', 'would', 'you', 'your',
+  'account', 'accounts', 'category',
+  'categories', 'member', 'members', 'membership', 'memberships', 'plan', 'plans',
+  'product', 'products', 'programme', 'program', 'subscription', 'subscriptions',
+  'user', 'users',
+])
 
 const normalizeText = (value: string) => value
   .normalize('NFKC')
@@ -148,7 +178,7 @@ const extractInventoryItems = (sentence: string) => {
   return offeredList ? splitInventory(offeredList[1]) : []
 }
 
-const NUMBER_WORD = '(?:\\d+(?:\\.\\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|unlimited)'
+const NUMBER_WORD = '(?:\\d+(?:\\.\\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|hundred|thousand|unlimited)'
 const DIMENSION_STOP_WORDS = new Set(['a', 'an', 'the', 'local', 'monthly', 'active', 'normal', 'ordinary', 'additional'])
 const QUANTITY_WORDS = new Set(['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'])
 
@@ -159,13 +189,58 @@ const normalizeDimensionSubject = (value: string) => {
   return tokens.at(-1) ?? ''
 }
 
+const lexicalForms = (value: string) => {
+  const token = value
+    .toLocaleLowerCase('en')
+    .replace(/[^a-z0-9-]+/g, '')
+  if (!token || token.length < 3 || LEXICAL_STOP_WORDS.has(token) || /^\d/.test(token)) return []
+  const singular = token.endsWith('ies') && token.length > 4
+    ? `${token.slice(0, -3)}y`
+    : token.endsWith('s') && !token.endsWith('ss') && token.length > 4
+      ? token.slice(0, -1)
+      : token
+  return [...new Set([token, singular])]
+}
+
+const extractLexicalCompanions = (text: string) => {
+  const tokens = text.match(/[A-Za-z][A-Za-z-]*/g) ?? []
+  const companions = new Map<string, number>()
+  tokens.forEach((token, index) => {
+    if (!LEXICAL_CUE_WORDS.has(token.toLocaleLowerCase('en'))) return
+    for (let offset = -3; offset <= 3; offset += 1) {
+      const companion = tokens[index + offset]
+      if (!companion || offset === 0) continue
+      lexicalForms(companion).forEach((form) => {
+        if (!LEXICAL_CUE_WORDS.has(form)) {
+          const proximityScore = 4 - Math.abs(offset)
+          companions.set(form, Math.max(companions.get(form) ?? 0, proximityScore))
+        }
+      })
+    }
+  })
+  return companions
+}
+
+interface PolicyDimensionOccurrence {
+  subject: string
+  lexicalAliases: string[]
+}
+
 const extractPolicyDimensions = (text: string) => {
-  const dimensions: string[] = []
+  const dimensions: PolicyDimensionOccurrence[] = []
+  const addDimension = (subjectRaw: string, companions: string[]) => {
+    const subject = normalizeDimensionSubject(subjectRaw)
+    if (!subject) return
+    dimensions.push({
+      subject,
+      lexicalAliases: [...new Set(companions.flatMap((value) => lexicalForms(value)))],
+    })
+  }
   const quantifiedPattern = new RegExp(`\\b(?:includes?|included|receives?|received|allows?|allowed|provides?|provided)\\s+(?:(?:up to|at least|more than)\\s+)?${NUMBER_WORD}\\s+(?:included\\s+)?([a-z][a-z-]+)\\s+([a-z][a-z-]+)\\b`, 'gi')
-  for (const match of text.matchAll(quantifiedPattern)) dimensions.push(normalizeDimensionSubject(match[1]))
-  for (const match of text.matchAll(/\bunlimited\s+([a-z][a-z-]+)\s+([a-z][a-z-]+)\b/gi)) dimensions.push(normalizeDimensionSubject(match[1]))
-  for (const match of text.matchAll(/\b([a-z][a-z-]+)\s+(?:allowance|quota|entitlement)\b/gi)) dimensions.push(normalizeDimensionSubject(match[1]))
-  return dimensions.filter((item) => item.length >= 3)
+  for (const match of text.matchAll(quantifiedPattern)) addDimension(match[1], [match[1], match[2]])
+  for (const match of text.matchAll(/\bunlimited\s+([a-z][a-z-]+)\s+([a-z][a-z-]+)\b/gi)) addDimension(match[1], [match[1], match[2]])
+  for (const match of text.matchAll(/\b([a-z][a-z-]+)\s+(allowance|quota|entitlement)\b/gi)) addDimension(match[1], [match[1], match[2]])
+  return dimensions.filter((item) => item.subject.length >= 3)
 }
 
 const SCOPED_MODIFIER_STOP_WORDS = new Set([
@@ -224,6 +299,7 @@ export const discoverFacets = (
       signal: FacetDiscoverySignal
       chunkId?: string
       obligation?: FacetObligationKind
+      lexicalAliases?: string[]
     },
   ) => {
     const cleaned = cleanLabel(rawLabel, isDocumentTarget ? rootTarget : null)
@@ -237,12 +313,18 @@ export const discoverFacets = (
       normalizedSubject: options.normalizedSubject ?? slugify(cleaned),
       parentId: options.parentId ?? null,
       aliases: new Set<string>(),
+      lexicalAliases: new Map<string, number>(),
       chunkIds: new Set<string>(),
       signals: new Set<FacetDiscoverySignal>(),
       obligationChunks: new Map<FacetObligationKind, Set<string>>(),
       forceRejected: false,
     }
     existing.aliases.add(cleaned)
+    for (const lexicalAlias of options.lexicalAliases ?? []) {
+      for (const form of lexicalForms(lexicalAlias)) {
+        existing.lexicalAliases.set(form, (existing.lexicalAliases.get(form) ?? 0) + 1)
+      }
+    }
     existing.signals.add(options.signal)
     if (options.chunkId) existing.chunkIds.add(options.chunkId)
     if (options.obligation) {
@@ -288,10 +370,10 @@ export const discoverFacets = (
 
   const dimensionChunks = new Map<string, Set<string>>()
   for (const chunk of analysisChunks) {
-    for (const subject of extractPolicyDimensions(chunk.text)) {
-      const subjectChunks = dimensionChunks.get(subject) ?? new Set<string>()
+    for (const occurrence of extractPolicyDimensions(chunk.text)) {
+      const subjectChunks = dimensionChunks.get(occurrence.subject) ?? new Set<string>()
       subjectChunks.add(chunk.id)
-      dimensionChunks.set(subject, subjectChunks)
+      dimensionChunks.set(occurrence.subject, subjectChunks)
     }
   }
   for (const [subject, subjectChunks] of dimensionChunks) {
@@ -302,6 +384,15 @@ export const discoverFacets = (
       signal: 'recurring_policy_dimension',
       obligation: 'current-state',
     })
+    for (const chunkId of subjectChunks) {
+      const chunk = analysisChunks.find((candidate) => candidate.id === chunkId)
+      const occurrence = chunk && extractPolicyDimensions(chunk.text).find((item) => item.subject === subject)
+      for (const alias of occurrence?.lexicalAliases ?? []) {
+        for (const form of lexicalForms(alias)) {
+          if (dimension) dimension.lexicalAliases.set(form, (dimension.lexicalAliases.get(form) ?? 0) + 1)
+        }
+      }
+    }
     subjectChunks.forEach((chunkId) => {
       dimension?.chunkIds.add(chunkId)
       dimension?.obligationChunks.get('current-state')?.add(chunkId)
@@ -364,6 +455,13 @@ export const discoverFacets = (
     matchingChunks.forEach((chunk) => candidate.chunkIds.add(chunk.id))
     if (matchingChunks.length >= 2) candidate.signals.add('recurring_named_subject')
 
+    const companionChunkIds = new Set([...candidate.chunkIds, ...matchingChunks.map((chunk) => chunk.id)])
+    for (const chunk of analysisChunks.filter((item) => companionChunkIds.has(item.id))) {
+      for (const [companion, score] of extractLexicalCompanions(chunk.text)) {
+        candidate.lexicalAliases.set(companion, (candidate.lexicalAliases.get(companion) ?? 0) + score)
+      }
+    }
+
     for (const chunk of matchingChunks) {
       const text = chunk.text
       const addObligation = (kind: FacetObligationKind) => {
@@ -411,6 +509,17 @@ export const discoverFacets = (
     if (candidate.forceRejected) rejectionReason = 'inactive_or_proposed_covered_by_composite'
     if (comparisonEntities.length && !explicitComparisonIds.has(candidate.id)) rejectionReason = 'outside_explicit_comparison'
     if (normalizedTarget && !isDocumentTarget && candidate.id !== targetId) rejectionReason = 'outside_requested_subject'
+    const lexicalEntries = [...candidate.lexicalAliases.entries()]
+    const frequentLexicalAliases = lexicalEntries
+      .slice()
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    const sparseLexicalAliases = lexicalEntries
+      .filter((entry) => entry[1] <= 2)
+      .sort((left, right) => left[0].localeCompare(right[0]))
+    const lexicalAliases = [...new Set([
+      ...frequentLexicalAliases.slice(0, 16).map(([alias]) => alias),
+      ...sparseLexicalAliases.slice(0, 32).map(([alias]) => alias),
+    ])]
     return {
       id: candidate.id,
       label: candidate.label,
@@ -418,6 +527,7 @@ export const discoverFacets = (
       normalizedSubject: candidate.normalizedSubject,
       parentId: candidate.parentId,
       aliases: [...candidate.aliases].sort(),
+      lexicalAliases,
       occurrenceCount: candidate.chunkIds.size,
       chunkIds: [...candidate.chunkIds].sort(),
       signals: [...candidate.signals].sort(),

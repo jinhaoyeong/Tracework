@@ -127,6 +127,7 @@ const facetIdentityTerms = (facet: DiscoveredFacet) => tokenize([
   facet.label,
   facet.normalizedSubject,
   ...facet.aliases,
+  ...(facet.lexicalAliases ?? []).slice(0, 8),
 ].join(' '))
 
 const obligationTerms = (obligation: FacetEvidenceObligation) => [
@@ -192,6 +193,7 @@ const facetScopeQuestion = (facet: DiscoveredFacet) => [
   facet.label,
   facet.normalizedSubject,
   ...facet.aliases,
+  ...(facet.lexicalAliases ?? []).slice(0, 8),
 ].join(' ')
 
 const restoreDeclaredObligationWitness = (
@@ -215,9 +217,9 @@ const restoreDeclaredObligationWitness = (
     .filter((result): result is SearchResult => Boolean(result))
     .sort((left, right) => (unionRanks.get(left.chunk.id) ?? Infinity) - (unionRanks.get(right.chunk.id) ?? Infinity))
 
-  if (declared.some((result) => context.some((candidate) => candidate.chunk.id === result.chunk.id))) return
-  const witness = declared[0]
-  if (witness) addRestoration(context, restored, witness, 'obligation-witness')
+  declared
+    .filter((result) => !context.some((candidate) => candidate.chunk.id === result.chunk.id))
+    .forEach((witness) => addRestoration(context, restored, witness, 'obligation-witness'))
 }
 
 const restoreInferredObligationWitness = (

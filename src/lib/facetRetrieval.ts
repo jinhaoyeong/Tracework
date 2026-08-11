@@ -88,11 +88,32 @@ const OBLIGATION_QUERY_TERMS: Record<FacetEvidenceObligation['kind'], string[]> 
   definition: ['introduced', 'category', 'membership'],
   'current-state': ['current', 'effective'],
   applicability: ['applicable', 'eligible', 'included'],
-  exception: ['exception', 'unlimited', 'special'],
+  exception: ['exception', 'except', 'only', 'unlimited', 'special', 'limitation'],
   'change-status': ['changed', 'proposed', 'future'],
 }
 
 const unique = (values: string[]) => [...new Set(values.filter(Boolean))]
+const lexicalAliasesOf = (facet: DiscoveredFacet) => facet.lexicalAliases ?? []
+const DESCRIPTION_STOP_TERMS = new Set([
+  'a', 'an', 'and', 'as', 'at', 'be', 'by', 'for', 'from', 'in', 'is', 'it', 'of', 'on',
+  'or', 'the', 'to', 'with', 'establish', 'corpus', 'evidence', 'current', 'state',
+  'change', 'status', 'applicability', 'definition', 'exception', 'exceptions',
+  'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen',
+  'eighteen', 'nineteen', 'twenty', 'thirty', 'forty', 'fifty', 'hundred', 'thousand',
+])
+// These terms come from the runtime obligation description; the filter only
+// removes grammar, structural labels, and numeric tokens. It does not supply
+// a domain-specific synonym list.
+const descriptionLexicalTerms = (description: string) => tokenize(description)
+  .filter((term) => term.length >= 3 && !DESCRIPTION_STOP_TERMS.has(term) && !/^\d/.test(term))
+  .slice(0, 12)
+const lexicalAliasGroups = (facet: DiscoveredFacet, size = 8) => {
+  const aliases = lexicalAliasesOf(facet)
+  const groups: string[][] = []
+  for (let index = 0; index < aliases.length; index += size) groups.push(aliases.slice(index, index + size))
+  return groups
+}
 
 const mergeSearchResults = (resultLists: SearchResult[][], limit: number) => {
   const byChunkId = new Map<string, SearchResult>()
@@ -133,14 +154,28 @@ export const buildFacetQuery = (question: string, facet: DiscoveredFacet): strin
   const exceptionTerms = facet.kind === 'exception-collection' || facet.kind === 'scoped-exception'
     ? ['eligible', 'unlimited', 'special', 'differs']
     : []
-  const identityTerms = [facet.label, facet.normalizedSubject, ...facet.aliases]
+  const comparisonTerms = facet.kind === 'comparison-entity'
+    ? ['initial', 'launch', 'historical', 'eligibility', 'exception', 'only']
+    : []
+  const policyDimensionTerms = facet.kind === 'recurring-policy-dimension'
+    ? ['allowance', 'included', 'entitlement', 'quota', 'permanent']
+    : []
+  const obligationExceptionTerms = facet.evidenceObligations.some((obligation) => obligation.kind === 'exception')
+    ? ['exception', 'only', 'special', 'unlimited']
+    : []
+  const identityTerms = [facet.label, facet.normalizedSubject, ...facet.aliases, ...lexicalAliasesOf(facet).slice(0, 8)]
   const kindTerms = facet.kind.replace(/-/g, ' ')
-  const includeTemporalContext = facet.kind === 'exception-collection' || facet.kind === 'inactive-collection'
+  const includeTemporalContext = facet.kind === 'exception-collection'
+    || facet.kind === 'inactive-collection'
+    || facet.kind === 'comparison-entity'
   return unique([
     ...identityTerms,
     kindTerms,
     ...obligationTerms,
     ...exceptionTerms,
+    ...comparisonTerms,
+    ...policyDimensionTerms,
+    ...obligationExceptionTerms,
     ...extractQuestionContext(question, includeTemporalContext),
   ]).join(' ')
 }
@@ -153,15 +188,55 @@ export const buildFacetQuery = (question: string, facet: DiscoveredFacet): strin
  */
 export const buildFacetObligationQueries = (facet: DiscoveredFacet): string[] => {
   const facetText = `${facet.label} ${facet.normalizedSubject}`.toLocaleLowerCase('en')
+  const aliasQueries = lexicalAliasGroups(facet).map((group) => unique([
+    facet.label,
+    facet.normalizedSubject,
+    ...group,
+  ]).join(' '))
+  const obligationDescriptionTerms = (description: string) => {
+    const terms: string[] = []
+    if (/\b(?:price|pricing|cost|fee|rate|subscription)\b/i.test(description)) terms.push('price', 'cost', 'fee', 'rate', 'subscription')
+    if (/\b(?:eligibility|eligible|qualification|launch|initial)\b/i.test(description)) terms.push('eligibility', 'eligible', 'qualification', 'launch', 'initial')
+    if (/\b(?:allowance|included|unlimited|quota|entitlement)\b/i.test(description)) terms.push('allowance', 'included', 'unlimited', 'quota', 'entitlement')
+    if (/\b(?:benefit|discount|reduction|rebate)\b/i.test(description)) terms.push('benefit', 'discount', 'reduction', 'rebate')
+    if (/\b(?:exception|except|only|special|limitation)\b/i.test(description)) terms.push('exception', 'except', 'only', 'special', 'limitation', 'unlimited')
+    return terms
+  }
+  if (facet.kind === 'comparison-entity') {
+    const identityTerms = [facet.label, facet.normalizedSubject, ...facet.aliases, ...lexicalAliasesOf(facet).slice(0, 8)]
+    const baseQueries = [
+      [...identityTerms, 'launch', 'initial'].join(' '),
+      [...identityTerms, 'eligibility', 'eligible', 'qualification'].join(' '),
+      [...identityTerms, 'exception', 'except', 'only', 'special', 'limitation', 'unlimited'].join(' '),
+      [...identityTerms, 'current', 'effective', 'approved', 'permanent'].join(' '),
+    ]
+    const obligationQueries = facet.evidenceObligations.map((obligation) => unique([
+      ...identityTerms,
+      obligation.kind.replace(/-/g, ' '),
+      ...OBLIGATION_QUERY_TERMS[obligation.kind],
+      ...obligationDescriptionTerms(obligation.description),
+      ...(obligation.kind === 'exception' ? descriptionLexicalTerms(obligation.description) : []),
+    ]).join(' '))
+    return unique([...baseQueries, ...aliasQueries, ...obligationQueries])
+  }
+  if (facet.kind === 'recurring-policy-dimension') {
+    const identityTerms = [facet.label, facet.normalizedSubject, ...facet.aliases, ...lexicalAliasesOf(facet).slice(0, 8)]
+    return unique([
+      [...identityTerms, 'allowance', 'included', 'entitlement', 'quota'].join(' '),
+      [...identityTerms, 'current', 'permanent', 'exception', 'unlimited'].join(' '),
+      ...aliasQueries,
+    ])
+  }
   const isChronologicalFacet = /\b(?:19|20)\d{2}\b/.test(facetText) || [...MONTHS].some((month) => facetText.includes(month))
-  if (!isChronologicalFacet) return []
+  if (!isChronologicalFacet) return aliasQueries
 
   const identityTerms = [facet.label, facet.normalizedSubject, ...facet.aliases]
-  return unique(facet.evidenceObligations.map((obligation) => unique([
+  return unique([...aliasQueries, ...facet.evidenceObligations.map((obligation) => unique([
     ...identityTerms,
     obligation.kind.replace(/-/g, ' '),
     ...OBLIGATION_QUERY_TERMS[obligation.kind],
-  ]).join(' ')))
+    ...(obligation.kind === 'exception' ? descriptionLexicalTerms(obligation.description) : []),
+  ]).join(' '))])
 }
 
 /**
@@ -171,6 +246,9 @@ export const buildFacetObligationQueries = (facet: DiscoveredFacet): string[] =>
  * the subject the facet is responsible for.
  */
 export const buildFacetRankingQuery = (facet: DiscoveredFacet): string => {
+  // Keep reranking anchored to the facet identity. Corpus-derived companions
+  // expand candidate recall, but must not silently change the published
+  // Step 6 selection baseline.
   const identityTerms = [facet.label, facet.normalizedSubject, ...facet.aliases]
   const kindTerms = facet.kind === 'exception-collection' || facet.kind === 'scoped-exception' || facet.kind === 'inactive-collection'
     ? [facet.kind.replace(/-/g, ' ')]
