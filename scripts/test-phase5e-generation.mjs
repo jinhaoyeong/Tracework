@@ -99,6 +99,80 @@ for (const id of ['S1', 'S2', 'S3', 'S4', 'S5']) {
   answerRuns.push({ id, preparation, context, calls })
 }
 
+/* ------------------ Step 10D: render the adjudicated packet, not raw chunks */
+
+const s1Run = answerRuns.find((run) => run.id === 'S1')
+assert.ok(s1Run)
+const s1CurrentPropositions = s1Run.context.facets.flatMap((facet) => (
+  facet.adjudicatedPropositions.filter((proposition) => proposition.status === 'supported')
+))
+const s1NotCurrentPropositions = s1Run.context.facets.flatMap((facet) => (
+  facet.adjudicatedPropositions.filter((proposition) => proposition.status === 'excluded')
+))
+const s1ExceptionRows = s1Run.context.facets.reduce((total, facet) => total + facet.exceptions.length, 0)
+assert.equal(s1CurrentPropositions.length, 35)
+assert.equal(s1NotCurrentPropositions.length, 9)
+assert.equal(s1ExceptionRows, 10)
+assert.match(s1Run.context.text, /current \/ applicable claims:/)
+assert.match(s1Run.context.text, /NOT CURRENT/)
+assert.match(s1Run.context.text, /deterministic status: supported/)
+assert.match(s1Run.context.text, /deterministic status: excluded/)
+assert.match(s1Run.context.instructions, /deterministic system has already decided.*answer-ready/i)
+assert.doesNotMatch(s1Run.context.instructions, /If the supplied evidence does not answer the question/i)
+
+const facetSection = (context, facet) => {
+  const marker = `FACET: ${facet.label} (id: ${facet.facetId})`
+  return context.text.split(marker)[1]?.split('\nFACET: ')[0].split('\nEVIDENCE\n')[0] ?? ''
+}
+
+for (const facet of s1Run.context.facets) {
+  const section = facetSection(s1Run.context, facet)
+  const supported = facet.adjudicatedPropositions.filter((proposition) => proposition.status === 'supported')
+  const excluded = facet.adjudicatedPropositions.filter((proposition) => proposition.status === 'excluded')
+  if (supported.length) assert.doesNotMatch(section, /current \/ applicable claims: none recorded/)
+  for (const proposition of supported) assert.ok(section.includes(proposition.value), `${facet.facetId} supported proposition must render`)
+  for (const proposition of excluded) {
+    const notCurrent = section.split('NOT CURRENT')[1] ?? ''
+    const current = section.split('NOT CURRENT')[0]
+    assert.ok(notCurrent.includes(proposition.value), `${facet.facetId} excluded proposition must render under NOT CURRENT`)
+    assert.ok(!current.includes(proposition.value), `${facet.facetId} excluded proposition must not render as current`)
+  }
+}
+
+const s2Run = answerRuns.find((run) => run.id === 'S2')
+assert.ok(s2Run)
+for (const category of ['Standard', 'Supported', 'Institutional', 'Dayline']) {
+  const facet = s2Run.context.facets.find((candidate) => candidate.label.toLocaleLowerCase().includes(category.toLocaleLowerCase()))
+  assert.ok(facet, `S2 must retain a scoped ${category} facet`)
+  assert.ok(facet.adjudicatedPropositions.length || facet.applicableClaims.length, `S2 ${category} must retain scoped claims`)
+  assert.ok(facet.citations.length > 0, `S2 ${category} must retain scoped packet references`)
+}
+assert.equal(new Set(s2Run.context.facets.map((facet) => facet.facetId)).size, s2Run.context.facets.length)
+
+const s5Run = answerRuns.find((run) => run.id === 'S5')
+assert.ok(s5Run)
+const s5NotCurrentPropositions = s5Run.context.facets.flatMap((facet) => (
+  facet.adjudicatedPropositions.filter((proposition) => proposition.status === 'excluded')
+))
+assert.ok(s5NotCurrentPropositions.length > 0)
+for (const facet of s5Run.context.facets) {
+  const section = facetSection(s5Run.context, facet)
+  const current = section.split('NOT CURRENT')[0]
+  const notCurrent = section.split('NOT CURRENT')[1] ?? ''
+  for (const proposition of facet.adjudicatedPropositions.filter((item) => item.status === 'excluded')) {
+    assert.ok(notCurrent.includes(proposition.value), `${facet.facetId} S5 non-current proposition must be explicit`)
+    assert.ok(!current.includes(proposition.value), `${facet.facetId} S5 non-current proposition must not be current`)
+  }
+}
+
+// The injected fake provider receives the same adjudicated context that the
+// live adapter would receive, while the synthesis instruction no longer asks
+// it to reopen the deterministic coverage decision.
+assert.match(s1Run.calls[0].context, /current \/ applicable claims:/)
+assert.match(s1Run.calls[0].context, /preserved exceptions \(must survive into the answer\):/)
+assert.match(s1Run.calls[0].context, /\[1\]/)
+assert.doesNotMatch(s1Run.calls[0].instructions, /If the supplied evidence does not answer the question/i)
+
 /* ------------------------------------------- 2. S6 makes zero model requests */
 
 const s6Preparation = prepare(fixtureCase('S6'))
@@ -398,7 +472,6 @@ assert.equal(temporalRun.calls.length, 1)
 
 /* ------------------------------------------------- 7. valid citations resolve */
 
-const s1Run = answerRuns[0]
 const s1References = s1Run.context.references
 const validCitation = await generate(s1Run.preparation, () => ({
   answer: `The first facet is supported [1] and the second is corroborated [2, 3].`,

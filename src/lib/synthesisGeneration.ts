@@ -3,6 +3,7 @@ import type { NormalizedClaim } from './temporalNormalization.ts'
 import type { TemporalClaimAssessment } from './temporalResolution.ts'
 import type {
   FacetCoverageStatus,
+  PropositionCoverageStatus,
   StructuredFacetSynthesisPacket,
   StructuredSynthesisPacket,
   SynthesisCoverageResult,
@@ -79,12 +80,21 @@ export interface SynthesisGenerationClaim {
   validFrom: string | null
   source: string
   citation: number | null
+  citations: number[]
 }
 
 export interface SynthesisGenerationExcludedClaim extends SynthesisGenerationClaim {
-  /** `superseded`, `historical`, `future`, `undated`, `outside-period`. */
+  /** Temporal states plus the generic coverage-level excluded state. */
   state: TemporalClaimAssessment['state']
   reason: string
+}
+
+export interface SynthesisGenerationAdjudicatedProposition {
+  propositionId: string
+  value: string
+  status: PropositionCoverageStatus
+  reason: string
+  citations: number[]
 }
 
 export interface SynthesisGenerationException {
@@ -101,6 +111,7 @@ export interface SynthesisGenerationFacet {
   critical: boolean
   applicableClaims: SynthesisGenerationClaim[]
   excludedClaims: SynthesisGenerationExcludedClaim[]
+  adjudicatedPropositions: SynthesisGenerationAdjudicatedProposition[]
   exceptions: SynthesisGenerationException[]
   conflicts: string[]
   temporalNotice: string
@@ -390,7 +401,25 @@ const claimView = (
   validFrom: claim.validFrom,
   source: claim.claim.source,
   citation: citationOf(claimChunkId(claim)),
+  citations: [citationOf(claimChunkId(claim))].filter((citation): citation is number => citation !== null),
 })
+
+const propositionView = (
+  packetFacet: StructuredFacetSynthesisPacket,
+  prepared: SynthesisPreparedFacet | undefined,
+  citationOf: (chunkId: string) => number | null,
+): SynthesisGenerationAdjudicatedProposition[] => {
+  const obligations = new Map(prepared?.facet.evidenceObligations.map((obligation) => [obligation.id, obligation]) ?? [])
+  return packetFacet.propositions.map((proposition) => ({
+    propositionId: proposition.propositionId,
+    value: obligations.get(proposition.propositionId)?.description ?? proposition.propositionId,
+    status: proposition.status,
+    reason: proposition.reason,
+    citations: proposition.supportingChunkIds
+      .map(citationOf)
+      .filter((citation): citation is number => citation !== null),
+  }))
+}
 
 const EXCEPTION_KINDS = new Set(['exception'])
 
@@ -425,20 +454,46 @@ const renderFacet = (facet: SynthesisGenerationFacet) => {
     claim.subjectKey ? ` (subject: ${claim.subjectKey})` : '',
     claim.validFrom ? ` (valid from: ${claim.validFrom})` : '',
     ` — source: ${claim.source}`,
-    marker(claim.citation === null ? [] : [claim.citation]),
+    marker(claim.citations),
   ].join('')
+
+  const propositionLine = (proposition: SynthesisGenerationAdjudicatedProposition) => [
+    `  - ${proposition.value}`,
+    ` — deterministic status: ${proposition.status}`,
+    marker(proposition.citations),
+    ` — ${proposition.reason}`,
+  ].join('')
+
+  const currentClaims = [
+    ...facet.applicableClaims.map(claimLine),
+    ...facet.adjudicatedPropositions
+      .filter((proposition) => proposition.status === 'supported')
+      .map(propositionLine),
+  ]
+  const notCurrentClaims = [
+    ...facet.excludedClaims.map((claim) => `${claimLine(claim)} — state: ${claim.state} — ${claim.reason}`),
+    ...facet.adjudicatedPropositions
+      .filter((proposition) => proposition.status === 'excluded')
+      .map((proposition) => `${propositionLine(proposition)} — state: excluded`),
+  ]
+  const propositionConflicts = facet.adjudicatedPropositions
+    .filter((proposition) => proposition.status === 'conflicted')
+    .map(propositionLine)
+  const unsatisfied = facet.adjudicatedPropositions
+    .filter((proposition) => proposition.status === 'unsupported' || proposition.status === 'missing-evidence')
+    .map(propositionLine)
 
   return [
     `FACET: ${facet.label} (id: ${facet.facetId})`,
     `coverage: ${facet.status}${facet.required ? ', required' : ', optional'}${facet.critical ? ', critical' : ''}`,
     `evidence markers for this facet: ${facet.citations.length ? facet.citations.map((citation) => `[${citation}]`).join(' ') : 'none'}`,
-    facet.applicableClaims.length
-      ? ['current / applicable claims:', ...facet.applicableClaims.map(claimLine)].join('\n')
+    currentClaims.length
+      ? ['current / applicable claims:', ...currentClaims].join('\n')
       : 'current / applicable claims: none recorded',
-    facet.excludedClaims.length
+    notCurrentClaims.length
       ? [
           'NOT CURRENT — historical, superseded, proposed, or out-of-period claims (never state these as current):',
-          ...facet.excludedClaims.map((claim) => `${claimLine(claim)} — state: ${claim.state} — ${claim.reason}`),
+          ...notCurrentClaims,
         ].join('\n')
       : 'NOT CURRENT claims: none recorded',
     facet.exceptions.length
@@ -447,9 +502,12 @@ const renderFacet = (facet: SynthesisGenerationFacet) => {
           ...facet.exceptions.map((exception) => `  - ${exception.description}${marker(exception.citations)}`),
         ].join('\n')
       : 'preserved exceptions: none recorded',
-    facet.conflicts.length
-      ? ['unresolved conflicts:', ...facet.conflicts.map((conflict) => `  - ${conflict}`)].join('\n')
+    facet.conflicts.length || propositionConflicts.length
+      ? ['unresolved conflicts:', ...facet.conflicts.map((conflict) => `  - ${conflict}`), ...propositionConflicts].join('\n')
       : 'unresolved conflicts: none',
+    unsatisfied.length
+      ? ['UNSATISFIED / NOT ASSERTED obligations:', ...unsatisfied].join('\n')
+      : 'UNSATISFIED / NOT ASSERTED obligations: none',
     `temporal note: ${facet.temporalNotice}`,
     `provenance note: ${facet.provenanceNotice}`,
   ].join('\n')
@@ -486,6 +544,7 @@ export const buildSynthesisGenerationContext = (
       state: assessment.state,
       reason: assessment.reason,
     })),
+    adjudicatedPropositions: propositionView(packetFacet, preparedByFacetId.get(packetFacet.facetId), citationOf),
     exceptions: exceptionViews(packetFacet, preparedByFacetId.get(packetFacet.facetId), citationOf),
     conflicts: packetFacet.conflicts.map((conflict) => conflict.summary),
     temporalNotice: packetFacet.temporalNotice,

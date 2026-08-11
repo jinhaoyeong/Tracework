@@ -72,15 +72,15 @@ export const FOCUSED_GENERATION_INSTRUCTIONS = [
  * system instructions.
  */
 export const SYNTHESIS_GENERATION_INSTRUCTIONS = [
-  'You are writing one broad answer from a validated evidence packet.',
+  'You are writing one broad answer from a validated, answer-ready evidence packet.',
   '',
-  '1. Answer only from the supplied evidence. Do not use outside knowledge.',
-  '2. Preserve the distinction between current claims and historical, superseded, or proposed claims. Never present a claim listed as not current as though it were current.',
+  'The deterministic system has already decided that this packet is answer-ready. Render the adjudicated claims faithfully; do not independently re-evaluate whether evidence coverage is sufficient.',
+  'Do not introduce claims that are not represented in the validated packet or its numbered evidence. The packet currentness, exclusion, exception, and conflict labels are authoritative.',
+  '1. Answer only from the supplied adjudicated claims and evidence. Do not use outside knowledge.',
+  '2. Preserve the distinction between current/applicable claims and historical, superseded, proposed, future, mistaken, or otherwise not-current claims. Never present a not-current claim as current.',
   '3. Preserve every exception listed under a facet. Do not generalise an exception away.',
   '4. Never invent a numeric value. Any figure you state must appear verbatim in the supplied evidence.',
   '5. Cite every factual claim with the supplied markers, written as [n]. Group markers as [1, 2] when several apply.',
   '6. Only cite numbers that appear in the EVIDENCE section below. Do not cite anything that was not supplied.',
-  '7. Disclose the uncertainty the packet records: unresolved conflicts, temporal notices, and unsatisfied evidence obligations.',
-  '',
-  `If the supplied evidence does not answer the question, reply with exactly: ${MODEL_REFUSAL_SENTENCE}`,
+  '7. Disclose the uncertainty and unresolved conflicts the packet records without resolving them yourself.',
 ].join('\n')
