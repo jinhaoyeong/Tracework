@@ -1,0 +1,30 @@
+{
+  "recordedAt": "2026-08-11T06:44:56.147Z",
+  "phase": "5D-live",
+  "step": 10,
+  "authorizationScope": [
+    "T1",
+    "T2",
+    "T6b",
+    "T7",
+    "T9"
+  ],
+  "fatalError": {
+    "code": "proxy_error",
+    "message": "The local embedding proxy failed before receiving a provider response."
+  },
+  "usage": {
+    "generation": {
+      "requests": 0,
+      "inputTokens": 0,
+      "outputTokens": 0
+    },
+    "embeddings": {
+      "requests": 0,
+      "texts": 0,
+      "promptTokens": 0
+    },
+    "note": "Embedding prompt tokens were not reported by the route; request and text counts are exact."
+  },
+  "passed": false
+}
