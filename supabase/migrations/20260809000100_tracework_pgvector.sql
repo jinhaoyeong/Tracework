@@ -26,9 +26,13 @@ create table if not exists public.tracework_chunks (
   unique (source_id, chunk_index)
 );
 
+-- The operator class is schema-qualified because the vector extension lives in
+-- `extensions`. Unqualified, this resolves only when the running session happens
+-- to have that schema on its search_path, which the SQL Editor does and the
+-- Supabase CLI does not.
 create index if not exists tracework_chunks_embedding_hnsw
   on public.tracework_chunks
-  using hnsw (embedding vector_cosine_ops);
+  using hnsw (embedding extensions.vector_cosine_ops);
 
 alter table public.tracework_sources enable row level security;
 alter table public.tracework_chunks enable row level security;

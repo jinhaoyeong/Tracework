@@ -87,6 +87,21 @@ const callSupabaseRpc = async (env: Record<string, string>, functionName: string
   return payload
 }
 
+/**
+ * The deployed routes default to refusing shared writes (see server/traceworkApi.ts).
+ * The Vite dev server is local by construction and is where a source is actually
+ * indexed, so here the polarity is reversed: writes are allowed unless the flag
+ * explicitly turns them off, which lets you rehearse the locked-down deployment.
+ */
+const assertSharedWritesEnabled = (env: Record<string, string>) => {
+  if (env.TRACEWORK_ALLOW_SHARED_WRITES?.trim() !== 'false') return
+  throw new ServerVectorError(
+    'shared_writes_disabled',
+    'This deployment does not accept writes to the shared knowledge base. Reading and searching the existing library still work. Set TRACEWORK_ALLOW_SHARED_WRITES=true to enable syncing and deletion.',
+    403,
+  )
+}
+
 const validateVector = (value: unknown, label: string) => {
   if (!Array.isArray(value) || value.length !== PGVECTOR_DIMENSIONS || value.some((item) => typeof item !== 'number' || !Number.isFinite(item))) {
     throw new ServerVectorError(
@@ -314,6 +329,7 @@ const neuralEmbeddingsPlugin = (env: Record<string, string>): Plugin => ({
       }
 
       try {
+        assertSharedWritesEnabled(env)
         const body = await readJson(request)
         const documents = Array.isArray(body.documents) ? body.documents : []
         if (!documents.length) {
@@ -393,6 +409,7 @@ const neuralEmbeddingsPlugin = (env: Record<string, string>): Plugin => ({
           title: row.title,
           sourcePath: row.source_path,
           kind: row.kind,
+          provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
           embeddingModel: row.embedding_model,
           embeddingDimensions: Number(row.embedding_dimensions ?? PGVECTOR_DIMENSIONS),
           distance: Number(row.distance),
@@ -412,6 +429,65 @@ const neuralEmbeddingsPlugin = (env: Record<string, string>): Plugin => ({
       }
     })
 
+    server.middlewares.use('/api/library/collections', async (request, response) => {
+      if (request.method !== 'POST') {
+        sendJson(response, 405, { error: { code: 'method_not_allowed', message: 'Use POST /api/library/collections.' } })
+        return
+      }
+
+      try {
+        const rows = await callSupabaseRpc(env, 'tracework_list_collections', {}) as Array<Record<string, any>>
+        sendJson(response, 200, {
+          database: 'supabase postgres / knowledge library',
+          collections: (Array.isArray(rows) ? rows : []).map((row) => ({
+            slug: row.slug,
+            title: row.title,
+            description: row.description ?? '',
+            kind: row.kind,
+            provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
+            documentCount: Number(row.document_count ?? 0),
+            characterCount: Number(row.character_count ?? 0),
+            updatedAt: row.updated_at ?? null,
+          })),
+        })
+      } catch (error) {
+        sendServerError(response, error, 'The knowledge library catalog could not be read.')
+      }
+    })
+
+    server.middlewares.use('/api/library/documents', async (request, response) => {
+      if (request.method !== 'POST') {
+        sendJson(response, 405, { error: { code: 'method_not_allowed', message: 'Use POST /api/library/documents.' } })
+        return
+      }
+
+      try {
+        const body = await readJson(request)
+        const slug = typeof body.slug === 'string' ? body.slug.trim() : ''
+        if (!slug) {
+          throw new ServerVectorError('invalid_collection_slug', 'Send the slug of the collection to read.', 400)
+        }
+
+        const rows = await callSupabaseRpc(env, 'tracework_collection_documents', { p_slug: slug }) as Array<Record<string, any>>
+        const documents = (Array.isArray(rows) ? rows : []).map((row) => ({
+          id: row.id,
+          collectionSlug: row.collection_slug,
+          title: row.title,
+          sourcePath: row.source_path,
+          kind: row.kind,
+          content: row.content,
+          provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
+        }))
+        if (!documents.length) {
+          throw new ServerVectorError('collection_not_found', `The shared library has no documents for "${slug}". Seed it with npm run seed:library.`, 404)
+        }
+
+        sendJson(response, 200, { collectionSlug: slug, documents })
+      } catch (error) {
+        sendServerError(response, error, 'The knowledge library documents could not be read.')
+      }
+    })
+
     server.middlewares.use('/api/vector/delete', async (request, response) => {
       if (request.method !== 'POST') {
         sendJson(response, 405, { error: { code: 'method_not_allowed', message: 'Use POST /api/vector/delete.' } })
@@ -419,6 +495,7 @@ const neuralEmbeddingsPlugin = (env: Record<string, string>): Plugin => ({
       }
 
       try {
+        assertSharedWritesEnabled(env)
         const body = await readJson(request)
         const sourceIds = Array.isArray(body.sourceIds) ? body.sourceIds : []
         if (!sourceIds.length || sourceIds.some((id) => typeof id !== 'string' || !id.trim())) {

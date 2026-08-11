@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { buildSampleCorpus } from './data/sampleCorpus'
-import { buildPhase5cConflictCorpus } from './data/phase5cCorpus'
 import { Icon } from './components/Icon'
+import { KnowledgeLibrary, type LibraryStatus } from './components/KnowledgeLibrary'
+import { KnowledgeLibraryError, requestCollectionDocuments, requestKnowledgeLibrary, toIndexedDocument, type KnowledgeCollection } from './lib/knowledgeLibrary'
 import { buildAnswer, createDocument, formatBytes, searchDocuments, tokenize } from './lib/rag'
 import { adjudicateEvidence, ensureConflictCoverage, type EvidenceAdjudication } from './lib/adjudication'
 import { buildConflictAnswer, buildGroundedContext, buildInsufficientAnswer, classifyGeneratedAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
@@ -10,7 +11,7 @@ import { buildLexicalIndex, searchLexical, toLexicalResults } from './lib/lexica
 import { fuseRankings, RRF_K } from './lib/fusion'
 import { buildCandidateUnion, DEFAULT_PHASE5B_CANDIDATE_LIMIT, DEFAULT_PHASE5B_CONTEXT_LIMIT, pruneCandidates, rerank, type RankedCandidate } from './lib/reranker'
 import { NeuralEmbeddingError, requestNeuralEmbeddings } from './lib/semantic'
-import { PGVECTOR_DIMENSIONS, PgvectorError, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
+import { PGVECTOR_DIMENSIONS, PgvectorError, SHARED_WRITES_DISABLED, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
 
 const STORAGE_KEY = 'tracework.documents.v1'
@@ -251,8 +252,13 @@ function App() {
   const [pruningEnabled, setPruningEnabled] = useState(false)
   const [sourceKindFilter, setSourceKindFilter] = useState<SourceKind | 'all'>('all')
   const [answerMode, setAnswerMode] = useState<AnswerMode>('retrieval')
+  const [showMethodHelp, setShowMethodHelp] = useState(false)
   const [generationState, setGenerationState] = useState<GenerationState>({ status: 'idle', model: null, message: null })
   const [groundedSession, setGroundedSession] = useState<GroundedSession | null>(null)
+  const [libraryCollections, setLibraryCollections] = useState<KnowledgeCollection[]>([])
+  const [libraryStatus, setLibraryStatus] = useState<LibraryStatus>('idle')
+  const [libraryMessage, setLibraryMessage] = useState<string | null>(null)
+  const [libraryPendingSlug, setLibraryPendingSlug] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const neuralIndexPromiseRef = useRef<Promise<DocumentRecord[]> | null>(null)
 
@@ -266,6 +272,13 @@ function App() {
       }
     }
   }, [documents, persistenceWarningShown])
+
+  // The catalog is database state, so it is read once on open rather than
+  // rebuilt from anything bundled with this build of the app.
+  useEffect(() => {
+    void loadLibraryCatalog()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!notice) return undefined
@@ -375,6 +388,10 @@ function App() {
   const selectedPhase5bDecision = selectedPhase5bCandidate
     ? phase5bDecisionByChunkId.get(selectedPhase5bCandidate.result.chunk.id)
     : undefined
+  const indexedLibrarySlugs = useMemo(
+    () => new Set(documents.map((document) => document.libraryCollection).filter((slug): slug is string => Boolean(slug))),
+    [documents],
+  )
   const chunkCount = documents.reduce((total, document) => total + document.chunks.length, 0)
   const wordCount = documents.reduce((total, document) => total + tokenize(document.content).length, 0)
   const indexedTerms = new Set(documents.flatMap((document) => tokenize(document.content))).size
@@ -561,11 +578,14 @@ function App() {
         tokens: tokenize(match.content),
         vector: [],
       }
+      // A source synced by another reader is only present in the database, so
+      // its provenance has to come back from the row rather than local state.
       const document = localDocument ?? {
         id: match.sourceId,
         title: match.title,
         source: match.sourcePath,
         kind: match.kind,
+        provenance: match.provenance ?? undefined,
         content: match.sourceContent,
         createdAt: new Date().toISOString(),
         chunks: [chunk],
@@ -666,9 +686,20 @@ function App() {
     setPgvectorState((current) => ({ ...current, status: 'syncing', topK: nextTopK, message: 'Preparing neural vectors for database sync...' }))
     try {
       const { indexedDocuments, queryVector, response } = await prepareNeuralQuery(nextQuery)
-      setPgvectorState((current) => ({ ...current, status: 'syncing', message: `Syncing ${indexedDocuments.length} sources to pgvector...` }))
-      const sync = await requestPgvectorSync(indexedDocuments)
-      setPgvectorState((current) => ({ ...current, status: 'searching', database: sync.database, message: `Searching ${sync.syncedChunks} stored chunks...` }))
+      let syncMessage = 'Searching the shared pgvector library...'
+      if (indexedDocuments.length) {
+        setPgvectorState((current) => ({ ...current, status: 'syncing', message: `Syncing ${indexedDocuments.length} sources to pgvector...` }))
+        try {
+          const sync = await requestPgvectorSync(indexedDocuments)
+          syncMessage = `Searching ${sync.syncedChunks} stored chunks...`
+        } catch (error) {
+          // A deployment that refuses writes can still be searched. Treat it as
+          // read-only rather than failing the whole retrieval.
+          if (!(error instanceof PgvectorError) || error.code !== SHARED_WRITES_DISABLED) throw error
+          syncMessage = 'Searching the shared library read-only; this deployment does not accept writes.'
+        }
+      }
+      setPgvectorState((current) => ({ ...current, status: 'searching', database: current.database, message: syncMessage }))
       const search = await requestPgvectorSearch(queryVector, { limit: nextTopK, sourceKind: nextFilter })
       const nextResults = mapPgvectorResults(search.results, indexedDocuments, search.database, nextQuery)
       setPgvectorResults(nextResults)
@@ -776,41 +807,72 @@ function App() {
     }
   }
 
-  const handleLoadSamples = () => {
-    const hasSamples = documents.some((document) => document.kind === 'sample')
-    if (hasSamples) {
-      showNotice('info', 'The synthetic workshop sources are already in this index.')
-      return
+  const loadLibraryCatalog = async () => {
+    setLibraryStatus('loading')
+    try {
+      const response = await requestKnowledgeLibrary()
+      setLibraryCollections(response.collections)
+      setLibraryStatus('ready')
+      setLibraryMessage(null)
+    } catch (error) {
+      const message = error instanceof KnowledgeLibraryError
+        ? error.message
+        : 'The shared knowledge library could not be read.'
+      setLibraryCollections([])
+      setLibraryStatus('error')
+      setLibraryMessage(message)
     }
-    setDocuments((current) => [...buildSampleCorpus(), ...current])
-    resetRetrievalState()
-    showNotice('success', 'Three synthetic workshop sources added for the retrieval exercise.')
   }
 
-  const handleLoadPhase5c = (includeAuthority = false) => {
-    const hasPhase5cSources = documents.some((document) => document.source.includes('phase 5C'))
-    const hasAuthorityRecord = documents.some((document) => document.source.includes('phase 5C') && document.provenance?.authority === 'authoritative')
-    if ((!includeAuthority && hasPhase5cSources) || (includeAuthority && hasAuthorityRecord)) {
-      showNotice('info', 'The Phase 5C conflict set is already in this index.')
-      return
+  const handleAddCollection = async (slug: string) => {
+    setLibraryPendingSlug(slug)
+    try {
+      const response = await requestCollectionDocuments(slug)
+      // The library row is shared, but this index is not: only pull in the
+      // documents this browser has not already indexed.
+      const existingIds = new Set(documents.map((document) => document.id))
+      const additions = response.documents
+        .filter((document) => !existingIds.has(document.id))
+        .map(toIndexedDocument)
+      if (!additions.length) {
+        showNotice('info', 'Every source in that collection is already in this index.')
+        return
+      }
+      setDocuments((current) => [...additions, ...current])
+      resetRetrievalState()
+      showNotice('success', `${additions.length} ${additions.length === 1 ? 'source' : 'sources'} indexed from the shared library.`)
+    } catch (error) {
+      const message = error instanceof KnowledgeLibraryError
+        ? error.message
+        : 'That collection could not be read from the shared library.'
+      showNotice('error', message)
+    } finally {
+      setLibraryPendingSlug(null)
     }
-    const additions = includeAuthority
-      ? (hasPhase5cSources ? buildPhase5cConflictCorpus(true).filter((document) => document.provenance?.authority === 'authoritative') : buildPhase5cConflictCorpus(true))
-      : buildPhase5cConflictCorpus(false)
-    setDocuments((current) => [...additions, ...current])
+  }
+
+  // Removing a collection is a local operation. The library row belongs to every
+  // reader, so dropping it from this browser must not delete shared state.
+  const handleRemoveCollection = (slug: string) => {
+    setDocuments((current) => current.filter((document) => document.libraryCollection !== slug))
     resetRetrievalState()
-    showNotice('success', includeAuthority
-      ? 'The authoritative Phase 5C metadata record was added. Ask where Tracework was invented to inspect the resolution boundary.'
-      : 'Phase 5C conflict sources added. Ask where Tracework was invented to inspect the disagreement.')
+    showNotice('info', 'Collection removed from this browser. It remains in the shared library.')
   }
 
   const handleClear = () => {
-    const sourceIds = documents.map((document) => document.id)
+    // Library sources are excluded: clearing a local index must not delete a
+    // collection another reader is relying on.
+    const sourceIds = documents.filter((document) => !document.libraryCollection).map((document) => document.id)
     setDocuments([])
     setCompareMode(false)
     if (pgvectorState.database) {
       void requestPgvectorDelete(sourceIds).catch((error) => {
-        if (error instanceof PgvectorError) showNotice('error', `Local index cleared, but database cleanup failed: ${error.message}`)
+        if (!(error instanceof PgvectorError)) return
+        if (error.code === SHARED_WRITES_DISABLED) {
+          showNotice('info', 'Local index cleared. This deployment does not accept deletions, so the shared database copy remains.')
+          return
+        }
+        showNotice('error', `Local index cleared, but database cleanup failed: ${error.message}`)
       })
     }
     resetRetrievalState()
@@ -882,9 +944,10 @@ function App() {
   const removeDocument = (documentId: string) => {
     const document = documents.find((item) => item.id === documentId)
     setDocuments((current) => current.filter((item) => item.id !== documentId))
-    if (document && pgvectorState.database) {
+    if (document && !document.libraryCollection && pgvectorState.database) {
       void requestPgvectorDelete([document.id]).catch((error) => {
-        if (error instanceof PgvectorError) showNotice('error', `Source removed locally, but database cleanup failed: ${error.message}`)
+        if (!(error instanceof PgvectorError) || error.code === SHARED_WRITES_DISABLED) return
+        showNotice('error', `Source removed locally, but database cleanup failed: ${error.message}`)
       })
     }
     resetRetrievalState()
@@ -944,19 +1007,18 @@ function App() {
               {isReadingFiles ? 'reading files...' : 'choose text files'}
               <input ref={fileInputRef} type="file" multiple accept=".txt,.md,.mdx,.ts,.tsx,.js,.jsx,.json,.css,.html,.py,.sql,.yaml,.yml,.csv" onChange={handleFiles} disabled={isReadingFiles} />
             </label>
-            <button className="text-button" type="button" onClick={handleLoadSamples}>
-              <Icon name="spark" size={15} />
-              load synthetic sources
-            </button>
-            <button className="text-button phase5c-load-button" type="button" onClick={() => handleLoadPhase5c(false)}>
-              <Icon name="target" size={15} />
-              load Phase 5C conflict set
-            </button>
-            <button className="text-button phase5c-load-button is-authority" type="button" onClick={() => handleLoadPhase5c(true)}>
-              <Icon name="check" size={15} />
-              add authority variant
-            </button>
           </div>
+
+          <KnowledgeLibrary
+            status={libraryStatus}
+            message={libraryMessage}
+            collections={libraryCollections}
+            indexedSlugs={indexedLibrarySlugs}
+            pendingSlug={libraryPendingSlug}
+            onRefresh={() => void loadLibraryCatalog()}
+            onAdd={(slug) => void handleAddCollection(slug)}
+            onRemove={handleRemoveCollection}
+          />
 
           <div className="loop-block">
             <span className="rail-code">the loop</span>
@@ -1011,8 +1073,40 @@ function App() {
                   <button className={`engine-option ${answerMode === 'retrieval' ? 'is-active' : ''}`} type="button" onClick={() => handleAnswerModeChange('retrieval')}>retrieval only</button>
                   <button className={`engine-option ${answerMode === 'grounded' ? 'is-active' : ''}`} type="button" onClick={() => handleAnswerModeChange('grounded')}>grounded answer</button>
                 </div>
+                <button
+                  className={`method-help-toggle ${showMethodHelp ? 'is-active' : ''}`}
+                  type="button"
+                  aria-expanded={showMethodHelp}
+                  aria-controls="method-help"
+                  onClick={() => setShowMethodHelp((visible) => !visible)}
+                >
+                  {showMethodHelp ? 'close guide' : 'how this works'}
+                </button>
               </div>
             </div>
+            {showMethodHelp && (
+              <section className="method-help" id="method-help" aria-labelledby="method-help-title">
+                <div className="method-help-heading">
+                  <div>
+                    <div className="method-help-kicker">guide / two decisions</div>
+                    <h2 id="method-help-title">Search first. Answer second.</h2>
+                  </div>
+                  <span className="method-help-rule">engine → evidence / answer → response</span>
+                </div>
+                <div className="method-help-grid">
+                  <div className="method-help-item">
+                    <span className="method-help-label">engine / how to find</span>
+                    <p>Chooses how Tracework searches. Hashed is the fast local baseline; neural and pgvector search by meaning; BM25 matches exact terms; hybrid combines rankings; Union Rerank keeps both candidate pools before selecting passages.</p>
+                  </div>
+                  <div className="method-help-item">
+                    <span className="method-help-label">answer / what happens next</span>
+                    <p>Retrieval only shows the evidence. Grounded answer sends the selected context to the model for a cited response, with refusal behavior when the evidence is not sufficient.</p>
+                  </div>
+                </div>
+                <p className="method-help-note">For inspection, pair any engine with Retrieval Only. For the current end-to-end path, try Union Rerank + Grounded Answer.</p>
+                <p className="method-help-note">Browser engines stay on this device. Pgvector searches the shared Supabase library once configured, so sources synced there can be retrieved from another device.</p>
+              </section>
+            )}
             <div className="neural-status-row" role="status" aria-live="polite">
               <span className="method-label">{engine === 'pgvector' ? 'pgvector / database cosine search' : engine === 'neural' ? 'local neural / semantic similarity' : engine === 'lexical' ? 'lexical / bm25 over title, path, and body' : engine === 'hybrid' ? `hybrid / reciprocal rank fusion of ${denseSourceLabel} + bm25` : engine === 'rerank' ? 'phase 5B / dense + lexical union / relevance-only rerank' : 'baseline / hashed vector + term overlap'}</span>
               <span className={`neural-state-label is-${activeStatus}`}>

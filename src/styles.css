@@ -118,6 +118,47 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .compare-button { border-color: var(--vermilion); color: #ef9b8b; }
 .compare-button:hover:not(:disabled), .compare-button.is-active { background: var(--vermilion); color: #fff8f4; }
 .compare-button:disabled { cursor: wait; opacity: 0.55; }
+.method-help-toggle { justify-self: end; min-height: 27px; border: 0; border-bottom: 1px solid #50605a; padding: 3px 0 2px; background: transparent; color: #ef9b8b; cursor: pointer; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.method-help-toggle:hover, .method-help-toggle:focus-visible, .method-help-toggle.is-active { border-color: var(--paper); color: var(--paper); }
+.method-help { border-bottom: 1px solid var(--line-strong); padding: 16px 15px 15px; background: #d8e1dd; color: var(--ink); }
+.method-help-heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 12px; }
+.method-help-kicker, .method-help-label { color: var(--teal); font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.method-help h2 { margin: 5px 0 0; font-size: 22px; letter-spacing: -0.05em; line-height: 1; }
+.method-help-rule { color: #71817b; font-size: 9px; font-weight: 750; letter-spacing: 0.06em; text-align: right; text-transform: uppercase; }
+.method-help-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #b8c6c0; background: #b8c6c0; }
+.method-help-item { min-width: 0; padding: 12px 13px; background: #e4ebe7; }
+.method-help-item + .method-help-item { border-left: 1px solid #b8c6c0; }
+.method-help-item p { margin: 7px 0 0; color: #475650; font-size: 11px; line-height: 1.55; }
+.method-help-note { margin: 10px 0 0; color: #62726c; font-size: 10px; line-height: 1.5; }
+/* Shared knowledge library. The catalog is database state, so it is presented as
+   a standing list of collections rather than a row of one-shot load actions. */
+.library-block { padding: 21px 0 18px; border-bottom: 1px solid var(--line-strong); }
+.library-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.library-heading h2 { margin: 5px 0 0; font-size: 17px; letter-spacing: -0.04em; line-height: 1; }
+.library-refresh { border: 0; padding: 4px; background: transparent; color: var(--teal); cursor: pointer; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.library-refresh:hover:not(:disabled) { color: var(--vermilion-dark); }
+.library-refresh:disabled { color: var(--soft); cursor: default; }
+.library-intro { margin: 9px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.library-state { margin-top: 12px; border: 1px solid var(--line-strong); padding: 11px 10px; background: var(--paper-deep); color: #62726c; font-size: 10px; line-height: 1.5; }
+.library-state strong { display: block; color: var(--ink); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+.library-state span { display: block; margin-top: 4px; overflow-wrap: anywhere; }
+.library-state.is-error { border-color: #b49d91; }
+.library-state.is-error strong { color: var(--vermilion-dark); }
+.library-list { display: flex; flex-direction: column; gap: 9px; margin: 13px 0 0; padding: 0; list-style: none; }
+.library-list li { border: 1px solid var(--line); padding: 10px 10px 9px; background: var(--paper); }
+.library-list li.is-indexed { border-color: #8ca9a0; }
+.library-item-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 7px; color: var(--teal); }
+.library-list li:not(.is-indexed) .library-item-head { color: var(--muted); }
+.library-item-head strong { min-width: 0; overflow: hidden; color: var(--ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.library-item-state { color: inherit; font-size: 8px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.library-list p { margin: 7px 0 0; color: #62726c; font-size: 10px; line-height: 1.5; }
+.library-item-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px; color: var(--soft); font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.library-item-action { display: inline-flex; align-items: center; gap: 7px; margin-top: 9px; border: 0; padding: 4px 0; background: transparent; color: var(--vermilion-dark); cursor: pointer; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.library-item-action:hover:not(:disabled) { color: var(--vermilion); }
+.library-item-action:disabled { color: var(--soft); cursor: default; }
+.library-list li.is-indexed .library-item-action { color: var(--muted); }
+.library-list li.is-indexed .library-item-action:hover:not(:disabled) { color: var(--vermilion-dark); }
+.library-note { margin: 11px 0 0; color: #71807a; font-size: 10px; line-height: 1.5; }
 .neural-status-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; border-bottom: 1px solid var(--line-strong); padding: 8px 15px; background: #d8e1dd; }
 .neural-state-label { color: #66756f; font-size: 9px; font-weight: 750; letter-spacing: 0.04em; text-align: right; }
 .neural-state-label.is-indexing { color: var(--vermilion-dark); }
@@ -344,6 +385,7 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
   .rail-heading { border-bottom: 0; }
   .capture-form { padding-top: 0; }
   .file-actions { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: 17px 0 0; border-bottom: 0; border-top: 1px solid var(--line-strong); }
+  .library-block { grid-column: 1 / -1; padding-top: 19px; }
   .loop-block, .rail-footer { display: none; }
   .main-workbench { padding: 29px 21px 55px; }
   .inspector-panel { display: block; border-top: 1px solid var(--line-strong); }
@@ -366,6 +408,7 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
   .primary-button, .secondary-button { min-height: 44px; }
   .file-actions { display: flex; flex-direction: column; align-items: stretch; padding-top: 17px; }
   .text-button { min-height: 44px; padding: 10px 4px; }
+  .library-refresh, .library-item-action { min-height: 44px; }
   .main-workbench { padding: 27px 17px 47px; background-size: 100% 35px; }
   .query-section { padding-top: 2px; }
   .query-section h1 { font-size: clamp(41px, 13.5vw, 64px); }
@@ -387,6 +430,13 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
   .engine-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; justify-content: stretch; }
   .engine-label { grid-column: 1 / -1; }
   .engine-option, .compare-button { width: 100%; min-width: 0; min-height: 44px; padding-left: 4px; padding-right: 4px; }
+  .method-help-toggle { justify-self: start; min-height: 44px; padding: 10px 0; }
+  .method-help { padding: 14px 13px 13px; }
+  .method-help-heading { align-items: start; flex-direction: column; gap: 7px; }
+  .method-help h2 { font-size: 21px; }
+  .method-help-rule { text-align: left; }
+  .method-help-grid { display: block; }
+  .method-help-item + .method-help-item { border-top: 1px solid #b8c6c0; border-left: 0; }
   .neural-status-row { align-items: start; flex-direction: column; gap: 5px; }
   .neural-state-label { text-align: left; }
   .answer-layout { display: block; }
@@ -553,8 +603,6 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
 .phase5c-source-state.is-conflicted { border-color: #b49d91; color: var(--vermilion-dark); }
 .phase5c-source-state.is-authoritative { border-color: #8ca9a0; color: var(--teal); }
 .phase5c-empty { border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); padding: 17px 8px; color: #71807a; font-size: 10px; line-height: 1.45; }
-.phase5c-load-button { color: var(--vermilion-dark); }
-.phase5c-load-button.is-authority { color: var(--teal); }
 .grounded-debug-state.is-conflicted { border-color: #b49d91; color: var(--vermilion-dark); }
 
 @media (max-width: 900px) {

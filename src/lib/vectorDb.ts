@@ -1,6 +1,13 @@
-import type { DocumentRecord, SourceKind } from '../types'
+import type { DocumentRecord, SourceKind, SourceProvenance } from '../types'
 
 export const PGVECTOR_DIMENSIONS = 1536
+
+/**
+ * Returned when a deployment refuses writes to the shared knowledge base. It is
+ * a deliberate configuration, not a fault: retrieval should fall back to
+ * searching what is already stored rather than reporting a failure.
+ */
+export const SHARED_WRITES_DISABLED = 'shared_writes_disabled'
 
 export class PgvectorError extends Error {
   code: string
@@ -30,6 +37,8 @@ export interface PgvectorMatch {
   title: string
   sourcePath: string
   kind: SourceKind
+  /** Null when the stored source predates provenance being persisted. */
+  provenance: SourceProvenance | null
   embeddingModel: string
   embeddingDimensions: number
   distance: number
@@ -84,6 +93,7 @@ const serializeDocument = (document: DocumentRecord) => ({
   sourcePath: document.source,
   kind: document.kind,
   content: document.content,
+  provenance: document.provenance ?? null,
   createdAt: document.createdAt,
   chunks: document.chunks.map((chunk) => ({
     id: chunk.id,

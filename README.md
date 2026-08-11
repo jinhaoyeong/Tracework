@@ -82,6 +82,42 @@ Restart Tracework and choose `pgvector`. It will embed missing chunks, sync thei
 
 If Supabase is not configured, hashed and local-neural retrieval still work. The pgvector button shows a clear configuration error instead of silently searching the browser array.
 
+### Shared knowledge library
+
+The bundled corpora are no longer buttons that replay a fixture into one browser. They are rows in the database, listed in the capture rail under **knowledge library**, and read from Postgres every time Tracework opens. A collection seeded from any machine is visible to every reader of the same database.
+
+The migration at `supabase/migrations/20260811000100_tracework_knowledge_library.sql` adds:
+
+- `tracework_collections` for collection identity, description, kind, and provenance.
+- `tracework_library_documents` for the raw catalog text. Library documents are stored without embeddings on purpose: the catalog has to be listable before an embedding provider is configured, and chunking still happens client-side.
+- A `provenance` column on `tracework_sources`, so a source synced by one reader reaches the next with the authority record Phase 5C adjudication depends on. `tracework_match_chunks` now returns it.
+- Server-only RPCs for upserting a collection, listing the catalog, and reading one collection's documents.
+
+Apply it in the Supabase SQL Editor after the pgvector migration, then publish the bundled collections:
+
+```powershell
+npm run seed:library            # add --dry-run to see what would be written
+```
+
+The seeder talks to Supabase directly with the service-role key from `.env.local`. The browser routes `/api/library/collections` and `/api/library/documents` are read-only by design: an unauthenticated write endpoint would let anyone rewrite the shared catalog.
+
+Adding a collection chunks its documents into the local index under the database's own document ids, so two devices indexing the same collection produce one row in the shared vector table rather than a duplicate per device. **remove from this index** and **clear index** are local operations — a library row belongs to every reader, so neither deletes shared state. Choose **pgvector** after adding a collection to sync its neural chunks; another device can then retrieve those passages without a local copy.
+
+Without Supabase configured, the library panel reports that it is unavailable and the browser-local engines still work over whatever is already indexed.
+
+This is a **system-seeded** library, not a user-contributed one. An operator seeds it; every device consumes it. Ownership, visibility, and contribution by ordinary users are Phase 6 work — see [docs/phase6-permissions.md](docs/phase6-permissions.md).
+
+### Shared writes are opt-in
+
+Every route in `api/` runs on the Supabase service role and has no notion of a caller. `/api/vector/sync` and `/api/vector/delete` are therefore gated by `TRACEWORK_ALLOW_SHARED_WRITES`:
+
+- Deployed handlers refuse with `403 shared_writes_disabled` unless it is exactly `true`. The default is deny, so a deployment that forgets the variable is safe rather than open.
+- The local Vite dev server allows writes unless it is set to `false`, which lets you rehearse a locked-down deployment.
+
+When writes are refused, pgvector retrieval falls back to searching the existing library read-only rather than failing, so a public demo still works. Reading, searching, and grounded answers are unaffected.
+
+This closes the anonymous poisoning and deletion paths. It does not establish identity, so `/api/embed` and `/api/generate` remain consumable on an enabled deployment — use Vercel deployment protection until the Phase 6 permission model exists, and keep private data out of the shared production library until then.
+
 The vector schema is fixed at 1536 dimensions to match `text-embedding-3-small`. All stored and query vectors must use the same embedding model and dimensions; otherwise similarity values are not meaningful. See Supabase's [semantic search guide](https://supabase.com/docs/guides/ai/semantic-search) and [pgvector guide](https://supabase.com/docs/guides/database/extensions/pgvector).
 
 ## Phase 3.5: end-to-end verification
@@ -181,7 +217,7 @@ The real generation smoke test still requires a valid `OPENAI_API_KEY`; until th
 
 ## Deploy the API routes to Vercel
 
-The files in `api/` are Vercel serverless functions. They provide the same server-side contracts as local Vite middleware for `/api/embed`, `/api/generate`, `/api/vector/sync`, `/api/vector/search`, and `/api/vector/delete`. The browser never receives the OpenAI or Supabase service-role keys.
+The files in `api/` are Vercel serverless functions. They provide the same server-side contracts as local Vite middleware for `/api/embed`, `/api/generate`, `/api/vector/sync`, `/api/vector/search`, `/api/vector/delete`, `/api/library/collections`, and `/api/library/documents`. The browser never receives the OpenAI or Supabase service-role keys.
 
 In the Vercel project settings, add these variables to the environments you deploy (`Production` and/or `Preview`):
 

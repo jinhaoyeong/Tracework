@@ -3,3 +3,5 @@ dist/
 .env
 .env.local
 *.local
+# Supabase CLI link state: machine-local, and holds the pooler connection URL.
+supabase/.temp/

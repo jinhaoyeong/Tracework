@@ -39,6 +39,12 @@ export interface DocumentRecord {
   content: string
   createdAt: string
   chunks: ChunkRecord[]
+  /**
+   * Set when the source came from the shared knowledge library. Removing such a
+   * source drops it from this browser's index only: the library row belongs to
+   * everyone, so a local clear must not delete it from the shared database.
+   */
+  libraryCollection?: string
 }
 
 export interface SearchResult {

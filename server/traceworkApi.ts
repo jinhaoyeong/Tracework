@@ -133,6 +133,24 @@ const callSupabaseRpc = async (functionName: string, body: unknown) => {
   return payload
 }
 
+/**
+ * Writes to the shared vector table are opt-in, not opt-out.
+ *
+ * These routes run on the Supabase service role and have no notion of a caller,
+ * so on a reachable deployment they are an unauthenticated write and delete path
+ * into knowledge everyone reads. Until Tracework has a real permission model,
+ * a deployment must say explicitly that it wants to accept writes. Defaulting to
+ * "deny" means forgetting the variable leaves a deployment safe rather than open.
+ */
+const assertSharedWritesEnabled = () => {
+  if (runtimeEnv().TRACEWORK_ALLOW_SHARED_WRITES?.trim() === 'true') return
+  throw new ServerVectorError(
+    'shared_writes_disabled',
+    'This deployment does not accept writes to the shared knowledge base. Reading and searching the existing library still work. Set TRACEWORK_ALLOW_SHARED_WRITES=true to enable syncing and deletion.',
+    403,
+  )
+}
+
 const validateVector = (value: unknown, label: string) => {
   if (!Array.isArray(value) || value.length !== PGVECTOR_DIMENSIONS || value.some((item) => typeof item !== 'number' || !Number.isFinite(item))) {
     throw new ServerVectorError(
@@ -370,6 +388,7 @@ export const handleVectorSync = async (request: VercelRequestLike, response: Ver
   }
 
   try {
+    assertSharedWritesEnabled()
     const body = readJsonBody(request) as { documents?: unknown }
     const documents = Array.isArray(body.documents) ? body.documents : []
     if (!documents.length) {
@@ -454,6 +473,7 @@ export const handleVectorSearch = async (request: VercelRequestLike, response: V
       title: row.title,
       sourcePath: row.source_path,
       kind: row.kind,
+      provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
       embeddingModel: row.embedding_model,
       embeddingDimensions: Number(row.embedding_dimensions ?? PGVECTOR_DIMENSIONS),
       distance: Number(row.distance),
@@ -477,6 +497,73 @@ export const handleVectorSearch = async (request: VercelRequestLike, response: V
   }
 }
 
+const mapCollectionRow = (row: Record<string, any>) => ({
+  slug: row.slug,
+  title: row.title,
+  description: row.description ?? '',
+  kind: row.kind,
+  provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
+  documentCount: Number(row.document_count ?? 0),
+  characterCount: Number(row.character_count ?? 0),
+  updatedAt: row.updated_at ?? null,
+})
+
+const mapLibraryDocumentRow = (row: Record<string, any>) => ({
+  id: row.id,
+  collectionSlug: row.collection_slug,
+  title: row.title,
+  sourcePath: row.source_path,
+  kind: row.kind,
+  content: row.content,
+  provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
+})
+
+export const handleLibraryCollections = async (request: VercelRequestLike, response: VercelResponseLike) => {
+  if (request.method !== 'POST') {
+    sendMethodNotAllowed(response, '/api/library/collections')
+    return
+  }
+
+  try {
+    const rows = await callSupabaseRpc('tracework_list_collections', {}) as Array<Record<string, any>>
+    sendJson(response, 200, {
+      database: 'supabase postgres / knowledge library',
+      collections: (Array.isArray(rows) ? rows : []).map(mapCollectionRow),
+    })
+  } catch (error) {
+    sendServerError(response, error, 'The knowledge library catalog could not be read.')
+  }
+}
+
+export const handleLibraryDocuments = async (request: VercelRequestLike, response: VercelResponseLike) => {
+  if (request.method !== 'POST') {
+    sendMethodNotAllowed(response, '/api/library/documents')
+    return
+  }
+
+  try {
+    const body = readJsonBody(request) as { slug?: unknown }
+    const slug = typeof body.slug === 'string' ? body.slug.trim() : ''
+    if (!slug) {
+      throw new ServerVectorError('invalid_collection_slug', 'Send the slug of the collection to read.', 400)
+    }
+
+    const rows = await callSupabaseRpc('tracework_collection_documents', { p_slug: slug }) as Array<Record<string, any>>
+    const documents = (Array.isArray(rows) ? rows : []).map(mapLibraryDocumentRow)
+    if (!documents.length) {
+      throw new ServerVectorError('collection_not_found', `The shared library has no documents for "${slug}". Seed it with npm run seed:library.`, 404)
+    }
+
+    sendJson(response, 200, { collectionSlug: slug, documents })
+  } catch (error) {
+    if (error instanceof InvalidRequestBodyError) {
+      sendJson(response, 400, { error: { code: 'invalid_request_body', message: error.message } })
+      return
+    }
+    sendServerError(response, error, 'The knowledge library documents could not be read.')
+  }
+}
+
 export const handleVectorDelete = async (request: VercelRequestLike, response: VercelResponseLike) => {
   if (request.method !== 'POST') {
     sendMethodNotAllowed(response, '/api/vector/delete')
@@ -484,6 +571,7 @@ export const handleVectorDelete = async (request: VercelRequestLike, response: V
   }
 
   try {
+    assertSharedWritesEnabled()
     const body = readJsonBody(request) as { sourceIds?: unknown }
     const sourceIds = Array.isArray(body.sourceIds) ? body.sourceIds : []
     if (!sourceIds.length || sourceIds.some((id) => typeof id !== 'string' || !id.trim())) {
