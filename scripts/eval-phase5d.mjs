@@ -15,7 +15,7 @@ import { adjudicateEvidence, ensureConflictCoverage } from '../src/lib/adjudicat
 import { extractTemporalClaims } from '../src/lib/temporal.ts'
 import { normalizeTemporalExtraction } from '../src/lib/temporalNormalization.ts'
 import { resolveTemporalNormalization } from '../src/lib/temporalResolution.ts'
-import { planTemporalCoverage, temporalCoverageWitnessChunkIds, temporalCoverageWitnesses, temporalGate } from '../src/lib/temporalCoverage.ts'
+import { assessQueryRelevance, planTemporalCoverage, temporalCoverageWitnessChunkIds, temporalCoverageWitnesses, temporalGate } from '../src/lib/temporalCoverage.ts'
 import { buildVariant, PHASE5D_CASES, PHASE5D_WORDING_CASES } from './fixtures/phase5d.mjs'
 
 const CANDIDATE_LIMIT = 10
@@ -111,7 +111,12 @@ const evaluateCase = (spec) => {
       missing.length ? `missing ${missing.join(', ')} from ${resolvedSources.join(', ') || 'none'}` : 'all present')
   }
 
-  const gate = temporalGate(resolution, coverage)
+  const relevance = assessQueryRelevance(spec.question, resolution)
+  const gate = temporalGate(resolution, coverage, relevance)
+  // Every frozen case asks about the subject in its own corpus, so relevance
+  // must never be what makes one of them pass.
+  check('subject relevance', relevance.relevant === (resolution.assessments.length > 0),
+    `expected relevance to follow the presence of temporal claims; relevant=${relevance.relevant}, claims=${resolution.assessments.length}`)
   check('disposition', gate.disposition === spec.expectedDisposition,
     `expected ${spec.expectedDisposition}, got ${gate.disposition}`)
   check('hold reason', (gate.holdReason ?? null) === (spec.expectedHoldReason ?? null),
@@ -174,6 +179,8 @@ const evaluateCase = (spec) => {
       value: resolution.resolvedValue,
       citations: resolvedSources,
       disposition: gate.disposition,
+      queryRelevant: relevance.relevant,
+      matchedSubjectKeys: relevance.matchedSubjectKeys,
       holdReason: gate.holdReason,
       providerWouldBeCalled: gate.disposition !== 'hold',
       notice: resolution.notice,

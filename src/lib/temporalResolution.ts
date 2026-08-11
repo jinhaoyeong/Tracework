@@ -321,6 +321,68 @@ const invalidReferenceResult = (
   notice: `Temporal resolution requires a parseable ${requestedPeriod ? 'requested period' : 'asOf'}; no wall-clock fallback was used.`,
 })
 
+const MONTH_NAMES = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december',
+]
+
+export interface RequestedPeriodReading {
+  /** The single period the question names, or null when it names none or many. */
+  period: string | null
+  /** Every distinct explicit period found, in the order they appear. */
+  found: string[]
+  reason: 'none' | 'single' | 'ambiguous'
+}
+
+/**
+ * Read the explicitly named period(s) out of a question.
+ *
+ * Deliberately narrow: a four-digit year, optionally preceded by a month name.
+ * It never infers a period from "current" or "now" -- those mean the injected
+ * asOf applies, which is a different claim from the question naming a time.
+ *
+ * A question naming SEVERAL periods ("how did pricing change from 2024 to
+ * 2025?") has no single applicability time. Silently taking the first or last
+ * match would answer a comparison as though it were a point-in-time question, so
+ * that case yields no period and says why. Comparing across periods is Phase 5E
+ * work; this only refuses to guess.
+ */
+export const readRequestedPeriods = (question: string): RequestedPeriodReading => {
+  const lowered = question.toLocaleLowerCase()
+  const found: string[] = []
+  const add = (value: string) => {
+    if (!found.includes(value)) found.push(value)
+  }
+
+  const monthPattern = new RegExp(`\\b(${MONTH_NAMES.join('|')})\\s+(\\d{4})\\b`, 'g')
+  const monthYears = new Set<string>()
+  for (const match of lowered.matchAll(monthPattern)) {
+    const month = MONTH_NAMES.indexOf(match[1]) + 1
+    monthYears.add(match[2])
+    add(`${match[2]}-${String(month).padStart(2, '0')}`)
+  }
+
+  for (const match of lowered.matchAll(/\b(\d{4})-(0[1-9]|1[0-2])\b/g)) {
+    monthYears.add(match[1])
+    add(`${match[1]}-${match[2]}`)
+  }
+
+  // A bare year already covered by a month-qualified mention is the same period
+  // stated once, not a second one: "February 2027" must not also count as 2027.
+  for (const match of lowered.matchAll(/\b(19|20)(\d{2})\b/g)) {
+    const year = `${match[1]}${match[2]}`
+    if (monthYears.has(year)) continue
+    add(year)
+  }
+
+  if (!found.length) return { period: null, found, reason: 'none' }
+  if (found.length === 1) return { period: found[0], found, reason: 'single' }
+  return { period: null, found, reason: 'ambiguous' }
+}
+
+/** The single named period, or null when the question names none or several. */
+export const parseRequestedPeriod = (question: string): string | null => readRequestedPeriods(question).period
+
 /**
  * Resolve one normalized extraction. This function intentionally does not
  * inspect provenance authority: authority is Phase 5C's separate tie-break

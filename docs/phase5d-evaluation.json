@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-08-11T05:17:17.388Z",
+  "recordedAt": "2026-08-11T05:37:38.264Z",
   "phase": "5D",
   "step": 8,
   "providerCalls": 0,
@@ -77,6 +77,10 @@
           "t-pricing-2025.md"
         ],
         "disposition": "proceed",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": null,
         "providerWouldBeCalled": true,
         "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
@@ -129,6 +133,11 @@
           "name": "expected citations resolved",
           "passed": true,
           "detail": "all present"
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=2"
         },
         {
           "name": "disposition",
@@ -208,6 +217,10 @@
           "t-pricing-2024.md"
         ],
         "disposition": "proceed",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": null,
         "providerWouldBeCalled": true,
         "notice": "Temporal evidence selects 40 usd per seat per month at 2024; older claims remain in the evidence record for their own periods.",
@@ -260,6 +273,11 @@
           "name": "expected citations resolved",
           "passed": true,
           "detail": "all present"
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=2"
         },
         {
           "name": "disposition",
@@ -339,6 +357,10 @@
           "t-pricing-2025.md"
         ],
         "disposition": "proceed",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": null,
         "providerWouldBeCalled": true,
         "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
@@ -391,6 +413,11 @@
           "name": "expected citations resolved",
           "passed": true,
           "detail": "all present"
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=2"
         },
         {
           "name": "disposition",
@@ -483,6 +510,10 @@
           "t-pricing-2025.md"
         ],
         "disposition": "proceed",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": null,
         "providerWouldBeCalled": true,
         "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
@@ -546,6 +577,11 @@
           "name": "expected citations resolved",
           "passed": true,
           "detail": "all present"
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=3"
         },
         {
           "name": "disposition",
@@ -615,6 +651,10 @@
         "value": null,
         "citations": [],
         "disposition": "hold",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": "multiple_applicable_propositions",
         "providerWouldBeCalled": false,
         "notice": "Multiple claims remain applicable at 2026-08-10 (40 usd per seat per month and 55 usd per seat per month); the temporal evidence does not establish which value is correct, so Tracework discloses the versions instead of choosing one.",
@@ -665,6 +705,11 @@
           "name": "must not answer 55",
           "passed": true,
           "detail": "forbidden value 55 appeared in null"
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=2"
         },
         {
           "name": "disposition",
@@ -754,6 +799,10 @@
           "t-pricing-2025.md"
         ],
         "disposition": "proceed",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": null,
         "providerWouldBeCalled": true,
         "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
@@ -812,6 +861,11 @@
           "name": "must not answer 65",
           "passed": true,
           "detail": "forbidden value 65 appeared in \"55 usd per seat per month\""
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=3"
         },
         {
           "name": "disposition",
@@ -905,6 +959,10 @@
           "t-price-notice-2026.md"
         ],
         "disposition": "proceed",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": null,
         "providerWouldBeCalled": true,
         "notice": "Temporal evidence selects 65 usd per seat per month at 2027-02; older claims remain in the evidence record for their own periods.",
@@ -963,6 +1021,11 @@
           "name": "expected citations resolved",
           "passed": true,
           "detail": "all present"
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=3"
         },
         {
           "name": "disposition",
@@ -1057,6 +1120,10 @@
           "t-pricing-2025.md"
         ],
         "disposition": "proceed",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": null,
         "providerWouldBeCalled": true,
         "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
@@ -1109,6 +1176,11 @@
           "name": "must not answer 40",
           "passed": true,
           "detail": "forbidden value 40 appeared in \"55 usd per seat per month\""
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=2"
         },
         {
           "name": "disposition",
@@ -1205,6 +1277,10 @@
         "value": null,
         "citations": [],
         "disposition": "hold",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": "temporal_evidence_insufficient",
         "providerWouldBeCalled": false,
         "notice": "Temporal evidence includes a competing undated claim. Tracework will not assume it is current or silently discard it.",
@@ -1255,6 +1331,11 @@
           "name": "must not answer 55",
           "passed": true,
           "detail": "forbidden value 55 appeared in null"
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=2"
         },
         {
           "name": "disposition",
@@ -1324,6 +1405,10 @@
         "value": null,
         "citations": [],
         "disposition": "hold",
+        "queryRelevant": true,
+        "matchedSubjectKeys": [
+          "team|usd|per-seat-per-month|subscription"
+        ],
         "holdReason": "multiple_applicable_propositions",
         "providerWouldBeCalled": false,
         "notice": "Multiple claims remain applicable at 2026-08-10 (60 usd per seat per month and 55 usd per seat per month); the temporal evidence does not establish which value is correct, so Tracework discloses the versions instead of choosing one.",
@@ -1374,6 +1459,11 @@
           "name": "must not answer 60",
           "passed": true,
           "detail": "forbidden value 60 appeared in null"
+        },
+        {
+          "name": "subject relevance",
+          "passed": true,
+          "detail": "expected relevance to follow the presence of temporal claims; relevant=true, claims=2"
         },
         {
           "name": "disposition",

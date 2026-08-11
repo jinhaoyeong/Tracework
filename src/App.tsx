@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import { buildSampleCorpus } from './data/sampleCorpus'
 import { Icon } from './components/Icon'
 import { KnowledgeLibrary, type LibraryStatus } from './components/KnowledgeLibrary'
+import { TemporalInspector } from './components/TemporalInspector'
 import { KnowledgeLibraryError, requestCollectionDocuments, requestKnowledgeLibrary, toIndexedDocument, type KnowledgeCollection } from './lib/knowledgeLibrary'
 import { buildAnswer, createDocument, formatBytes, searchDocuments, tokenize } from './lib/rag'
 import { adjudicateEvidence, ensureConflictCoverage, type EvidenceAdjudication } from './lib/adjudication'
@@ -13,8 +14,8 @@ import { buildCandidateUnion, DEFAULT_PHASE5B_CANDIDATE_LIMIT, DEFAULT_PHASE5B_C
 import { NeuralEmbeddingError, requestNeuralEmbeddings } from './lib/semantic'
 import { extractTemporalClaims } from './lib/temporal'
 import { normalizeTemporalExtraction } from './lib/temporalNormalization'
-import { planTemporalCoverage, temporalCoverageWitnessChunkIds, temporalGate, type TemporalCoverageReport } from './lib/temporalCoverage'
-import { resolveTemporalNormalization, type TemporalResolution } from './lib/temporalResolution'
+import { assessQueryRelevance, planTemporalCoverage, temporalCoverageWitnessChunkIds, temporalGate, type TemporalCoverageReport, type TemporalQueryRelevance } from './lib/temporalCoverage'
+import { parseRequestedPeriod, readRequestedPeriods, resolveTemporalNormalization, type TemporalResolution } from './lib/temporalResolution'
 import { PGVECTOR_DIMENSIONS, PgvectorError, SHARED_WRITES_DISABLED, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
 
@@ -259,9 +260,9 @@ function App() {
   const [showMethodHelp, setShowMethodHelp] = useState(false)
   const [generationState, setGenerationState] = useState<GenerationState>({ status: 'idle', model: null, message: null })
   const [groundedSession, setGroundedSession] = useState<GroundedSession | null>(null)
-  // The resolver never reads a clock. The app injects the reference date as an
-  // explicit value; step 9 turns this into the user-facing "as of" control.
-  const [asOf] = useState(() => new Date().toISOString().slice(0, 10))
+  // The clock is read here, once, at the UI boundary. Everything downstream
+  // receives an immutable value; the resolver never calls Date.now() itself.
+  const [asOf, setAsOf] = useState(() => new Date().toISOString().slice(0, 10))
   const [libraryCollections, setLibraryCollections] = useState<KnowledgeCollection[]>([])
   const [libraryStatus, setLibraryStatus] = useState<LibraryStatus>('idle')
   const [libraryMessage, setLibraryMessage] = useState<string | null>(null)
@@ -368,6 +369,29 @@ function App() {
     [engine, phase5cAdjudication, phase5cBaseContextResults, phase5dNormalization, phase5dWitnessChunkIds, pruningEnabled, topK],
   )
   const results = phase5cContextResults
+  // The inspector reports the same computation the generation gate performs, so
+  // what a reader sees is the decision that was actually made.
+  const phase5dPeriodReading = useMemo(() => readRequestedPeriods(activeQuery), [activeQuery])
+  const phase5dRequestedPeriod = phase5dPeriodReading.period
+  const phase5dCoverage = useMemo(
+    () => planTemporalCoverage(phase5dNormalization, phase5cBaseContextResults, pruningEnabled ? topK : undefined),
+    [phase5dNormalization, phase5cBaseContextResults, pruningEnabled, topK],
+  )
+  const phase5dResolution = useMemo(
+    () => resolveTemporalNormalization(
+      normalizeTemporalExtraction(extractTemporalClaims(activeQuery, results)),
+      { asOf, requestedPeriod: phase5dRequestedPeriod },
+    ),
+    [activeQuery, asOf, phase5dRequestedPeriod, results],
+  )
+  const phase5dRelevance = useMemo(
+    () => assessQueryRelevance(activeQuery, phase5dResolution),
+    [activeQuery, phase5dResolution],
+  )
+  const phase5dGate = useMemo(
+    () => temporalGate(phase5dResolution, phase5dCoverage, phase5dRelevance),
+    [phase5dCoverage, phase5dRelevance, phase5dResolution],
+  )
   const phase5cContextAdjudication = useMemo(
     () => adjudicateEvidence(activeQuery, results),
     [activeQuery, results],
@@ -645,7 +669,7 @@ function App() {
       contextLimit?: number
       requestedTopK?: number
       adjudication?: EvidenceAdjudication
-      temporal?: { resolution: TemporalResolution; coverage: TemporalCoverageReport }
+      temporal?: { resolution: TemporalResolution; coverage: TemporalCoverageReport; relevance: TemporalQueryRelevance }
     } = {},
   ) => {
     const assessment = evaluateEvidence(nextQuery, retrievedResults)
@@ -673,7 +697,7 @@ function App() {
     // supersession relation can explain a disagreement 5C would otherwise call a
     // conflict, and 5C cannot recognise these claims at all. No provider call.
     if (options.temporal) {
-      const gate = temporalGate(options.temporal.resolution, options.temporal.coverage)
+      const gate = temporalGate(options.temporal.resolution, options.temporal.coverage, options.temporal.relevance)
       if (gate.disposition === 'hold') {
         setGroundedSession({ ...session, answer: buildTemporalHoldAnswer(options.temporal.resolution, gate.holdReason) })
         setGenerationState({
@@ -783,7 +807,7 @@ function App() {
     }
 
     let retrievedResults: SearchResult[] | null = null
-    let temporalGateInput: { resolution: TemporalResolution; coverage: TemporalCoverageReport } | undefined
+    let temporalGateInput: { resolution: TemporalResolution; coverage: TemporalCoverageReport; relevance: TemporalQueryRelevance } | undefined
     if (engine === 'rerank') {
       const dense = await runNeuralRetrieval(nextQuery)
       if (dense) {
@@ -807,13 +831,19 @@ function App() {
           temporalWitnessIds,
         )
         // Resolution runs over the context that will actually be sent, and the
-        // asOf is injected here rather than read inside the resolver.
+        // asOf is injected here rather than read inside the resolver. A question
+        // naming its own period overrides asOf, so a historical question is not
+        // answered at the present instant.
+        const runResolution = resolveTemporalNormalization(
+          normalizeTemporalExtraction(extractTemporalClaims(nextQuery, retrievedResults)),
+          { asOf, requestedPeriod: parseRequestedPeriod(nextQuery) },
+        )
         temporalGateInput = {
-          resolution: resolveTemporalNormalization(
-            normalizeTemporalExtraction(extractTemporalClaims(nextQuery, retrievedResults)),
-            { asOf, requestedPeriod: null },
-          ),
+          resolution: runResolution,
           coverage,
+          // Temporal uncertainty may only authorise a hold when it concerns the
+          // subject actually being asked about.
+          relevance: assessQueryRelevance(nextQuery, runResolution),
         }
       }
     } else if (engine === 'pgvector' || compareMode) {
@@ -1361,6 +1391,20 @@ function App() {
             </div> : null}
             <p className="grounded-debug-note">The reranker is a deterministic relevance experiment, not a source-trust, recency, or contradiction model. Use the inspector to see why a row moved from its union position to its new rank.</p>
           </section>}
+
+          {/* Temporal applicability is decided before Phase 5C sees anything,
+              so it is presented in that order too. */}
+          {(engine === 'rerank' || answerMode === 'grounded') && <TemporalInspector
+            resolution={phase5dResolution}
+            coverage={phase5dCoverage}
+            gate={phase5dGate}
+            relevance={phase5dRelevance}
+            periodReading={phase5dPeriodReading}
+            asOf={asOf}
+            onAsOfChange={setAsOf}
+            onUseNow={() => setAsOf(new Date().toISOString().slice(0, 10))}
+            onSelect={setSelectedChunkId}
+          />}
 
           {(engine === 'rerank' || answerMode === 'grounded') && <Phase5CPanel
             adjudication={phase5cAdjudication}

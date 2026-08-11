@@ -605,6 +605,76 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
 .phase5c-empty { border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); padding: 17px 8px; color: #71807a; font-size: 10px; line-height: 1.45; }
 .grounded-debug-state.is-conflicted { border-color: #b49d91; color: var(--vermilion-dark); }
 
+/* Phase 5D temporal inspector. Same visual language as the 5C panel, because it
+   answers the same kind of question one stage earlier. */
+.temporal-section { border-bottom: 1px solid var(--line-strong); padding: 26px 0 30px; }
+.temporal-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.temporal-heading h2 { margin: 9px 0 0; font-size: 25px; letter-spacing: -0.05em; line-height: 1.05; }
+.temporal-badge { flex-shrink: 0; border: 1px solid var(--line-strong); padding: 5px 8px; color: #62736d; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.temporal-badge.is-resolved { border-color: #8ca9a0; color: var(--teal); }
+.temporal-badge.is-hold { border-color: #b49d91; color: var(--vermilion-dark); }
+.temporal-clock { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; margin-top: 17px; border: 1px solid var(--line); padding: 12px 13px; background: var(--paper-deep); }
+.temporal-clock label { display: flex; flex-direction: column; gap: 5px; }
+.temporal-clock label span { color: var(--teal); font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.temporal-clock input { border: 1px solid var(--line-strong); padding: 7px 8px; background: var(--paper); color: var(--ink); font-size: 12px; }
+.temporal-clock > button { border: 1px solid var(--line-strong); padding: 8px 12px; background: var(--paper); color: var(--teal); cursor: pointer; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.temporal-clock > button:hover { border-color: var(--teal); color: var(--vermilion-dark); }
+.temporal-clock-derived { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-left: auto; }
+.temporal-clock-derived div { display: flex; flex-direction: column; gap: 3px; }
+.temporal-clock-derived span { color: var(--soft); font-size: 8px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.temporal-clock-derived strong { color: var(--ink); font-size: 11px; }
+.temporal-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 15px; border: 1px solid var(--line-strong); background: var(--line-strong); }
+.temporal-stat-grid > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 11px 12px; background: var(--paper); }
+.temporal-stat-grid span { color: var(--teal); font-size: 9px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; }
+.temporal-stat-grid strong { overflow-wrap: anywhere; font-size: 15px; letter-spacing: -0.03em; }
+.temporal-stat-grid small { color: #71817b; font-size: 9px; line-height: 1.4; }
+.temporal-hold-notice { margin: 14px 0 0; border-left: 3px solid var(--vermilion-dark); padding: 9px 12px; background: #f0e6e2; color: #6d4a3f; font-size: 11px; line-height: 1.55; }
+.temporal-hold-notice strong { color: var(--vermilion-dark); font-family: ui-monospace, monospace; font-size: 10px; }
+.temporal-notice { margin: 11px 0 0; color: #62726c; font-size: 11px; line-height: 1.55; }
+.temporal-clock-derived strong.is-ambiguous { color: var(--vermilion-dark); }
+.temporal-stat-grid strong.is-irrelevant { color: var(--blue); }
+.temporal-relevance-note { margin: 12px 0 0; border-left: 3px solid var(--blue); padding: 9px 12px; background: #e2e8ee; color: #3d5266; font-size: 11px; line-height: 1.55; }
+.temporal-ambiguous-note { margin: 12px 0 0; border-left: 3px solid var(--blue); padding: 9px 12px; background: #e2e8ee; color: #3d5266; font-size: 11px; line-height: 1.55; }
+.temporal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 17px; }
+.temporal-column { min-width: 0; }
+.temporal-column-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line-strong); padding-bottom: 6px; }
+.temporal-column-heading h3 { margin: 0; font-size: 10px; font-weight: 800; letter-spacing: 0.09em; }
+.temporal-column-heading span { color: var(--soft); font-size: 9px; font-weight: 750; letter-spacing: 0.05em; }
+.temporal-column-heading span.is-incomplete { color: var(--vermilion-dark); }
+.temporal-claims, .temporal-relations, .temporal-witnesses { margin: 0; padding: 0; list-style: none; }
+.temporal-claims li { border-bottom: 1px solid var(--line); }
+.temporal-claims button { display: flex; flex-direction: column; gap: 3px; width: 100%; border: 0; padding: 9px 8px; background: transparent; color: inherit; cursor: pointer; text-align: left; }
+.temporal-claims button:hover { background: var(--paper-deep); }
+.temporal-claim-value { color: var(--ink); font-size: 12px; font-weight: 700; }
+.temporal-claim-state { align-self: flex-start; border: 1px solid #aebcb7; padding: 2px 4px; color: #62736d; font-size: 8px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+.temporal-claim-state.is-applicable { border-color: #8ca9a0; color: var(--teal); }
+.temporal-claim-state.is-superseded, .temporal-claim-state.is-outside-period { border-color: #b8a99f; color: #8a6b5c; }
+.temporal-claim-state.is-future { border-color: #9aa9bd; color: var(--blue); }
+.temporal-claims small { color: #71817b; font-size: 9px; line-height: 1.45; overflow-wrap: anywhere; }
+.temporal-claim-reason { color: #8a968f; font-style: italic; }
+.temporal-relations li { display: flex; flex-direction: column; gap: 3px; border-bottom: 1px solid var(--line); padding: 9px 8px; }
+.temporal-relations strong { color: var(--ink); font-size: 11px; }
+.temporal-relation-evidence { color: #71817b; font-size: 9px; line-height: 1.45; overflow-wrap: anywhere; }
+.temporal-coverage { margin-top: 16px; }
+.temporal-witnesses li { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 3px 8px; border-bottom: 1px solid var(--line); padding: 8px; color: var(--teal); }
+.temporal-witnesses li.is-omitted { color: var(--vermilion-dark); }
+.temporal-witnesses span { min-width: 0; overflow: hidden; color: var(--ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.temporal-witnesses small { grid-column: 2; color: #71817b; font-size: 9px; }
+.temporal-incomplete-note { margin: 10px 0 0; color: #6d4a3f; font-size: 10px; line-height: 1.5; }
+.temporal-empty { border-bottom: 1px solid var(--line-strong); padding: 15px 8px; color: #71807a; font-size: 10px; line-height: 1.45; }
+
+@media (max-width: 900px) {
+  .temporal-grid { grid-template-columns: 1fr; }
+  .temporal-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .temporal-clock-derived { margin-left: 0; }
+}
+
+@media (max-width: 580px) {
+  .temporal-stat-grid { grid-template-columns: 1fr; }
+  .temporal-clock { flex-direction: column; align-items: stretch; }
+  .temporal-clock input, .temporal-clock > button { min-height: 44px; }
+}
+
 @media (max-width: 900px) {
   .phase5c-grid { grid-template-columns: 1fr; }
 }

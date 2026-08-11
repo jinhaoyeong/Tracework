@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { createDocument } from '../src/lib/rag.ts'
 import { extractTemporalClaims } from '../src/lib/temporal.ts'
 import { normalizeTemporalExtraction } from '../src/lib/temporalNormalization.ts'
-import { resolveTemporalNormalization, parseTemporalReference } from '../src/lib/temporalResolution.ts'
+import { resolveTemporalNormalization, parseRequestedPeriod, parseTemporalReference, readRequestedPeriods } from '../src/lib/temporalResolution.ts'
 import { buildVariant, PHASE5D_CASES } from './fixtures/phase5d.mjs'
 
 const makeResults = (variantName, question) => buildVariant(variantName)
@@ -62,6 +62,45 @@ for (const spec of PHASE5D_CASES) {
   assert.equal(resolution.disposition, spec.expectedDisposition, `${spec.id} generation disposition`)
   assert.equal(resolution.holdReason ?? null, spec.expectedHoldReason ?? null, `${spec.id} hold reason`)
 }
+
+/* ------------------------------------------- requested period from question */
+
+// The frozen cases already pin the period each question names, so the parser is
+// asserted against them rather than against examples written to suit it.
+for (const spec of PHASE5D_CASES) {
+  assert.equal(
+    parseRequestedPeriod(spec.question),
+    spec.requestedPeriod,
+    `${spec.id} requested period parsed from "${spec.question}"`,
+  )
+}
+
+// "current" and "now" name no period: they mean the injected asOf applies.
+assert.equal(parseRequestedPeriod('What is the current price?'), null)
+assert.equal(parseRequestedPeriod('How much is it now?'), null)
+assert.equal(parseRequestedPeriod('What did it cost in 2024?'), '2024')
+assert.equal(parseRequestedPeriod('What will it cost in February 2027?'), '2027-02')
+assert.equal(parseRequestedPeriod('What applies in 2027-02?'), '2027-02')
+
+// A question naming several periods has no single applicability time. Taking the
+// first or last match would answer a comparison as a point-in-time question.
+for (const question of [
+  'How did Team pricing change from 2024 to 2025?',
+  'Compare the Team plan price in 2024 and 2025',
+  'Was the Team plan cheaper in 2024 than in February 2027?',
+]) {
+  const reading = readRequestedPeriods(question)
+  assert.equal(reading.period, null, `"${question}" must not collapse to one period`)
+  assert.equal(reading.reason, 'ambiguous')
+  assert.ok(reading.found.length >= 2, 'both named periods must be reported')
+  assert.notEqual(reading.period, '2024', 'must not silently choose the first period')
+  assert.notEqual(reading.period, '2025', 'must not silently choose the last period')
+}
+
+// A month-qualified period is one period stated once, not a month plus a year.
+const singleMonth = readRequestedPeriods('What will it cost in February 2027?')
+assert.deepEqual(singleMonth.found, ['2027-02'], 'February 2027 must not also count as 2027')
+assert.equal(singleMonth.reason, 'single')
 
 const current = runCase(PHASE5D_CASES.find((spec) => spec.id === 'T1'))
 assert.equal(current.boundaries.length, 1, 'T1 should expose the supersession boundary')

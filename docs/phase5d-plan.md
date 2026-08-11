@@ -326,6 +326,48 @@ witnesses) and the gate holds with `incomplete_temporal_evidence`, rather than
 leaving half a relation in context for the resolver to answer from. Recall must
 never be bought with evidentiary completeness.
 
+### 6b.4 Query subject relevance — found at step 9
+
+Step 9's inspector immediately earned itself. Asking *"Where was Tracework
+invented?"* against an index that also held two conflicting pricing documents
+produced a **hold**: the temporal layer saw an unresolved 55-vs-60 disagreement
+in retrieved context and refused a question about project origin.
+
+The invariant that was missing:
+
+> Temporal uncertainty may only authorise a hold when that uncertainty concerns
+> the subject the question is about.
+
+Extraction and resolution are unchanged — they should still notice a conflict in
+whatever retrieval supplied. Relevance is assessed at the boundary where a
+temporal finding becomes authority to block:
+
+```
+relevance? no  -> proceed, temporal_subject_not_relevant   (finding still reported)
+coverage incomplete -> hold, incomplete_temporal_evidence
+resolver holds -> hold, resolver's own reason
+otherwise -> proceed
+```
+
+Matching is deliberately tiny and declared: `NormalizedSubject.plan` is the
+entity portion of the subject key, and the rest (currency, unit, scope) describes
+the measurement rather than the topic, so requiring the whole key to appear in a
+question would never match. No embeddings and no second model — this is a scope
+check, not a semantic judgement.
+
+Frozen as a pair, because the first assertion alone could be satisfied by simply
+disabling temporal holds:
+
+- unrelated question + pricing conflict in context -> `proceed`, conflict still reported
+- pricing question + same conflict -> `hold`, `multiple_applicable_propositions`
+
+Also frozen: relevance keys off the subject, not the word "price", so "what does
+the Team plan cost?" remains relevant.
+
+The inspector no longer headlines a value the question did not ask about. It
+shows `question relevance: not relevant` and `applicable to question: not used`,
+names the unrelated subject, and still lists the claims below for inspection.
+
 ## 7. Anti-rules
 
 Never: newest file wins · largest year wins · `createdAt` ordering · version

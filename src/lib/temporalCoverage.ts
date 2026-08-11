@@ -1,3 +1,4 @@
+import { tokenize } from './rag.ts'
 import type { SearchResult } from '../types.ts'
 import type { TemporalNormalization } from './temporalNormalization.ts'
 import type { TemporalDisposition, TemporalHoldReason, TemporalResolution } from './temporalResolution.ts'
@@ -102,15 +103,79 @@ export const ensureTemporalCoverage = (
   protectedChunkIds: ReadonlySet<string> = new Set(),
 ): SearchResult[] => planTemporalCoverage(normalization, selected, maxChunks, protectedChunkIds).results
 
+export interface TemporalQueryRelevance {
+  /** Whether any temporal subject in evidence is the subject being asked about. */
+  relevant: boolean
+  matchedSubjectKeys: string[]
+  unmatchedSubjectKeys: string[]
+}
+
 /**
- * The temporal layer's final gate: the resolver's own disposition, plus the
- * separate fact that required evidence may not have fitted the context. Either
- * one is sufficient to hold.
+ * Subject vocabulary for relevance, kept deliberately tiny and declared.
+ *
+ * `NormalizedSubject.plan` is the entity portion of the subject key; the rest
+ * (currency, unit, scope) describes the measurement, not the topic, so requiring
+ * the whole key to appear in the question would never match. No embeddings and
+ * no second model: relevance is a scope check, not a semantic judgement.
+ */
+const SUBJECT_TERMS: Record<string, string[]> = {
+  team: ['team'],
+}
+
+/**
+ * Does the temporal evidence concern what the user actually asked about?
+ *
+ * Temporal resolution reads whatever retrieval supplied, which is correct -- it
+ * should notice a pricing conflict in context. But an unresolved pricing
+ * disagreement must not refuse a question about something else. Relevance is
+ * assessed here, at the boundary where temporal findings become authority to
+ * block, rather than inside extraction or resolution.
+ */
+export const assessQueryRelevance = (
+  question: string,
+  resolution: Pick<TemporalResolution, 'assessments'>,
+): TemporalQueryRelevance => {
+  const asked = new Set(tokenize(question))
+  const matched: string[] = []
+  const unmatched: string[] = []
+
+  for (const assessment of resolution.assessments) {
+    const subject = assessment.claim.subject
+    if (!subject) continue
+    const terms = SUBJECT_TERMS[subject.plan] ?? [subject.plan]
+    const hit = terms.some((term) => asked.has(term))
+    const bucket = hit ? matched : unmatched
+    if (!bucket.includes(subject.key)) bucket.push(subject.key)
+  }
+
+  return {
+    relevant: matched.length > 0,
+    matchedSubjectKeys: matched,
+    unmatchedSubjectKeys: unmatched.filter((key) => !matched.includes(key)),
+  }
+}
+
+/**
+ * The temporal layer's final gate.
+ *
+ * Order matters. Relevance is checked first because temporal uncertainty may
+ * only authorise a hold when that uncertainty concerns the subject being asked
+ * about; without it, a pricing disagreement in retrieved context refuses a
+ * question about project origin. The finding is still reported -- the layer does
+ * not pretend the conflict is absent, it declines to act on it here.
  */
 export const temporalGate = (
   resolution: Pick<TemporalResolution, 'disposition' | 'holdReason'>,
   coverage: Pick<TemporalCoverageReport, 'complete'>,
-): { disposition: TemporalDisposition; holdReason: TemporalHoldReason | null } => {
+  relevance?: TemporalQueryRelevance,
+): {
+  disposition: TemporalDisposition
+  holdReason: TemporalHoldReason | null
+  proceedReason?: 'temporal_subject_not_relevant'
+} => {
+  if (relevance && !relevance.relevant) {
+    return { disposition: 'proceed', holdReason: null, proceedReason: 'temporal_subject_not_relevant' }
+  }
   if (!coverage.complete) return { disposition: 'hold', holdReason: 'incomplete_temporal_evidence' }
   return { disposition: resolution.disposition, holdReason: resolution.holdReason }
 }
