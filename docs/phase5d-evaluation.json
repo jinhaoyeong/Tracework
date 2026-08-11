@@ -1,0 +1,1448 @@
+{
+  "recordedAt": "2026-08-11T05:17:17.388Z",
+  "phase": "5D",
+  "step": 8,
+  "providerCalls": 0,
+  "settings": {
+    "topK": 4,
+    "candidateLimit": 10
+  },
+  "providerDependentEvalsNotRun": {
+    "scripts": [
+      "eval:retrieval",
+      "eval:reranker",
+      "eval:conflict-corpus"
+    ],
+    "reason": "require a running dev server and embedding credentials; step 8 is defined as zero provider calls",
+    "status": "not executed in this run — not a regression"
+  },
+  "records": [
+    {
+      "id": "T1",
+      "name": "current price with explicit supersession",
+      "variant": "supersession",
+      "question": "What is the current Team plan price?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": null,
+      "corpusSize": 2,
+      "ranking": {
+        "preview": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "droppedByPruning": [],
+        "afterPruning": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "restoredByCoverage": []
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-pricing-2024.md",
+            "value": "40 usd per seat per month",
+            "validFrom": "2024-03",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "value": "55 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [
+          {
+            "superseding": "t-pricing-2025.md",
+            "superseded": "t-pricing-2024.md"
+          }
+        ],
+        "unassessedReasons": [],
+        "witnesses": [
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "value": "55 usd per seat per month",
+        "citations": [
+          "t-pricing-2025.md"
+        ],
+        "disposition": "proceed",
+        "holdReason": null,
+        "providerWouldBeCalled": true,
+        "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
+        "assessments": [
+          {
+            "source": "t-pricing-2024.md",
+            "state": "superseded",
+            "reason": "Supersession starts at 2025-01."
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2025-01 and remains applicable at 2026-08-10."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "resolved",
+        "value": "55 usd per seat per month",
+        "citations": [
+          "t-pricing-2025.md"
+        ],
+        "changedByCoverage": false
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected resolved, got resolved"
+        },
+        {
+          "name": "resolved value",
+          "passed": true,
+          "detail": "expected a value containing 55, got \"55 usd per seat per month\""
+        },
+        {
+          "name": "expected citations resolved",
+          "passed": true,
+          "detail": "all present"
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected proceed, got proceed"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected null, got null"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=proceed"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "T2",
+      "name": "historical price for a named period",
+      "variant": "supersession",
+      "question": "What did the Team plan cost in 2024?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": "2024",
+      "corpusSize": 2,
+      "ranking": {
+        "preview": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "droppedByPruning": [],
+        "afterPruning": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "restoredByCoverage": []
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-pricing-2024.md",
+            "value": "40 usd per seat per month",
+            "validFrom": "2024-03",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "value": "55 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [
+          {
+            "superseding": "t-pricing-2025.md",
+            "superseded": "t-pricing-2024.md"
+          }
+        ],
+        "unassessedReasons": [],
+        "witnesses": [
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "value": "40 usd per seat per month",
+        "citations": [
+          "t-pricing-2024.md"
+        ],
+        "disposition": "proceed",
+        "holdReason": null,
+        "providerWouldBeCalled": true,
+        "notice": "Temporal evidence selects 40 usd per seat per month at 2024; older claims remain in the evidence record for their own periods.",
+        "assessments": [
+          {
+            "source": "t-pricing-2024.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2024-03 and remains applicable at 2024."
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "state": "future",
+            "reason": "The claim starts at 2025-01, after the requested reference period 2024."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "resolved",
+        "value": "40 usd per seat per month",
+        "citations": [
+          "t-pricing-2024.md"
+        ],
+        "changedByCoverage": false
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected resolved, got resolved"
+        },
+        {
+          "name": "resolved value",
+          "passed": true,
+          "detail": "expected a value containing 40, got \"40 usd per seat per month\""
+        },
+        {
+          "name": "expected citations resolved",
+          "passed": true,
+          "detail": "all present"
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected proceed, got proceed"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected null, got null"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=proceed"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "T3",
+      "name": "unspecified time with evidenced currentness",
+      "variant": "supersession",
+      "question": "How much is the Team plan?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": null,
+      "corpusSize": 2,
+      "ranking": {
+        "preview": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "droppedByPruning": [],
+        "afterPruning": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "restoredByCoverage": []
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-pricing-2024.md",
+            "value": "40 usd per seat per month",
+            "validFrom": "2024-03",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "value": "55 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [
+          {
+            "superseding": "t-pricing-2025.md",
+            "superseded": "t-pricing-2024.md"
+          }
+        ],
+        "unassessedReasons": [],
+        "witnesses": [
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "value": "55 usd per seat per month",
+        "citations": [
+          "t-pricing-2025.md"
+        ],
+        "disposition": "proceed",
+        "holdReason": null,
+        "providerWouldBeCalled": true,
+        "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
+        "assessments": [
+          {
+            "source": "t-pricing-2024.md",
+            "state": "superseded",
+            "reason": "Supersession starts at 2025-01."
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2025-01 and remains applicable at 2026-08-10."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "resolved",
+        "value": "55 usd per seat per month",
+        "citations": [
+          "t-pricing-2025.md"
+        ],
+        "changedByCoverage": false
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected resolved, got resolved"
+        },
+        {
+          "name": "resolved value",
+          "passed": true,
+          "detail": "expected a value containing 55, got \"55 usd per seat per month\""
+        },
+        {
+          "name": "expected citations resolved",
+          "passed": true,
+          "detail": "all present"
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected proceed, got proceed"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected null, got null"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=proceed"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "T4",
+      "name": "newer document mentioning an older value",
+      "variant": "staleMention",
+      "question": "What is the current Team plan price?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": null,
+      "corpusSize": 3,
+      "ranking": {
+        "preview": [
+          "t-meeting-notes-2026.md",
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "droppedByPruning": [
+          "t-pricing-2025.md"
+        ],
+        "afterPruning": [
+          "t-meeting-notes-2026.md",
+          "t-pricing-2024.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-meeting-notes-2026.md",
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "restoredByCoverage": [
+          "t-pricing-2025.md"
+        ]
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-meeting-notes-2026.md",
+            "value": "40 usd",
+            "validFrom": null,
+            "historical": true,
+            "status": "unresolved"
+          },
+          {
+            "source": "t-pricing-2024.md",
+            "value": "40 usd per seat per month",
+            "validFrom": "2024-03",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "value": "55 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [
+          {
+            "superseding": "t-pricing-2025.md",
+            "superseded": "t-pricing-2024.md"
+          }
+        ],
+        "unassessedReasons": [],
+        "witnesses": [
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "value": "55 usd per seat per month",
+        "citations": [
+          "t-pricing-2025.md"
+        ],
+        "disposition": "proceed",
+        "holdReason": null,
+        "providerWouldBeCalled": true,
+        "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
+        "assessments": [
+          {
+            "source": "t-meeting-notes-2026.md",
+            "state": "historical",
+            "reason": "The claim is explicitly marked former, previous, or old and is not treated as current evidence."
+          },
+          {
+            "source": "t-pricing-2024.md",
+            "state": "superseded",
+            "reason": "Supersession starts at 2025-01."
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2025-01 and remains applicable at 2026-08-10."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "resolved",
+        "value": "40 usd per seat per month",
+        "citations": [
+          "t-pricing-2024.md"
+        ],
+        "changedByCoverage": true
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-meeting-notes-2026.md",
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected resolved, got resolved"
+        },
+        {
+          "name": "resolved value",
+          "passed": true,
+          "detail": "expected a value containing 55, got \"55 usd per seat per month\""
+        },
+        {
+          "name": "must not answer 40",
+          "passed": true,
+          "detail": "forbidden value 40 appeared in \"55 usd per seat per month\""
+        },
+        {
+          "name": "expected citations resolved",
+          "passed": true,
+          "detail": "all present"
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected proceed, got proceed"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected null, got null"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=proceed"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "T5",
+      "name": "competing versions with no currentness evidence",
+      "variant": "ambiguous",
+      "question": "How much is the Team plan?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": null,
+      "corpusSize": 2,
+      "ranking": {
+        "preview": [
+          "t-pricing-2024.md",
+          "t-pricing-2025-bare.md"
+        ],
+        "droppedByPruning": [],
+        "afterPruning": [
+          "t-pricing-2024.md",
+          "t-pricing-2025-bare.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-pricing-2024.md",
+          "t-pricing-2025-bare.md"
+        ],
+        "restoredByCoverage": []
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-pricing-2024.md",
+            "value": "40 usd per seat per month",
+            "validFrom": "2024-03",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2025-bare.md",
+            "value": "55 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [],
+        "unassessedReasons": [],
+        "witnesses": []
+      },
+      "resolution": {
+        "status": "unresolved",
+        "value": null,
+        "citations": [],
+        "disposition": "hold",
+        "holdReason": "multiple_applicable_propositions",
+        "providerWouldBeCalled": false,
+        "notice": "Multiple claims remain applicable at 2026-08-10 (40 usd per seat per month and 55 usd per seat per month); the temporal evidence does not establish which value is correct, so Tracework discloses the versions instead of choosing one.",
+        "assessments": [
+          {
+            "source": "t-pricing-2024.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2024-03 and remains applicable at 2026-08-10."
+          },
+          {
+            "source": "t-pricing-2025-bare.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2025-01 and remains applicable at 2026-08-10."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "unresolved",
+        "value": null,
+        "citations": [],
+        "changedByCoverage": false
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-pricing-2024.md",
+          "t-pricing-2025-bare.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected unresolved, got unresolved"
+        },
+        {
+          "name": "no value asserted",
+          "passed": true,
+          "detail": "an unresolved or unassessed case must not answer; got null"
+        },
+        {
+          "name": "must not answer 55",
+          "passed": true,
+          "detail": "forbidden value 55 appeared in null"
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected hold, got hold"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected multiple_applicable_propositions, got multiple_applicable_propositions"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=hold"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "T6a",
+      "name": "future scheduled price, asked before it takes effect",
+      "variant": "future",
+      "question": "What is the current Team plan price?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": null,
+      "corpusSize": 3,
+      "ranking": {
+        "preview": [
+          "t-pricing-2024.md",
+          "t-price-notice-2026.md",
+          "t-pricing-2025.md"
+        ],
+        "droppedByPruning": [],
+        "afterPruning": [
+          "t-pricing-2024.md",
+          "t-price-notice-2026.md",
+          "t-pricing-2025.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-pricing-2024.md",
+          "t-price-notice-2026.md",
+          "t-pricing-2025.md"
+        ],
+        "restoredByCoverage": []
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-pricing-2024.md",
+            "value": "40 usd per seat per month",
+            "validFrom": "2024-03",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-price-notice-2026.md",
+            "value": "65 usd per seat per month",
+            "validFrom": "2027-01",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "value": "55 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [
+          {
+            "superseding": "t-pricing-2025.md",
+            "superseded": "t-pricing-2024.md"
+          }
+        ],
+        "unassessedReasons": [],
+        "witnesses": [
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "value": "55 usd per seat per month",
+        "citations": [
+          "t-pricing-2025.md"
+        ],
+        "disposition": "proceed",
+        "holdReason": null,
+        "providerWouldBeCalled": true,
+        "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
+        "assessments": [
+          {
+            "source": "t-pricing-2024.md",
+            "state": "superseded",
+            "reason": "Supersession starts at 2025-01."
+          },
+          {
+            "source": "t-price-notice-2026.md",
+            "state": "future",
+            "reason": "The claim starts at 2027-01, after the requested reference period 2026-08-10."
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2025-01 and remains applicable at 2026-08-10."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "resolved",
+        "value": "55 usd per seat per month",
+        "citations": [
+          "t-pricing-2025.md"
+        ],
+        "changedByCoverage": false
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-pricing-2024.md",
+          "t-price-notice-2026.md",
+          "t-pricing-2025.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected resolved, got resolved"
+        },
+        {
+          "name": "resolved value",
+          "passed": true,
+          "detail": "expected a value containing 55, got \"55 usd per seat per month\""
+        },
+        {
+          "name": "must not answer 65",
+          "passed": true,
+          "detail": "forbidden value 65 appeared in \"55 usd per seat per month\""
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected proceed, got proceed"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected null, got null"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=proceed"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "T6b",
+      "name": "future scheduled price, asked for its own period",
+      "variant": "future",
+      "question": "What will the Team plan cost in February 2027?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": "2027-02",
+      "corpusSize": 3,
+      "ranking": {
+        "preview": [
+          "t-price-notice-2026.md",
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "droppedByPruning": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "afterPruning": [
+          "t-price-notice-2026.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-price-notice-2026.md",
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ],
+        "restoredByCoverage": [
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ]
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-price-notice-2026.md",
+            "value": "65 usd per seat per month",
+            "validFrom": "2027-01",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2024.md",
+            "value": "40 usd per seat per month",
+            "validFrom": "2024-03",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "value": "55 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [
+          {
+            "superseding": "t-pricing-2025.md",
+            "superseded": "t-pricing-2024.md"
+          }
+        ],
+        "unassessedReasons": [],
+        "witnesses": [
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "value": "65 usd per seat per month",
+        "citations": [
+          "t-price-notice-2026.md"
+        ],
+        "disposition": "proceed",
+        "holdReason": null,
+        "providerWouldBeCalled": true,
+        "notice": "Temporal evidence selects 65 usd per seat per month at 2027-02; older claims remain in the evidence record for their own periods.",
+        "assessments": [
+          {
+            "source": "t-price-notice-2026.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2027-01 and remains applicable at 2027-02."
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "state": "superseded",
+            "reason": "An explicit effective-date boundary starts at 2027-01."
+          },
+          {
+            "source": "t-pricing-2024.md",
+            "state": "superseded",
+            "reason": "Supersession starts at 2025-01."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "resolved",
+        "value": "65 usd per seat per month",
+        "citations": [
+          "t-price-notice-2026.md"
+        ],
+        "changedByCoverage": false
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-price-notice-2026.md",
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected resolved, got resolved"
+        },
+        {
+          "name": "resolved value",
+          "passed": true,
+          "detail": "expected a value containing 65, got \"65 usd per seat per month\""
+        },
+        {
+          "name": "expected citations resolved",
+          "passed": true,
+          "detail": "all present"
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected proceed, got proceed"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected null, got null"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=proceed"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "T7",
+      "name": "superseding evidence pruned, coverage restores it",
+      "variant": "prunedSuperseder",
+      "question": "What is the current Team plan price?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": null,
+      "corpusSize": 34,
+      "ranking": {
+        "preview": [
+          "t-pricing-2024.md",
+          "changelog.md",
+          "t-pricing-2025.md",
+          "roadmap-notes.md",
+          "team-directory.md",
+          "api-migration.md"
+        ],
+        "droppedByPruning": [
+          "t-pricing-2025.md",
+          "roadmap-notes.md",
+          "team-directory.md",
+          "api-migration.md",
+          "lite-plan.md",
+          "meeting-minutes-january.md",
+          "release-checklist.md",
+          "vector-database-overview.md"
+        ],
+        "afterPruning": [
+          "t-pricing-2024.md",
+          "changelog.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ],
+        "restoredByCoverage": [
+          "t-pricing-2025.md"
+        ]
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-pricing-2024.md",
+            "value": "40 usd per seat per month",
+            "validFrom": "2024-03",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "value": "55 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [
+          {
+            "superseding": "t-pricing-2025.md",
+            "superseded": "t-pricing-2024.md"
+          }
+        ],
+        "unassessedReasons": [],
+        "witnesses": [
+          "t-pricing-2025.md",
+          "t-pricing-2024.md"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "value": "55 usd per seat per month",
+        "citations": [
+          "t-pricing-2025.md"
+        ],
+        "disposition": "proceed",
+        "holdReason": null,
+        "providerWouldBeCalled": true,
+        "notice": "Temporal evidence selects 55 usd per seat per month at 2026-08-10; older claims remain in the evidence record for their own periods.",
+        "assessments": [
+          {
+            "source": "t-pricing-2024.md",
+            "state": "superseded",
+            "reason": "Supersession starts at 2025-01."
+          },
+          {
+            "source": "t-pricing-2025.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2025-01 and remains applicable at 2026-08-10."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "resolved",
+        "value": "40 usd per seat per month",
+        "citations": [
+          "t-pricing-2024.md"
+        ],
+        "changedByCoverage": true
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-pricing-2024.md",
+          "t-pricing-2025.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected resolved, got resolved"
+        },
+        {
+          "name": "resolved value",
+          "passed": true,
+          "detail": "expected a value containing 55, got \"55 usd per seat per month\""
+        },
+        {
+          "name": "must not answer 40",
+          "passed": true,
+          "detail": "forbidden value 40 appeared in \"55 usd per seat per month\""
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected proceed, got proceed"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected null, got null"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=proceed"
+        },
+        {
+          "name": "superseder genuinely pruned",
+          "passed": true,
+          "detail": "t-pricing-2025.md survived pruning; the fixture requires it be dropped on merit"
+        },
+        {
+          "name": "coverage restores witness",
+          "passed": true,
+          "detail": "t-pricing-2025.md was not restored into context"
+        },
+        {
+          "name": "coverage respects topK",
+          "passed": true,
+          "detail": "context grew to 2 against a cap of 2"
+        },
+        {
+          "name": "stale answer without coverage",
+          "passed": true,
+          "detail": "expected the no-coverage arm to answer 40, got \"40 usd per seat per month\""
+        },
+        {
+          "name": "coverage changes the answer",
+          "passed": true,
+          "detail": "coverage must turn a stale answer into a current one; both arms returned \"55 usd per seat per month\""
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "T8",
+      "name": "version change with no decided trigger phrase",
+      "variant": "awkward",
+      "question": "What is the current Team plan price?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": null,
+      "corpusSize": 2,
+      "ranking": {
+        "preview": [
+          "t-pricing-2024.md",
+          "t-pricing-2025-awkward.md"
+        ],
+        "droppedByPruning": [],
+        "afterPruning": [
+          "t-pricing-2024.md",
+          "t-pricing-2025-awkward.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-pricing-2024.md",
+          "t-pricing-2025-awkward.md"
+        ],
+        "restoredByCoverage": []
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-pricing-2024.md",
+            "value": "40 usd per seat per month",
+            "validFrom": "2024-03",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-pricing-2025-awkward.md",
+            "value": "55 usd per seat per month",
+            "validFrom": null,
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [],
+        "unassessedReasons": [
+          "t-pricing-2025-awkward.md: no decided temporal trigger was extracted."
+        ],
+        "witnesses": []
+      },
+      "resolution": {
+        "status": "unassessed",
+        "value": null,
+        "citations": [],
+        "disposition": "hold",
+        "holdReason": "temporal_evidence_insufficient",
+        "providerWouldBeCalled": false,
+        "notice": "Temporal evidence includes a competing undated claim. Tracework will not assume it is current or silently discard it.",
+        "assessments": [
+          {
+            "source": "t-pricing-2024.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2024-03 and remains applicable at 2026-08-10."
+          },
+          {
+            "source": "t-pricing-2025-awkward.md",
+            "state": "undated",
+            "reason": "No parseable validity start was derived; this claim is never assumed current."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "unassessed",
+        "value": null,
+        "citations": [],
+        "changedByCoverage": false
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-pricing-2024.md",
+          "t-pricing-2025-awkward.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected unassessed, got unassessed"
+        },
+        {
+          "name": "no value asserted",
+          "passed": true,
+          "detail": "an unresolved or unassessed case must not answer; got null"
+        },
+        {
+          "name": "must not answer 55",
+          "passed": true,
+          "detail": "forbidden value 55 appeared in null"
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected hold, got hold"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected temporal_evidence_insufficient, got temporal_evidence_insufficient"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=hold"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "T9",
+      "name": "two authoritative same-period claims",
+      "variant": "duellingAuthority",
+      "question": "What is the current Team plan price?",
+      "asOf": "2026-08-10",
+      "requestedPeriod": null,
+      "corpusSize": 2,
+      "ranking": {
+        "preview": [
+          "t-pricing-2025-alt.md",
+          "t-official-pricing.md"
+        ],
+        "droppedByPruning": [],
+        "afterPruning": [
+          "t-pricing-2025-alt.md",
+          "t-official-pricing.md"
+        ],
+        "afterTemporalCoverage": [
+          "t-pricing-2025-alt.md",
+          "t-official-pricing.md"
+        ],
+        "restoredByCoverage": []
+      },
+      "temporal": {
+        "claims": [
+          {
+            "source": "t-pricing-2025-alt.md",
+            "value": "60 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          },
+          {
+            "source": "t-official-pricing.md",
+            "value": "55 usd per seat per month",
+            "validFrom": "2025-01",
+            "historical": false,
+            "status": "normalized"
+          }
+        ],
+        "relations": [],
+        "unassessedReasons": [],
+        "witnesses": []
+      },
+      "resolution": {
+        "status": "unresolved",
+        "value": null,
+        "citations": [],
+        "disposition": "hold",
+        "holdReason": "multiple_applicable_propositions",
+        "providerWouldBeCalled": false,
+        "notice": "Multiple claims remain applicable at 2026-08-10 (60 usd per seat per month and 55 usd per seat per month); the temporal evidence does not establish which value is correct, so Tracework discloses the versions instead of choosing one.",
+        "assessments": [
+          {
+            "source": "t-pricing-2025-alt.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2025-01 and remains applicable at 2026-08-10."
+          },
+          {
+            "source": "t-official-pricing.md",
+            "state": "applicable",
+            "reason": "The claim starts at 2025-01 and remains applicable at 2026-08-10."
+          }
+        ]
+      },
+      "coverage": {
+        "complete": true,
+        "omitted": []
+      },
+      "withoutCoverage": {
+        "status": "unresolved",
+        "value": null,
+        "citations": [],
+        "changedByCoverage": false
+      },
+      "phase5c": {
+        "status": "unassessed",
+        "conflicts": 0,
+        "notice": "No comparable claim pattern was extracted. This is not evidence that the sources are true or consistent.",
+        "finalContext": [
+          "t-pricing-2025-alt.md",
+          "t-official-pricing.md"
+        ]
+      },
+      "checks": [
+        {
+          "name": "resolution status",
+          "passed": true,
+          "detail": "expected unresolved, got unresolved"
+        },
+        {
+          "name": "no value asserted",
+          "passed": true,
+          "detail": "an unresolved or unassessed case must not answer; got null"
+        },
+        {
+          "name": "must not answer 60",
+          "passed": true,
+          "detail": "forbidden value 60 appeared in null"
+        },
+        {
+          "name": "disposition",
+          "passed": true,
+          "detail": "expected hold, got hold"
+        },
+        {
+          "name": "hold reason",
+          "passed": true,
+          "detail": "expected multiple_applicable_propositions, got multiple_applicable_propositions"
+        },
+        {
+          "name": "provider call",
+          "passed": true,
+          "detail": "a hold must prevent generation; disposition=hold"
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "wording": [
+    {
+      "id": "W1",
+      "level": "explicit",
+      "variant": "supersession",
+      "expected": "resolved",
+      "actual": "resolved",
+      "value": "55 usd per seat per month",
+      "passed": true
+    },
+    {
+      "id": "W2",
+      "level": "natural",
+      "variant": "naturalWording",
+      "expected": "resolved",
+      "actual": "resolved",
+      "value": "55 usd per seat per month",
+      "passed": true
+    },
+    {
+      "id": "W3",
+      "level": "awkward",
+      "variant": "awkward",
+      "expected": "unassessed",
+      "actual": "unassessed",
+      "value": null,
+      "passed": true
+    }
+  ],
+  "invariants": [
+    {
+      "name": "T5 and T8 fail for different reasons",
+      "passed": true,
+      "detail": "T5=unresolved/multiple_applicable_propositions vs T8=unassessed/temporal_evidence_insufficient"
+    },
+    {
+      "name": "authority does not break a temporal tie",
+      "passed": true,
+      "detail": "T9 resolution=unresolved value=null disposition=hold providerCalled=false"
+    },
+    {
+      "name": "T7 superseding source is pruned on merit and restored",
+      "passed": true,
+      "detail": "dropped=t-pricing-2025.md, roadmap-notes.md, team-directory.md, api-migration.md, lite-plan.md, meeting-minutes-january.md, release-checklist.md, vector-database-overview.md; restored=t-pricing-2025.md"
+    }
+  ],
+  "notes": {
+    "t7AnswerRescued": true,
+    "t7Caveat": "Coverage changed the resolved answer for T7."
+  },
+  "passed": true
+}

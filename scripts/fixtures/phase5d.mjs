@@ -92,12 +92,28 @@ export const CORPUS_VARIANTS = {
   duellingAuthority: { sources: ['officialPricing', 'pricing2025Alt'], padding: false },
   /**
    * Hostile ranking variant for the integration test. The full padded corpus is
-   * included so the superseding source competes against 34 real distractors and
-   * is pruned on merit. Whether it is genuinely pruned MUST be verified in the
+   * included so the superseding source competes against real distractors and is
+   * pruned on merit. Whether it is genuinely pruned MUST be verified in the
    * offline evaluation; if it survives, add padding rather than hand-placing the
    * source into context, which would test only the resolver.
+   *
+   * FIXTURE CORRECTION (Phase 5D step 8): the padded corpus carries the Phase 5A
+   * stress fixtures `pricing-2024.md` and `pricing-2025.md`. The latter is a
+   * semantic duplicate of `t-pricing-2025.md` -- same subject, same 55 USD value,
+   * same 2025 validity, same supersession wording. With it present the resolver
+   * still reached the correct answer after the designated witness was pruned, so
+   * the case proved only that coverage restores a witness, never that restoring
+   * it changes a stale answer into a current one. Excluding the two baseline
+   * pricing documents removes the accidental second copy of the very evidence
+   * whose absence the case exists to simulate. Every other distractor is kept and
+   * the expected outcome is unchanged: this corrects the experiment, it does not
+   * tune the benchmark.
    */
-  prunedSuperseder: { sources: ['pricing2024', 'pricing2025'], padding: true },
+  prunedSuperseder: {
+    sources: ['pricing2024', 'pricing2025'],
+    padding: true,
+    paddingExclude: ['pricing-2024.md', 'pricing-2025.md'],
+  },
 }
 
 export const buildVariant = (name) => {
@@ -107,8 +123,13 @@ export const buildVariant = (name) => {
     const { title, content, provenance } = source(key)
     return { title, content, provenance }
   })
+  // The shared padded corpus is never mutated; a variant may only decline rows
+  // from its own copy, and only to remove evidence that duplicates its subject.
+  const excluded = new Set(variant.paddingExclude ?? [])
   const padding = variant.padding
-    ? PADDED_CORPUS.map(([title, content]) => ({ title, content, provenance: undefined }))
+    ? PADDED_CORPUS
+      .filter(([title]) => !excluded.has(title))
+      .map(([title, content]) => ({ title, content, provenance: undefined }))
     : []
   return [...temporal, ...padding]
 }
@@ -134,7 +155,8 @@ export const PHASE5D_CASES = [
     expectedResolution: 'resolved',
     expectedValue: '55',
     expectedCitations: ['t-pricing-2025.md'],
-    reachesPhase5C: false,
+    expectedDisposition: 'proceed',
+    expectedHoldReason: null,
   },
   {
     id: 'T2', name: 'historical price for a named period',
@@ -146,7 +168,8 @@ export const PHASE5D_CASES = [
     expectedCitations: ['t-pricing-2024.md'],
     // A superseded claim is never deleted; it stays answerable for its period.
     note: 'Same corpus and same extraction as T1, opposite correct answer.',
-    reachesPhase5C: false,
+    expectedDisposition: 'proceed',
+    expectedHoldReason: null,
   },
   {
     id: 'T3', name: 'unspecified time with evidenced currentness',
@@ -157,7 +180,8 @@ export const PHASE5D_CASES = [
     expectedValue: '55',
     expectedCitations: ['t-pricing-2025.md'],
     note: 'Resolves only because supersession is explicitly evidenced, not because 2025 > 2024.',
-    reachesPhase5C: false,
+    expectedDisposition: 'proceed',
+    expectedHoldReason: null,
   },
   {
     id: 'T4', name: 'newer document mentioning an older value',
@@ -169,7 +193,8 @@ export const PHASE5D_CASES = [
     expectedValue: '55',
     expectedCitations: ['t-pricing-2025.md'],
     mustNotAnswer: '40',
-    reachesPhase5C: false,
+    expectedDisposition: 'proceed',
+    expectedHoldReason: null,
   },
   {
     id: 'T5', name: 'competing versions with no currentness evidence',
@@ -180,7 +205,8 @@ export const PHASE5D_CASES = [
     expectedDisclosure: 'multiple applicable versions, none established as current',
     // No latest-validFrom default. Disclosing is the correct answer here.
     mustNotAnswer: '55',
-    reachesPhase5C: true,
+    expectedDisposition: 'hold',
+    expectedHoldReason: 'multiple_applicable_propositions',
   },
   {
     id: 'T6a', name: 'future scheduled price, asked before it takes effect',
@@ -193,7 +219,8 @@ export const PHASE5D_CASES = [
     expectedResolution: 'resolved',
     expectedValue: '55',
     mustNotAnswer: '65',
-    reachesPhase5C: false,
+    expectedDisposition: 'proceed',
+    expectedHoldReason: null,
   },
   {
     id: 'T6b', name: 'future scheduled price, asked for its own period',
@@ -203,7 +230,8 @@ export const PHASE5D_CASES = [
     expectedResolution: 'resolved',
     expectedValue: '65',
     expectedCitations: ['t-price-notice-2026.md'],
-    reachesPhase5C: false,
+    expectedDisposition: 'proceed',
+    expectedHoldReason: null,
   },
   {
     id: 'T7', name: 'superseding evidence pruned, coverage restores it',
@@ -214,10 +242,23 @@ export const PHASE5D_CASES = [
     // the superseding source is the one pruning drops.
     expectedPrunedWithoutCoverage: 't-pricing-2025.md',
     expectedCoverageRestores: 't-pricing-2025.md',
+    /**
+     * The context budget is part of the experiment, not a tuning knob. With the
+     * duplicate baseline pricing documents excluded, `t-pricing-2025.md` ranks
+     * third, so only a budget of 2 actually drops it. At 3 or more nothing is
+     * pruned and there is nothing for coverage to restore; at 1 the witness pair
+     * cannot fit and the case must fail closed instead. 2 is the single budget
+     * at which the intended failure mode occurs.
+     */
+    topK: 2,
     expectedResolution: 'resolved',
     expectedValue: '55',
     mustNotAnswer: '40',
-    reachesPhase5C: false,
+    // The whole point: without coverage this answers the stale value.
+    expectedValueWithoutCoverage: '40',
+    expectedAnswerRescued: true,
+    expectedDisposition: 'proceed',
+    expectedHoldReason: null,
     integrationCritical: true,
   },
   {
@@ -230,7 +271,8 @@ export const PHASE5D_CASES = [
     // Frozen as a NEGATIVE result on purpose. Widening the trigger list to make
     // this pass is the failure mode, not the fix.
     mustNotAnswer: '55',
-    reachesPhase5C: true,
+    expectedDisposition: 'hold',
+    expectedHoldReason: 'temporal_evidence_insufficient',
   },
   {
     id: 'T9', name: 'two authoritative same-period claims',
@@ -244,8 +286,11 @@ export const PHASE5D_CASES = [
     expectedResolution: 'unresolved',
     // Both applicable, both authoritative, no supersession: authority does not
     // break a temporal tie, so this must fall through to Phase 5C.
-    reachesPhase5C: true,
-    expectedPhase5CStatus: 'conflicted',
+    // The temporal layer owns this hold. Phase 5C is not asked to relabel it:
+    // its extractor recognises origin claims only, so a pricing disagreement
+    // handed over came back 'unassessed' and stopped nothing.
+    expectedDisposition: 'hold',
+    expectedHoldReason: 'multiple_applicable_propositions',
     expectedCitations: ['t-official-pricing.md', 't-pricing-2025-alt.md'],
     mustNotAnswer: '60',
   },

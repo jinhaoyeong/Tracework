@@ -57,9 +57,10 @@ for (const spec of PHASE5D_CASES) {
     assert.notEqual(resolution.resolvedValue, `${spec.mustNotAnswer} usd per seat per month`, `${spec.id} must not select the forbidden value`)
   }
 
-  if (spec.reachesPhase5C !== undefined) {
-    assert.equal(resolution.phase5cRequired, spec.reachesPhase5C, `${spec.id} Phase 5C handoff`)
-  }
+  // Every frozen case declares a disposition, so this must never be skipped.
+  assert.ok(spec.expectedDisposition, `${spec.id} must declare an expected disposition`)
+  assert.equal(resolution.disposition, spec.expectedDisposition, `${spec.id} generation disposition`)
+  assert.equal(resolution.holdReason ?? null, spec.expectedHoldReason ?? null, `${spec.id} hold reason`)
 }
 
 const current = runCase(PHASE5D_CASES.find((spec) => spec.id === 'T1'))
@@ -90,7 +91,11 @@ const authorityTie = runCase(PHASE5D_CASES.find((spec) => spec.id === 'T9'))
 assert.equal(authorityTie.status, 'unresolved')
 assert.equal(authorityTie.resolvedValue, null)
 assert.equal(authorityTie.applicableClaims.length, 2, 'authority cannot hide either same-period claim')
-assert.match(authorityTie.notice, /Phase 5C/i)
+// The temporal layer explains its own hold. It no longer defers to Phase 5C,
+// whose extractor cannot recognise a pricing claim at all.
+assert.match(authorityTie.notice, /does not establish which value is correct/i)
+assert.equal(authorityTie.disposition, 'hold')
+assert.equal(authorityTie.holdReason, 'multiple_applicable_propositions')
 
 assert.deepEqual(parseTemporalReference('2024', true), { input: '2024', key: 202412, precision: 'year' })
 assert.deepEqual(parseTemporalReference('2027-02'), { input: '2027-02', key: 202702, precision: 'month' })

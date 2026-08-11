@@ -1,5 +1,6 @@
 import type { SearchResult } from '../types'
 import type { EvidenceAdjudication } from './adjudication'
+import type { TemporalHoldReason, TemporalResolution } from './temporalResolution'
 
 export type EvidenceStatus = 'strong' | 'partial' | 'insufficient'
 
@@ -392,6 +393,55 @@ export const buildConflictAnswer = (adjudication: EvidenceAdjudication): Grounde
     citations,
     citationNumbers: claims.map((claim) => claim.citation),
     validCitationNumbers: claims.map((claim) => claim.citation),
+    invalidCitationNumbers: [],
+    malformedCitationMarkers: [],
+    model: null,
+  }
+}
+
+/**
+ * A deterministic, cited hold produced by the temporal layer itself.
+ *
+ * Phase 5C is not asked to relabel this disagreement: its extractor recognises
+ * origin claims only, so handing it a pricing ambiguity returned `unassessed`
+ * and stopped nothing. The layer that detected the uncertainty explains it, and
+ * the generation provider is never called.
+ */
+export const buildTemporalHoldAnswer = (
+  resolution: TemporalResolution,
+  holdReason: TemporalHoldReason | null,
+): GroundedAnswer => {
+  const claims = resolution.applicableClaims.length
+    ? resolution.applicableClaims
+    : resolution.assessments.map((assessment) => assessment.claim)
+  const citations = claims
+    .map((claim) => claim.claim.result)
+    .filter((result, index, all) => all.findIndex((candidate) => candidate.chunk.id === result.chunk.id) === index)
+  const citationNumbers = citations.map((_result, index) => index + 1)
+  const details = claims
+    .map((claim, index) => `${claim.claim.source} states “${claim.claim.value}” [${index + 1}]`)
+    .join(' ')
+
+  // The reasons stay distinct on purpose. "Several versions apply and none wins"
+  // is a different failure from "a change is visible but its date is not
+  // established", and collapsing them into one message would discard the
+  // distinction the extraction contract exists to draw.
+  const explanation = holdReason === 'multiple_applicable_propositions'
+    ? `More than one version applies at ${resolution.requestedPeriod ?? resolution.asOf}, and no source establishes which one supersedes the other. ${details} Tracework cannot safely choose between them.`
+    : holdReason === 'temporal_evidence_insufficient'
+      ? `The sources indicate this value changed, but the available temporal evidence does not establish when the change applied. ${details} The versions are disclosed rather than one being selected.`
+      : holdReason === 'incomplete_temporal_evidence'
+        ? `The evidence needed to prove which version supersedes the other did not fit the retrieval budget, so an answer here would rest on part of a supersession relation. ${details} Increase the context size and ask again.`
+        : holdReason === 'unestablished_subject'
+          ? `At least one claim's subject could not be established, so its scope is unknown. ${details} Tracework will not guess which pricing scope it belongs to.`
+          : `The reference period could not be parsed, and Tracework does not fall back to the wall clock. ${details}`
+
+  return {
+    title: 'Temporal applicability / answer withheld',
+    body: explanation,
+    citations,
+    citationNumbers,
+    validCitationNumbers: citationNumbers,
     invalidCitationNumbers: [],
     malformedCitationMarkers: [],
     model: null,

@@ -5,7 +5,7 @@ import { KnowledgeLibrary, type LibraryStatus } from './components/KnowledgeLibr
 import { KnowledgeLibraryError, requestCollectionDocuments, requestKnowledgeLibrary, toIndexedDocument, type KnowledgeCollection } from './lib/knowledgeLibrary'
 import { buildAnswer, createDocument, formatBytes, searchDocuments, tokenize } from './lib/rag'
 import { adjudicateEvidence, ensureConflictCoverage, type EvidenceAdjudication } from './lib/adjudication'
-import { buildConflictAnswer, buildGroundedContext, buildInsufficientAnswer, classifyGeneratedAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
+import { buildConflictAnswer, buildGroundedContext, buildInsufficientAnswer, buildTemporalHoldAnswer, classifyGeneratedAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
 import { GenerationError, requestGroundedAnswer } from './lib/generation'
 import { buildLexicalIndex, searchLexical, toLexicalResults } from './lib/lexical'
 import { fuseRankings, RRF_K } from './lib/fusion'
@@ -13,7 +13,8 @@ import { buildCandidateUnion, DEFAULT_PHASE5B_CANDIDATE_LIMIT, DEFAULT_PHASE5B_C
 import { NeuralEmbeddingError, requestNeuralEmbeddings } from './lib/semantic'
 import { extractTemporalClaims } from './lib/temporal'
 import { normalizeTemporalExtraction } from './lib/temporalNormalization'
-import { ensureTemporalCoverage, temporalCoverageWitnessChunkIds } from './lib/temporalCoverage'
+import { planTemporalCoverage, temporalCoverageWitnessChunkIds, temporalGate, type TemporalCoverageReport } from './lib/temporalCoverage'
+import { resolveTemporalNormalization, type TemporalResolution } from './lib/temporalResolution'
 import { PGVECTOR_DIMENSIONS, PgvectorError, SHARED_WRITES_DISABLED, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
 
@@ -49,7 +50,7 @@ interface PgvectorState {
 }
 
 type AnswerMode = 'retrieval' | 'grounded'
-type GenerationStatus = 'idle' | 'generating' | 'ready' | 'blocked' | 'conflicted' | 'refused' | 'error'
+type GenerationStatus = 'idle' | 'generating' | 'ready' | 'blocked' | 'conflicted' | 'temporal-hold' | 'refused' | 'error'
 
 interface GenerationState {
   status: GenerationStatus
@@ -258,6 +259,9 @@ function App() {
   const [showMethodHelp, setShowMethodHelp] = useState(false)
   const [generationState, setGenerationState] = useState<GenerationState>({ status: 'idle', model: null, message: null })
   const [groundedSession, setGroundedSession] = useState<GroundedSession | null>(null)
+  // The resolver never reads a clock. The app injects the reference date as an
+  // explicit value; step 9 turns this into the user-facing "as of" control.
+  const [asOf] = useState(() => new Date().toISOString().slice(0, 10))
   const [libraryCollections, setLibraryCollections] = useState<KnowledgeCollection[]>([])
   const [libraryStatus, setLibraryStatus] = useState<LibraryStatus>('idle')
   const [libraryMessage, setLibraryMessage] = useState<string | null>(null)
@@ -349,11 +353,11 @@ function App() {
       // Temporal coverage comes first because resolution is upstream of Phase
       // 5C. Conflict coverage then protects those restored temporal witnesses
       // while preserving its own disagreement witnesses as well.
-      const temporalCovered = ensureTemporalCoverage(
+      const temporalCovered = planTemporalCoverage(
         phase5dNormalization,
         phase5cBaseContextResults,
         pruningEnabled ? topK : undefined,
-      )
+      ).results
       return ensureConflictCoverage(
         phase5cAdjudication,
         temporalCovered,
@@ -383,9 +387,9 @@ function App() {
   }), [activeQuery, engine, phase5cContextAdjudication, phase5cContextResults.length, results, topK])
   const contextForInspector: GroundedContext = groundedSession?.context ?? groundedPreviewContext
   const groundedAnswer = groundedSession?.answer ?? null
-  const groundedContextWasSent = groundedSession !== null && !['blocked', 'conflicted'].includes(generationState.status)
+  const groundedContextWasSent = groundedSession !== null && !['blocked', 'conflicted', 'temporal-hold'].includes(generationState.status)
   const groundedContextStateLabel = groundedSession
-    ? generationState.status === 'blocked' ? 'generation skipped' : generationState.status === 'conflicted' ? 'conflict hold' : 'context sent'
+    ? generationState.status === 'blocked' ? 'generation skipped' : generationState.status === 'conflicted' ? 'conflict hold' : generationState.status === 'temporal-hold' ? 'temporal hold' : 'context sent'
     : 'context preview'
   const generationDebugLabel = generationState.status === 'idle'
     ? 'not called'
@@ -636,7 +640,13 @@ function App() {
   const runGroundedGeneration = async (
     nextQuery: string,
     retrievedResults: SearchResult[],
-    options: { retrievalEngine?: string; contextLimit?: number; requestedTopK?: number; adjudication?: EvidenceAdjudication } = {},
+    options: {
+      retrievalEngine?: string
+      contextLimit?: number
+      requestedTopK?: number
+      adjudication?: EvidenceAdjudication
+      temporal?: { resolution: TemporalResolution; coverage: TemporalCoverageReport }
+    } = {},
   ) => {
     const assessment = evaluateEvidence(nextQuery, retrievedResults)
     const adjudication = options.adjudication ?? adjudicateEvidence(nextQuery, retrievedResults)
@@ -657,6 +667,23 @@ function App() {
         message: 'Generation skipped because the retrieved evidence is insufficient.',
       })
       return
+    }
+
+    // The temporal gate runs before Phase 5C, matching the coverage order: a
+    // supersession relation can explain a disagreement 5C would otherwise call a
+    // conflict, and 5C cannot recognise these claims at all. No provider call.
+    if (options.temporal) {
+      const gate = temporalGate(options.temporal.resolution, options.temporal.coverage)
+      if (gate.disposition === 'hold') {
+        setGroundedSession({ ...session, answer: buildTemporalHoldAnswer(options.temporal.resolution, gate.holdReason) })
+        setGenerationState({
+          status: 'temporal-hold',
+          model: null,
+          message: `Generation held on temporal applicability (${gate.holdReason}). No provider call was made.`,
+        })
+        showNotice('info', 'Temporal evidence does not establish a single applicable version. Tracework disclosed the versions instead of choosing one.')
+        return
+      }
     }
 
     if (adjudication.status === 'conflicted') {
@@ -756,6 +783,7 @@ function App() {
     }
 
     let retrievedResults: SearchResult[] | null = null
+    let temporalGateInput: { resolution: TemporalResolution; coverage: TemporalCoverageReport } | undefined
     if (engine === 'rerank') {
       const dense = await runNeuralRetrieval(nextQuery)
       if (dense) {
@@ -767,17 +795,26 @@ function App() {
         const adjudication = adjudicateEvidence(nextQuery, ranked.map((candidate) => candidate.result))
         const temporalNormalization = normalizeTemporalExtraction(extractTemporalClaims(nextQuery, ranked.map((candidate) => candidate.result)))
         const temporalWitnessIds = temporalCoverageWitnessChunkIds(temporalNormalization)
-        const temporalCovered = ensureTemporalCoverage(
+        const coverage = planTemporalCoverage(
           temporalNormalization,
           baseContextResults,
           pruningEnabled ? topK : undefined,
         )
         retrievedResults = ensureConflictCoverage(
           adjudication,
-          temporalCovered,
+          coverage.results,
           pruningEnabled ? topK : undefined,
           temporalWitnessIds,
         )
+        // Resolution runs over the context that will actually be sent, and the
+        // asOf is injected here rather than read inside the resolver.
+        temporalGateInput = {
+          resolution: resolveTemporalNormalization(
+            normalizeTemporalExtraction(extractTemporalClaims(nextQuery, retrievedResults)),
+            { asOf, requestedPeriod: null },
+          ),
+          coverage,
+        }
       }
     } else if (engine === 'pgvector' || compareMode) {
       retrievedResults = await runPgvectorRetrieval(nextQuery)
@@ -794,6 +831,7 @@ function App() {
             retrievalEngine: 'union-rerank',
             contextLimit: retrievedResults.length,
             requestedTopK: pruningEnabled ? topK : retrievedResults.length,
+            temporal: temporalGateInput,
           }
         : undefined)
     }

@@ -246,6 +246,86 @@ generic `ensureEvidenceCoverage`. They preserve evidence for different reasons �
 one so a disagreement stays visible, one so an obsolescence stays visible — and
 the common abstraction should be discovered, not assumed.
 
+## 6b. Corrections made at step 8 — **DECIDED**
+
+The offline evaluation changed two things the earlier sections got wrong. Both
+are recorded here rather than quietly edited into the sections above.
+
+### 6b.1 The temporal layer owns its own uncertainty
+
+§3 said Phase 5C was "unchanged; receives what temporal resolution could not
+settle", and T9 froze `expectedPhase5CStatus: conflicted`. Both cannot hold.
+Phase 5C's extractor recognises **origin claims only** — it is gated on the
+question containing `invented|created|built|founded|origin|where`. Handing it a
+pricing disagreement returned `unassessed` ("No comparable claim pattern was
+extracted"), so the handoff stopped nothing: `phase5cRequired` was computed by
+the resolver and consumed by nobody. Every 5D case reported 5C `unassessed`.
+
+Widening 5C to a generic subject/value extractor was rejected. That is a second
+claim-understanding layer — units, scope, qualifiers, negation, ranges — adopted
+only because 5D tried to give its result away, and it would forfeit the narrow
+inspectable patterns 5C was built on.
+
+So `phase5cRequired` is replaced by an orthogonal **disposition**:
+
+```
+status      resolved | unresolved | unassessed     what the evidence supports
+disposition proceed  | hold                        whether generation may run
+holdReason  multiple_applicable_propositions
+            temporal_evidence_insufficient
+            unestablished_subject
+            unparseable_reference
+            incomplete_temporal_evidence
+```
+
+Two fields, because `unassessed` does not always mean stop. "Where was Tracework
+invented?" produces no temporal claims and is `unassessed` + `proceed`; gating on
+status alone would refuse every ordinary question. A hold is for uncertainty the
+temporal layer actually **detected**.
+
+The gate order is unchanged and still load-bearing:
+
+```
+temporal coverage → temporal resolution → temporal gate
+    hold  → local cited temporal answer, NO provider call
+    proceed → Phase 5C adjudication
+        conflict → local cited conflict answer, NO provider call
+        otherwise → generation
+```
+
+Phase 5C remains available and unmodified for the contradictions it independently
+understands. T5, T8 and T9 are now temporal holds, each with a distinct
+explanation, because collapsing them would discard the distinction the extraction
+contract exists to draw.
+
+### 6b.2 T7 fixture correction
+
+The T7 variant padded with the Phase 5A stress corpus, which contains
+`pricing-2025.md` — a semantic duplicate of `t-pricing-2025.md`, carrying the
+same subject, the same 55 USD value, the same 2025 validity and the same
+supersession wording. The designated witness was genuinely pruned and genuinely
+restored, but the no-coverage arm still resolved to 55 from the duplicate. T7
+therefore proved *witness restoration* and never *answer rescue*, which is the
+failure §3 describes.
+
+The Phase 5D variant now excludes the two baseline pricing documents. Every other
+distractor is kept, and the expected outcome is unchanged. This corrects an
+experiment that contained a second copy of the evidence whose absence it was
+meant to simulate; it is not benchmark tuning.
+
+The budget is part of the experiment: with the duplicate gone `t-pricing-2025.md`
+ranks third, so only `topK: 2` drops it. At 3+ nothing is pruned; at 1 the witness
+pair cannot fit and the case must fail closed instead. T7 now asserts
+`40 → 55`, the evidence lineage, and that the two arms differ.
+
+### 6b.3 Coverage completeness
+
+A supersession is proved by a witness **pair**. When the pair cannot fit the
+budget, coverage records the shortfall (`complete: false`, named `omitted`
+witnesses) and the gate holds with `incomplete_temporal_evidence`, rather than
+leaving half a relation in context for the resolver to answer from. Recall must
+never be bought with evidentiary completeness.
+
 ## 7. Anti-rules
 
 Never: newest file wins · largest year wins · `createdAt` ordering · version

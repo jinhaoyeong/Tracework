@@ -6,14 +6,19 @@ import { buildLexicalIndex, searchLexical, toLexicalResults } from '../src/lib/l
 import { extractTemporalClaims } from '../src/lib/temporal.ts'
 import { normalizeTemporalExtraction } from '../src/lib/temporalNormalization.ts'
 import { resolveTemporalNormalization } from '../src/lib/temporalResolution.ts'
-import { ensureTemporalCoverage, temporalCoverageWitnessChunkIds, temporalCoverageWitnesses } from '../src/lib/temporalCoverage.ts'
+import { buildTemporalHoldAnswer } from '../src/lib/grounded.ts'
+import { ensureTemporalCoverage, planTemporalCoverage, temporalCoverageWitnessChunkIds, temporalCoverageWitnesses, temporalGate } from '../src/lib/temporalCoverage.ts'
 import { buildVariant, PHASE5D_CASES } from './fixtures/phase5d.mjs'
 
 const QUESTION = 'What is the current Team plan price?'
-// The frozen padded corpus also contains the older Phase 4 pricing fixtures.
-// Four slots are enough to reproduce the designated T7 source being pruned by
-// the deterministic offline reranker while retaining real corpus competition.
-const TOP_K = 4
+/**
+ * The T7 budget comes from the fixture, not from this file, because it is part
+ * of the experiment. With the duplicate baseline pricing documents excluded from
+ * the Phase 5D variant, `t-pricing-2025.md` ranks third: only a budget of 2 drops
+ * it, at 3+ nothing is pruned, and at 1 the witness pair cannot fit at all.
+ */
+const T7_SPEC = PHASE5D_CASES.find((spec) => spec.id === 'T7')
+const TOP_K = T7_SPEC.topK
 const CANDIDATE_LIMIT = 10
 
 const makeDocuments = (variantName) => buildVariant(variantName).map((source) => createDocument(
@@ -57,7 +62,7 @@ assert.ok(temporalWitnesses.length, 'T7 must expose a supersession witness pair 
 assert.ok(!titlesOf(prunedRows).includes('t-pricing-2025.md'),
   `T7 must genuinely prune the superseding source; context was ${titlesOf(prunedRows).join(', ')}`)
 
-const t7 = PHASE5D_CASES.find((spec) => spec.id === 'T7')
+const t7 = T7_SPEC
 assert.equal(titlesOf(prunedRows).includes(t7.expectedPrunedWithoutCoverage), false)
 
 const withoutCoverage = resolveTemporalNormalization(
@@ -66,6 +71,11 @@ const withoutCoverage = resolveTemporalNormalization(
 )
 assert.ok(!withoutCoverage.resolvedClaims.some((claim) => claim.claim.source === 't-pricing-2025.md'),
   'without temporal coverage the designated superseding source is absent from the resolution input')
+// The harm itself, not merely the absence of the witness. Asserting only the
+// absence let this case pass while a duplicate in the padding supplied the
+// right answer anyway.
+assert.equal(withoutCoverage.resolvedValue, '40 usd per seat per month',
+  'without coverage the resolver must answer the stale value from the surviving 2024 claim')
 
 const coveredRows = ensureTemporalCoverage(prePruningNormalization, prunedRows, TOP_K)
 assert.ok(titlesOf(coveredRows).includes(t7.expectedCoverageRestores),
@@ -81,6 +91,48 @@ assert.equal(withCoverage.resolvedValue, '55 usd per seat per month',
   'restored supersession evidence must prevent the stale answer')
 assert.ok(withCoverage.resolvedClaims.some((claim) => claim.claim.source === 't-pricing-2025.md'),
   'the restored superseder must remain among the selected resolution claims')
+assert.notEqual(withoutCoverage.resolvedValue, withCoverage.resolvedValue,
+  'coverage must change the answer from stale to current; if both arms agree, the corpus is leaking the superseding value')
+
+// Evidence lineage, so a future implementation cannot reach 55 by an unrelated
+// shortcut and still pass: present -> pruned -> restored, and nothing else added.
+assert.ok(titlesOf(ranked.map((candidate) => candidate.result)).includes('t-pricing-2025.md'), 'lineage: present before pruning')
+assert.ok(!titlesOf(prunedRows).includes('t-pricing-2025.md'), 'lineage: absent after pruning')
+assert.ok(titlesOf(coveredRows).includes('t-pricing-2025.md'), 'lineage: present after coverage')
+assert.deepEqual(
+  [...new Set(titlesOf(coveredRows))].filter((title) => !titlesOf(prunedRows).includes(title)),
+  ['t-pricing-2025.md'],
+  'lineage: coverage added exactly the designated witness and nothing else',
+)
+assert.match(withCoverage.notice, /selects 55 usd per seat per month/i,
+  'the resolved notice must attribute the answer to the supersession outcome')
+
+/* ------------------------------------------------ topK=1 fail-closed ------ */
+
+// A witness PAIR proves a supersession. When only one slot exists the relation
+// cannot be represented, and the honest outcome is a recorded shortfall -- not a
+// context holding half a relation that the resolver would answer from as though
+// the whole relation were present. Recall must never be bought with evidentiary
+// completeness.
+const singleSlot = pruneCandidates(ranked, { maxChunks: 1 }).selected.map((candidate) => candidate.result)
+const singleCoverage = planTemporalCoverage(prePruningNormalization, singleSlot, 1)
+
+assert.equal(singleCoverage.results.length, 1, 'coverage must not exceed a budget of one')
+assert.equal(singleCoverage.complete, false, 'a witness pair cannot fit one slot; the shortfall must be recorded')
+assert.ok(singleCoverage.omitted.length > 0, 'the omitted witness must be named, not silently dropped')
+assert.ok(singleCoverage.omitted.some((entry) => entry.source === 't-pricing-2025.md'),
+  'the superseding witness is the one that could not fit')
+
+const singleResolution = resolveTemporalNormalization(
+  normalizeResults(QUESTION, singleCoverage.results),
+  { asOf: t7.asOf, requestedPeriod: t7.requestedPeriod },
+)
+assert.notEqual(singleResolution.resolvedValue, '55 usd per seat per month',
+  'the resolver must not claim the superseding value from half the required evidence')
+
+const singleGate = temporalGate(singleResolution, singleCoverage)
+assert.equal(singleGate.disposition, 'hold', 'an incomplete witness set must hold rather than answer')
+assert.equal(singleGate.holdReason, 'incomplete_temporal_evidence')
 
 const witnessIds = temporalCoverageWitnessChunkIds(prePruningNormalization)
 assert.ok([...witnessIds].every((id) => temporalWitnesses.some((result) => result.chunk.id === id)))
@@ -136,4 +188,45 @@ const protectedOverflow = ensureConflictCoverage(
 )
 assert.deepEqual(titlesOf(protectedOverflow), titlesOf([temporalWitness, conflictFiller]))
 
-console.log('Phase 5D temporal coverage tests passed / T7 pruning rescue + composition')
+/* -------------------------------------------- deterministic hold answers -- */
+
+// The app path turns a hold into a local cited answer and never calls the
+// provider. The two reasons must not collapse into one message: "several
+// versions apply and none wins" is a different failure from "a change is
+// visible but its date is not established".
+const ambiguousResolution = resolveTemporalNormalization(
+  normalizeResults(QUESTION, resultsFrom(makeDocuments('ambiguous'))),
+  { asOf: t7.asOf, requestedPeriod: null },
+)
+assert.equal(ambiguousResolution.disposition, 'hold')
+assert.equal(ambiguousResolution.holdReason, 'multiple_applicable_propositions')
+
+const awkwardResolution = resolveTemporalNormalization(
+  normalizeResults(QUESTION, resultsFrom(makeDocuments('awkward'))),
+  { asOf: t7.asOf, requestedPeriod: null },
+)
+assert.equal(awkwardResolution.disposition, 'hold')
+assert.equal(awkwardResolution.holdReason, 'temporal_evidence_insufficient')
+
+const multipleAnswer = buildTemporalHoldAnswer(ambiguousResolution, ambiguousResolution.holdReason)
+const insufficientAnswer = buildTemporalHoldAnswer(awkwardResolution, awkwardResolution.holdReason)
+
+assert.equal(multipleAnswer.model, null, 'a temporal hold is local; no generation model produced it')
+assert.ok(multipleAnswer.citations.length > 0, 'a hold must still cite the versions it is disclosing')
+assert.deepEqual(multipleAnswer.invalidCitationNumbers, [])
+assert.notEqual(multipleAnswer.body, insufficientAnswer.body,
+  'the two hold reasons must keep distinct explanations')
+assert.match(multipleAnswer.body, /no source establishes which one supersedes/i)
+assert.match(insufficientAnswer.body, /does not establish when the change applied/i)
+
+// A question with no temporal material must not be held. Gating on status alone
+// would refuse every ordinary non-temporal question.
+const nonTemporal = resolveTemporalNormalization(
+  normalizeResults('Where was Tracework invented?', conflictResults),
+  { asOf: t7.asOf, requestedPeriod: null },
+)
+assert.equal(nonTemporal.status, 'unassessed')
+assert.equal(nonTemporal.disposition, 'proceed', 'no temporal claims means no temporal risk')
+assert.equal(nonTemporal.holdReason, null)
+
+console.log('Phase 5D temporal coverage tests passed / T7 rescue + fail-closed + hold answers')

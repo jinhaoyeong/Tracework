@@ -11,6 +11,29 @@ import type { NormalizedClaim, TemporalNormalization } from './temporalNormaliza
 
 export type TemporalResolutionStatus = 'resolved' | 'unresolved' | 'unassessed'
 
+/**
+ * Whether the temporal layer considers it safe to continue to generation.
+ *
+ * This is deliberately orthogonal to `status`, because `unassessed` does not
+ * always mean stop. A question with no temporal material at all -- "where was
+ * Tracework invented?" -- is unassessed and perfectly safe to proceed with;
+ * gating on status alone would refuse every ordinary question. A hold is for
+ * uncertainty the temporal layer actually detected and cannot settle.
+ */
+export type TemporalDisposition = 'proceed' | 'hold'
+
+export type TemporalHoldReason =
+  /** Several versions apply at the reference period and none supersedes the others. */
+  | 'multiple_applicable_propositions'
+  /** A version change is visible, but the evidence does not establish when it applied. */
+  | 'temporal_evidence_insufficient'
+  /** A claim's subject could not be established, so its scope is unknown. */
+  | 'unestablished_subject'
+  /** The asOf or requested period could not be parsed; no wall-clock fallback. */
+  | 'unparseable_reference'
+  /** Required supersession witnesses did not fit the context budget. */
+  | 'incomplete_temporal_evidence'
+
 export interface TemporalResolutionOptions {
   /** Immutable call-site input. This function never reads the wall clock. */
   asOf: string
@@ -53,7 +76,14 @@ export interface TemporalResolution {
   resolvedClaims: NormalizedClaim[]
   resolvedValue: string | null
   boundaries: TemporalBoundary[]
-  phase5cRequired: boolean
+  /**
+   * Replaces the former `phase5cRequired`. That name asserted a handoff Phase 5C
+   * cannot honour: its extractor only recognises origin claims, so a pricing
+   * disagreement handed to it came back `unassessed` and stopped nothing. The
+   * temporal layer owns the uncertainty it detected.
+   */
+  disposition: TemporalDisposition
+  holdReason: TemporalHoldReason | null
   notice: string
 }
 
@@ -286,7 +316,8 @@ const invalidReferenceResult = (
   resolvedClaims: [],
   resolvedValue: null,
   boundaries: [],
-  phase5cRequired: true,
+  disposition: 'hold',
+  holdReason: 'unparseable_reference',
   notice: `Temporal resolution requires a parseable ${requestedPeriod ? 'requested period' : 'asOf'}; no wall-clock fallback was used.`,
 })
 
@@ -327,6 +358,9 @@ export const resolveTemporalNormalization = (
       : unresolvedClaims.length
         ? 'At least one extracted claim has an unestablished subject; temporal resolution will not guess which pricing scope it belongs to.'
         : 'No dated claim applies at the requested reference period.'
+    // A question that produced no temporal material at all is not a temporal
+    // risk. Holding here would refuse every ordinary non-temporal question.
+    const noTemporalMaterial = normalization.claims.length === 0
     return {
       question: normalization.question,
       asOf: options.asOf,
@@ -339,8 +373,13 @@ export const resolveTemporalNormalization = (
       resolvedClaims: [],
       resolvedValue: null,
       boundaries,
-      phase5cRequired: true,
-      notice: undatedMessage,
+      disposition: noTemporalMaterial ? 'proceed' : 'hold',
+      holdReason: noTemporalMaterial
+        ? null
+        : unresolvedClaims.length > 0 ? 'unestablished_subject' : 'temporal_evidence_insufficient',
+      notice: noTemporalMaterial
+        ? 'No temporal claim was extracted for this question; temporal applicability does not apply.'
+        : undatedMessage,
     }
   }
 
@@ -357,7 +396,8 @@ export const resolveTemporalNormalization = (
       resolvedClaims: [],
       resolvedValue: null,
       boundaries,
-      phase5cRequired: true,
+      disposition: 'hold',
+      holdReason: 'temporal_evidence_insufficient',
       notice: 'Temporal evidence includes a competing undated claim. Tracework will not assume it is current or silently discard it.',
     }
   }
@@ -376,8 +416,9 @@ export const resolveTemporalNormalization = (
       resolvedClaims: [],
       resolvedValue: null,
       boundaries,
-      phase5cRequired: true,
-      notice: `Multiple claims remain applicable at ${reference.input} (${values}); temporal evidence does not establish which value is correct, so Phase 5C must handle the disagreement.`,
+      disposition: 'hold',
+      holdReason: 'multiple_applicable_propositions',
+      notice: `Multiple claims remain applicable at ${reference.input} (${values}); the temporal evidence does not establish which value is correct, so Tracework discloses the versions instead of choosing one.`,
     }
   }
 
@@ -395,7 +436,8 @@ export const resolveTemporalNormalization = (
     resolvedClaims,
     resolvedValue,
     boundaries,
-    phase5cRequired: false,
+    disposition: 'proceed',
+    holdReason: null,
     notice: `Temporal evidence selects ${resolvedValue} at ${reference.input}; older claims remain in the evidence record for their own periods.`,
   }
 }
