@@ -177,6 +177,33 @@ QUERY SCOPE CLASSIFIER
 
 ### 4.1 Query scope classification
 
+#### Two-stage scope boundary - **FROZEN**
+
+Scope is decided in two deliberately separate stages:
+
+```text
+Stage 1: query-language breadth
+  classify the wording and shape of the question
+  -> keep-focused or keep-synthesis as the initial route
+
+Stage 2: evidence-derived refinement
+  inspect the discovered subjects and corpus evidence
+  -> keep-focused
+  -> keep-synthesis
+  -> downgrade-to-focused when a broad-sounding request resolves to one narrow subject
+```
+
+Stage 1 is query-language classification only. It does not discover facets,
+retrieve evidence, or decide answerability. Stage 2 is the evidence-aware
+refinement boundary used by broad preparation. It may confirm synthesis or
+downgrade a nominally broad request when the evidence shows that only one
+narrow subject was requested. The refinement state is exposed in the discovery
+trace as `keep-focused`, `keep-synthesis`, or `downgrade-to-focused`.
+
+The focused route remains behaviorally unchanged. A Stage 1 focused decision
+does not pay for broad facet discovery, and a Stage 2 downgrade returns to that
+same focused route rather than generating a synthesis packet.
+
 The first classifier is deterministic and returns a reason. Initial positive
 signals include `summarise`, `summarize`, `overview`, `current state of`,
 `everything we know about`, `what are the main`, `explain the major`, and
@@ -185,6 +212,34 @@ multi-entity comparisons such as `compare A, B, C and D`.
 Keyword presence alone is not a permanent design. It is the first transparent
 boundary whose false positives and false negatives can be measured. Focused
 controls in section 7 prevent broad mode from swallowing ordinary questions.
+
+### 4.1.1 Two-stage scope design - **FROZEN**
+
+Scope is resolved in two deterministic stages:
+
+1. **Stage 1: query-language breadth.** `classifyQueryScope` reads the shape
+   and language of the question and returns an initial `focused` or
+   `synthesis` decision with inspectable signals and a reason. It does not
+   retrieve, discover facets, or decide answerability.
+2. **Stage 2: evidence-derived refinement.** `discoverFacets` examines the
+   corpus evidence and reports whether the initial route should remain focused,
+   remain synthesis, or be narrowed to the focused path. This stage prevents
+   broad wording from forcing broad retrieval when the evidence identifies one
+   narrow subject.
+
+The refinement contract is:
+
+| refinement | meaning |
+| --- | --- |
+| `keep-focused` | The focused initial route remains the existing focused path. |
+| `keep-synthesis` | The broad initial route has evidence for a compositional synthesis and continues to facet discovery, per-facet retrieval, and packet construction. |
+| `downgrade-to-focused` | The broad initial route resolves through evidence to one narrow subject; preparation stops broad planning and returns the focused route. |
+
+The production orchestrator consumes this result before synthesis requirements
+or per-facet retrieval are built. The two stages remain separate:
+query-language classification supplies the initial boundary, while corpus
+evidence may refine that boundary. Neither stage uses a provider or a
+Meridian-specific name list.
 
 ### 4.2 Facet discovery and decomposition
 
