@@ -1,14 +1,21 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { Icon } from '../components/Icon'
 import { useAuth } from './AuthProvider'
 import { BrowserAuthError } from './session'
 
 type AuthPanelMode = 'sign-in' | 'sign-up' | 'reset' | 'recovery'
 type FeedbackTone = 'success' | 'error' | 'info'
+type ModeMotion = 'next' | 'previous'
 
 interface Feedback {
   tone: FeedbackTone
   text: string
+}
+
+interface ModeTransition {
+  from: AuthPanelMode
+  to: AuthPanelMode
+  direction: ModeMotion
 }
 
 const modeCopy: Record<AuthPanelMode, { title: string; action: string }> = {
@@ -66,26 +73,121 @@ export const AuthPanel = () => {
   const [confirmation, setConfirmation] = useState('')
   const [busy, setBusy] = useState(false)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
+  const [modeMotion, setModeMotion] = useState<ModeMotion>('next')
+  const [modeTransition, setModeTransition] = useState<ModeTransition | null>(null)
+  const [modeFrameHeight, setModeFrameHeight] = useState<number | null>(null)
+  const modeFrameRef = useRef<HTMLDivElement>(null)
+  const modeFrameHeightRef = useRef<number | null>(null)
+  const modeTransitionTimerRef = useRef<number | null>(null)
+
+  const openPanel = () => {
+    if (modeTransitionTimerRef.current !== null) {
+      window.clearTimeout(modeTransitionTimerRef.current)
+      modeTransitionTimerRef.current = null
+    }
+    setModeTransition(null)
+    modeFrameHeightRef.current = null
+    setModeFrameHeight(null)
+    setOpen(true)
+  }
+
+  const togglePanel = () => {
+    if (open) {
+      setOpen(false)
+      return
+    }
+    openPanel()
+  }
 
   useEffect(() => {
     if (state.status === 'password-recovery') {
       setMode('recovery')
-      setOpen(true)
+      setModeMotion('next')
+      openPanel()
       setFeedback({ tone: 'info', text: 'Your reset link is ready. Choose a new password to continue.' })
     }
     if (state.status === 'email-verification-pending') {
       setMode('sign-in')
-      setOpen(true)
+      setModeMotion('previous')
+      openPanel()
       setFeedback({ tone: 'success', text: 'Check your inbox for the verification link, then return here to sign in.' })
     }
   }, [state.status])
 
   const setPanelMode = (nextMode: AuthPanelMode) => {
+    if (nextMode !== mode) {
+      const direction = nextMode === 'sign-in' ? 'previous' : 'next'
+      setModeMotion(direction)
+      setModeTransition({ from: mode, to: nextMode, direction })
+
+      if (modeTransitionTimerRef.current !== null) {
+        window.clearTimeout(modeTransitionTimerRef.current)
+      }
+      modeTransitionTimerRef.current = window.setTimeout(() => {
+        setModeTransition(null)
+        modeTransitionTimerRef.current = null
+      }, 300)
+    }
     setMode(nextMode)
     setFeedback(null)
     setPassword('')
     setConfirmation('')
   }
+
+  useEffect(() => () => {
+    if (modeTransitionTimerRef.current !== null) {
+      window.clearTimeout(modeTransitionTimerRef.current)
+    }
+  }, [])
+
+  useLayoutEffect(() => {
+    const frame = modeFrameRef.current
+    const content = frame?.querySelector<HTMLElement>('.auth-mode-content.is-current')
+
+    if (!frame || !(content instanceof HTMLElement)) {
+      if (modeFrameHeightRef.current !== null) {
+        modeFrameHeightRef.current = null
+        setModeFrameHeight(null)
+      }
+      return
+    }
+
+    let animationFrame: number | null = null
+
+    const measure = () => {
+      const nextHeight = content.scrollHeight
+      if (!nextHeight || modeFrameHeightRef.current === nextHeight) return
+
+      if (modeFrameHeightRef.current === null) {
+        modeFrameHeightRef.current = nextHeight
+        setModeFrameHeight(nextHeight)
+        return
+      }
+
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame)
+      animationFrame = requestAnimationFrame(() => {
+        modeFrameHeightRef.current = nextHeight
+        setModeFrameHeight(nextHeight)
+        animationFrame = null
+      })
+    }
+
+    measure()
+
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        if (animationFrame !== null) cancelAnimationFrame(animationFrame)
+      }
+    }
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(content)
+
+    return () => {
+      observer.disconnect()
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame)
+    }
+  }, [configured, feedback?.text, feedback?.tone, mode, modeTransition?.to, open, state.status])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -170,6 +272,63 @@ export const AuthPanel = () => {
     }
   }
 
+  const renderModeContent = (renderMode: AuthPanelMode, interactive: boolean, key: string) => (
+    <div
+      key={key}
+      className={`auth-mode-content ${interactive ? 'is-current' : 'is-outgoing'}`}
+      aria-hidden={!interactive}
+    >
+      <form className="auth-form" onSubmit={(event) => void handleSubmit(event)}>
+        {renderMode !== 'recovery' && <label className="auth-field">
+          <span>email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+            placeholder="you@example.com"
+            disabled={busy || !interactive}
+            tabIndex={interactive ? undefined : -1}
+          />
+        </label>}
+        {renderMode !== 'reset' && <label className="auth-field">
+          <span>{renderMode === 'recovery' ? 'new password' : 'password'}</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete={renderMode === 'sign-in' ? 'current-password' : 'new-password'}
+            placeholder="8 characters or more"
+            disabled={busy || !interactive}
+            tabIndex={interactive ? undefined : -1}
+          />
+        </label>}
+        {renderMode === 'sign-up' && <label className="auth-field">
+          <span>confirm password</span>
+          <input
+            type="password"
+            value={confirmation}
+            onChange={(event) => setConfirmation(event.target.value)}
+            autoComplete="new-password"
+            placeholder="repeat password"
+            disabled={busy || !interactive}
+            tabIndex={interactive ? undefined : -1}
+          />
+        </label>}
+
+        {interactive && feedback && <p className={`auth-inline-notice is-${feedback.tone}`} role="status" aria-live="polite">{feedback.text}</p>}
+
+        <button className="auth-submit" type="submit" disabled={busy || !interactive} tabIndex={interactive ? undefined : -1}>
+          {busy ? 'working...' : modeCopy[renderMode].action}
+          <Icon name="arrow" size={15} />
+        </button>
+      </form>
+
+      {renderMode === 'sign-in' && <button className="auth-text-button" type="button" onClick={() => setPanelMode('reset')} disabled={!interactive} tabIndex={interactive ? undefined : -1}>forgot password?</button>}
+      {(renderMode === 'reset' || renderMode === 'recovery') && <button className="auth-text-button" type="button" onClick={() => setPanelMode('sign-in')} disabled={!interactive} tabIndex={interactive ? undefined : -1}>return to sign in</button>}
+    </div>
+  )
+
   const triggerLabel = state.status === 'initializing'
     ? 'checking session'
     : state.status === 'signed-in'
@@ -185,11 +344,11 @@ export const AuthPanel = () => {
   return (
     <div className="auth-surface">
       <button
-        className={`auth-trigger is-${state.status}`}
+        className={`auth-trigger is-${state.status}${open ? ' is-open' : ''}`}
         type="button"
         aria-expanded={open}
         aria-controls="tracework-auth-panel"
-        onClick={() => setOpen((visible) => !visible)}
+        onClick={togglePanel}
         disabled={state.status === 'initializing'}
       >
         <span className="auth-trigger-mark" aria-hidden="true"><Icon name={state.status === 'signed-in' ? 'check' : 'target'} size={15} /></span>
@@ -200,16 +359,19 @@ export const AuthPanel = () => {
         <Icon name="chevron" size={15} />
       </button>
 
-      {open && <div className="auth-panel" id="tracework-auth-panel" role="dialog" aria-label="Tracework account">
+      {open && <div className={`auth-panel${open ? ' is-open' : ''}`} id="tracework-auth-panel" role="dialog" aria-label="Tracework account">
         <div className="auth-panel-heading">
           <div>
             <span className="auth-panel-kicker">account / identity</span>
-            <h2>{state.status === 'signed-in' ? 'Your session' : modeCopy[mode].title}</h2>
+            <h2 key={`${state.status}-${mode}`} className={`auth-panel-title is-${modeMotion}`}>
+              {state.status === 'signed-in' ? 'Your session' : modeCopy[mode].title}
+            </h2>
           </div>
           <button className="auth-close" type="button" aria-label="Close account panel" onClick={() => setOpen(false)}><Icon name="close" size={16} /></button>
         </div>
 
-        {state.status === 'signed-in' ? (
+        <div className="auth-panel-body">
+          {state.status === 'signed-in' ? (
           <div className="auth-account-state">
             <span className="auth-state-mark"><Icon name="check" size={18} /></span>
             <p className="auth-account-email">{displayEmail(state.user?.email)}</p>
@@ -244,37 +406,31 @@ export const AuthPanel = () => {
           <>
             {state.status === 'session-expired' && <p className="auth-inline-notice is-error" role="status">Your previous session is no longer usable. Sign in again to continue.</p>}
             {state.status === 'error' && state.error && <p className="auth-inline-notice is-error" role="status">{readableStateError(state.error)}</p>}
-            {mode !== 'recovery' && <div className="auth-mode-tabs" role="group" aria-label="Account action">
+            {mode !== 'recovery' && <div className={`auth-mode-tabs is-${mode}`} role="group" aria-label="Account action">
               <button type="button" className={mode === 'sign-in' ? 'is-active' : ''} aria-pressed={mode === 'sign-in'} onClick={() => setPanelMode('sign-in')}>sign in</button>
               <button type="button" className={mode === 'sign-up' ? 'is-active' : ''} aria-pressed={mode === 'sign-up'} onClick={() => setPanelMode('sign-up')}>create account</button>
             </div>}
 
-            <form className="auth-form" onSubmit={(event) => void handleSubmit(event)}>
-              {mode !== 'recovery' && <label className="auth-field">
-                <span>email</span>
-                <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="you@example.com" disabled={busy} />
-              </label>}
-              {mode !== 'reset' && <label className="auth-field">
-                <span>{mode === 'recovery' ? 'new password' : 'password'}</span>
-                <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} placeholder="8 characters or more" disabled={busy} />
-              </label>}
-              {mode === 'sign-up' && <label className="auth-field">
-                <span>confirm password</span>
-                <input type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} autoComplete="new-password" placeholder="repeat password" disabled={busy} />
-              </label>}
-
-              {feedback && <p className={`auth-inline-notice is-${feedback.tone}`} role="status" aria-live="polite">{feedback.text}</p>}
-
-              <button className="auth-submit" type="submit" disabled={busy}>
-                {busy ? 'working...' : modeCopy[mode].action}
-                <Icon name="arrow" size={15} />
-              </button>
-            </form>
-
-            {mode === 'sign-in' && <button className="auth-text-button" type="button" onClick={() => setPanelMode('reset')}>forgot password?</button>}
-            {(mode === 'reset' || mode === 'recovery') && <button className="auth-text-button" type="button" onClick={() => setPanelMode('sign-in')}>return to sign in</button>}
+            <div
+              ref={modeFrameRef}
+              className={`auth-mode-frame${modeFrameHeight === null ? '' : ' has-height'}`}
+              style={modeFrameHeight === null ? undefined : { gridTemplateRows: `${modeFrameHeight}px` }}
+            >
+              <div
+                className={`auth-mode-track${modeTransition ? ` is-transitioning is-${modeTransition.direction}` : ''}`}
+                key={modeTransition ? `${modeTransition.from}-${modeTransition.to}` : mode}
+              >
+                {(modeTransition
+                  ? modeTransition.direction === 'next'
+                    ? [modeTransition.from, modeTransition.to]
+                    : [modeTransition.to, modeTransition.from]
+                  : [mode]
+                ).map((renderMode, index) => renderModeContent(renderMode, renderMode === mode, `${renderMode}-${index}`))}
+              </div>
+            </div>
           </>
-        )}
+          )}
+        </div>
       </div>}
     </div>
   )
