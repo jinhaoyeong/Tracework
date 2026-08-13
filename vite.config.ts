@@ -1,29 +1,11 @@
-﻿import { defineConfig, loadEnv, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 // The dev generation route delegates to the deployed handler rather than
 // reimplementing it, so the mode rules, context limits, and instruction sets
 // exist in exactly one place.
 import { handleGeneration } from './server/traceworkApi.ts'
-// The dev server enforces the same route matrix as production through the same
-// module. There is exactly one authentication implementation; only the request
-// and response plumbing differs between the two runtimes.
-import { enforceRouteAuthPolicy } from './server/routeAuth.ts'
-import type { AuthResolverDependencies } from './server/auth.ts'
 
 const PGVECTOR_DIMENSIONS = 1536
-
-/**
- * @supabase/server resolves its configuration from process.env, but Vite's
- * loadEnv returns .env.local into a plain object instead. Copying just the three
- * auth values across means the dev server verifies tokens through the library's
- * own env resolution rather than a second, drift-prone copy of it.
- */
-const hydrateSupabaseAuthEnv = (env: Record<string, string>) => {
-  for (const name of ['SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_JWKS_URL', 'SUPABASE_JWKS']) {
-    const value = env[name]?.trim()
-    if (value && !process.env[name]) process.env[name] = value
-  }
-}
 
 const sendJson = (response: any, status: number, payload: unknown) => {
   response.statusCode = status
@@ -130,25 +112,10 @@ const sendServerError = (response: any, error: unknown, fallback: string) => {
   sendJson(response, 500, { error: { code: 'vector_route_error', message: fallback } })
 }
 
-/**
- * The dev API plugin.
- *
- * `authDependencies` exists so offline suites can drive these middlewares with a
- * deterministic verified principal instead of a real credential. It is a test
- * seam on the *verifier*, not on the policy: the route matrix in
- * server/routeAuth.ts is still consulted, and there is deliberately no
- * environment variable that turns the gate off.
- */
-export const traceworkDevPlugin = (
-  env: Record<string, string>,
-  authDependencies: AuthResolverDependencies = {},
-): Plugin => ({
+const neuralEmbeddingsPlugin = (env: Record<string, string>): Plugin => ({
   name: 'tracework-neural-embeddings',
   configureServer(server) {
-    hydrateSupabaseAuthEnv(env)
-
     server.middlewares.use('/api/embed', async (request, response) => {
-      if (!(await enforceRouteAuthPolicy('/api/embed', request, response, authDependencies)).allowed) return
       if (request.method !== 'POST') {
         sendJson(response, 405, { error: { code: 'method_not_allowed', message: 'Use POST /api/embed.' } })
         return
@@ -241,7 +208,6 @@ export const traceworkDevPlugin = (
      * object rather than process.env, which is what the deployed handler reads.
      */
     server.middlewares.use('/api/generate', async (request, response) => {
-      if (!(await enforceRouteAuthPolicy('/api/generate', request, response, authDependencies)).allowed) return
       // The body is read only for POST. A GET carries none, and parsing it
       // first would report method_not_allowed as a malformed body.
       let body: unknown
@@ -270,9 +236,6 @@ export const traceworkDevPlugin = (
     })
 
     server.middlewares.use('/api/vector/sync', async (request, response) => {
-      // Returns 403 authorization_pending for a verified caller, so the
-      // service-role write below is unreachable in dev exactly as in production.
-      if (!(await enforceRouteAuthPolicy('/api/vector/sync', request, response, authDependencies)).allowed) return
       if (request.method !== 'POST') {
         sendJson(response, 405, { error: { code: 'method_not_allowed', message: 'Use POST /api/vector/sync.' } })
         return
@@ -439,9 +402,6 @@ export const traceworkDevPlugin = (
     })
 
     server.middlewares.use('/api/vector/delete', async (request, response) => {
-      // Returns 403 authorization_pending for a verified caller, so the
-      // service-role delete below is unreachable in dev exactly as in production.
-      if (!(await enforceRouteAuthPolicy('/api/vector/delete', request, response, authDependencies)).allowed) return
       if (request.method !== 'POST') {
         sendJson(response, 405, { error: { code: 'method_not_allowed', message: 'Use POST /api/vector/delete.' } })
         return
@@ -467,6 +427,6 @@ export const traceworkDevPlugin = (
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
-    plugins: [react(), traceworkDevPlugin(env)],
+    plugins: [react(), neuralEmbeddingsPlugin(env)],
   }
 })

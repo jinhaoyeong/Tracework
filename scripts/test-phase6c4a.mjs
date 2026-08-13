@@ -199,29 +199,22 @@ writeAuthFailure(directResponse.response, new AuthFailure('invalid_auth'))
 assertSafeFailure(directResponse.captured, 401, 'invalid_auth')
 assert.equal(directResponse.captured.headers['Content-Type'], 'application/json')
 
-/*
- * Policy metadata stays well-formed: every route carries a known policy and a
- * reason. The enforced route matrix itself belongs to the cutover phase and is
- * asserted in scripts/test-phase6c4b.mjs rather than duplicated here.
- */
-const VALID_POLICIES = new Set(['anonymous', 'authenticated', 'authenticated-authorization-pending'])
-for (const [route, definition] of Object.entries(TRACEWORK_ROUTE_AUTH_POLICIES)) {
-  assert.equal(VALID_POLICIES.has(definition.policy), true, `${route} needs a known policy`)
-  assert.equal(typeof definition.reason === 'string' && definition.reason.length > 0, true, `${route} needs a reason`)
+/* Policy metadata identifies the four future cutover routes without activating them. */
+const expectedSensitive = ['/api/embed', '/api/generate', '/api/vector/sync', '/api/vector/delete']
+for (const route of expectedSensitive) {
+  const policy = getTraceworkRouteAuthPolicy(route)
+  assert.equal(policy.current, 'anonymous')
+  assert.equal(policy.cutover, 'authenticated')
+}
+for (const route of ['/api/library/collections', '/api/library/documents', '/api/vector/search']) {
+  const policy = getTraceworkRouteAuthPolicy(route)
+  assert.equal(policy.current, 'anonymous')
+  assert.equal(policy.cutover, 'anonymous')
 }
 assert.equal(Object.keys(TRACEWORK_ROUTE_AUTH_POLICIES).length, 7)
 assert.equal(getTraceworkRouteAuthPolicy('/api/not-a-route'), null)
 
-/* The public read/search surface was not part of the cutover. */
-for (const route of ['/api/library/collections', '/api/library/documents', '/api/vector/search']) {
-  assert.equal(getTraceworkRouteAuthPolicy(route).policy, 'anonymous')
-}
-
-/*
- * However a route is gated, it must reach the resolver through
- * server/routeAuth.ts. No adapter or handler may verify a token itself, which
- * is what keeps one authentication implementation across Vercel and Vite.
- */
+/* No existing production route or adapter imports/activates the gate in 6C4A. */
 const routeFiles = [
   'server/traceworkApi.ts',
   'vite.config.ts',
@@ -235,8 +228,8 @@ const routeFiles = [
 ]
 for (const file of routeFiles) {
   const source = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
-  assert.equal(source.includes('resolveAuthenticatedRequestContext'), false, `${file} must not verify tokens itself`)
-  assert.equal(source.includes('jwtVerify'), false, `${file} must not implement a second verifier`)
+  assert.equal(source.includes('requireAuthenticatedRequest'), false, `${file} must not be cut over`)
+  assert.equal(source.includes('writeAuthFailure'), false, `${file} must not map the future gate`)
 }
 
 const routeAuthSource = readFileSync(new URL('../server/routeAuth.ts', import.meta.url), 'utf8')

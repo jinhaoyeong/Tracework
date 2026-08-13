@@ -53,45 +53,19 @@ const callDeployed = async (body, env = FAKE_ENV, method = 'POST') => {
 
 /* ------------------------------------ pull the real middleware out of vite */
 
-const viteModule = await import('../vite.config.ts')
-const viteConfig = await viteModule.default({ mode: 'development', command: 'serve' })
-assert.ok(
-  viteConfig.plugins.flat().find((item) => item?.name === 'tracework-neural-embeddings'),
-  'the dev plugin must be present in the real vite config',
-)
-
-/*
- * Since 6C4B the dev routes are authenticated, so the middleware is built from
- * the same exported factory with a stubbed verifier and a fake env. That keeps
- * this suite about generation rules — limits, modes, instructions — while the
- * route matrix itself is proven in scripts/test-phase6c4b.mjs. Using FAKE_ENV
- * also means the machine's real key is no longer handed to the middleware.
- */
-const DEV_AUTH_DEPENDENCIES = {
-  verifyAuth: async () => ({
-    data: {
-      authMode: 'user',
-      token: 'dev-test-token',
-      userClaims: { id: '00000000-0000-0000-0000-0000000000de' },
-      jwtClaims: null,
-      keyName: null,
-    },
-    error: null,
-  }),
-  createContextClient: () => ({ callerScoped: true }),
-}
+const viteConfigFactory = (await import('../vite.config.ts')).default
+const viteConfig = await viteConfigFactory({ mode: 'development', command: 'serve' })
+const plugin = viteConfig.plugins.flat().find((item) => item?.name === 'tracework-neural-embeddings')
+assert.ok(plugin, 'the dev plugin must be present in the real vite config')
 
 const middlewares = new Map()
-viteModule
-  .traceworkDevPlugin(FAKE_ENV, DEV_AUTH_DEPENDENCIES)
-  .configureServer({ middlewares: { use: (route, handler) => middlewares.set(route, handler) } })
+plugin.configureServer({ middlewares: { use: (route, handler) => middlewares.set(route, handler) } })
 const generateMiddleware = middlewares.get('/api/generate')
 assert.ok(generateMiddleware, 'the dev config must register an /api/generate middleware')
 
 const callDev = async (rawBody, method = 'POST') => {
   const request = new EventEmitter()
   request.method = method
-  request.headers = { authorization: 'Bearer dev-test-token' }
   request[Symbol.asyncIterator] = async function* () {
     if (rawBody !== undefined) yield Buffer.from(rawBody)
   }

@@ -23,7 +23,7 @@ import { extractTemporalClaims } from './lib/temporal'
 import { normalizeTemporalExtraction } from './lib/temporalNormalization'
 import { assessQueryRelevance, planTemporalCoverage, temporalCoverageWitnessChunkIds, temporalGate, type TemporalCoverageReport, type TemporalQueryRelevance } from './lib/temporalCoverage'
 import { parseRequestedPeriod, readRequestedPeriods, resolveTemporalNormalization, type TemporalResolution } from './lib/temporalResolution'
-import { PGVECTOR_DIMENSIONS, PgvectorError, SHARED_WRITES_DISABLED, isSharedWriteUnavailable, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
+import { PGVECTOR_DIMENSIONS, PgvectorError, SHARED_WRITES_DISABLED, requestPgvectorDelete, requestPgvectorSearch, requestPgvectorSync, type PgvectorMatch } from './lib/vectorDb'
 import { SynthesisInspector } from './components/SynthesisInspector'
 import { SynthesisAnswerCitations } from './components/SynthesisAnswerCitations'
 import { IDLE_SYNTHESIS_GENERATION, buildSynthesisAnswerView, type SynthesisGenerationSurfaceState } from './lib/synthesisAnswerView'
@@ -864,13 +864,10 @@ function App() {
           const sync = await requestPgvectorSync(indexedDocuments)
           syncMessage = `Searching ${sync.syncedChunks} stored chunks...`
         } catch (error) {
-          // A deployment that refuses writes can still be searched, and so can
-          // one where the caller has no account or no authority to write yet.
-          // All three are read-only states, not retrieval failures.
-          if (!(error instanceof PgvectorError) || !isSharedWriteUnavailable(error)) throw error
-          syncMessage = error.code === SHARED_WRITES_DISABLED
-            ? 'Searching the shared library read-only; this deployment does not accept writes.'
-            : `Searching the shared library read-only; ${error.message.toLowerCase()}`
+          // A deployment that refuses writes can still be searched. Treat it as
+          // read-only rather than failing the whole retrieval.
+          if (!(error instanceof PgvectorError) || error.code !== SHARED_WRITES_DISABLED) throw error
+          syncMessage = 'Searching the shared library read-only; this deployment does not accept writes.'
         }
       }
       setPgvectorState((current) => ({ ...current, status: 'searching', database: current.database, message: syncMessage }))
@@ -1101,10 +1098,8 @@ function App() {
     if (pgvectorState.database) {
       void requestPgvectorDelete(sourceIds).catch((error) => {
         if (!(error instanceof PgvectorError)) return
-        if (isSharedWriteUnavailable(error)) {
-          showNotice('info', error.code === SHARED_WRITES_DISABLED
-            ? 'Local index cleared. This deployment does not accept deletions, so the shared database copy remains.'
-            : `Local index cleared. ${error.message} The shared database copy remains.`)
+        if (error.code === SHARED_WRITES_DISABLED) {
+          showNotice('info', 'Local index cleared. This deployment does not accept deletions, so the shared database copy remains.')
           return
         }
         showNotice('error', `Local index cleared, but database cleanup failed: ${error.message}`)
@@ -1181,7 +1176,7 @@ function App() {
     setDocuments((current) => current.filter((item) => item.id !== documentId))
     if (document && !document.libraryCollection && pgvectorState.database) {
       void requestPgvectorDelete([document.id]).catch((error) => {
-        if (!(error instanceof PgvectorError) || isSharedWriteUnavailable(error)) return
+        if (!(error instanceof PgvectorError) || error.code === SHARED_WRITES_DISABLED) return
         showNotice('error', `Source removed locally, but database cleanup failed: ${error.message}`)
       })
     }

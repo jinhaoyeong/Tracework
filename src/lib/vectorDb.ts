@@ -1,5 +1,5 @@
 import type { DocumentRecord, SourceKind, SourceProvenance } from '../types'
-import { ACCOUNT_REQUIRED, AUTHORIZATION_PENDING, AccountRequiredError, requestWithAuth } from './apiClient.ts'
+import { requestWithAuth } from './apiClient.ts'
 
 export const PGVECTOR_DIMENSIONS = 1536
 
@@ -9,21 +9,6 @@ export const PGVECTOR_DIMENSIONS = 1536
  * searching what is already stored rather than reporting a failure.
  */
 export const SHARED_WRITES_DISABLED = 'shared_writes_disabled'
-
-/**
- * The three reasons a shared write can be unavailable without anything being
- * broken. Callers treat these as "read-only right now" rather than as failures,
- * so local indexing and search keep working.
- */
-export const SHARED_WRITE_UNAVAILABLE_CODES: readonly string[] = [
-  SHARED_WRITES_DISABLED,
-  ACCOUNT_REQUIRED,
-  AUTHORIZATION_PENDING,
-]
-
-export const isSharedWriteUnavailable = (error: unknown): boolean => (
-  error instanceof PgvectorError && SHARED_WRITE_UNAVAILABLE_CODES.includes(error.code)
-)
 
 export class PgvectorError extends Error {
   code: string
@@ -74,20 +59,15 @@ interface ApiErrorPayload {
   error?: { code?: string; message?: string }
 }
 
-const requestJson = async <T>(path: string, body: unknown, requireAccount = false): Promise<T> => {
+const requestJson = async <T>(path: string, body: unknown): Promise<T> => {
   let response: Response
   try {
     response = await requestWithAuth(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    }, { requireAccount })
-  } catch (error) {
-    // A missing account is a known state, not an unreachable route; reporting it
-    // as a network error would send the reader to fix the wrong thing.
-    if (error instanceof AccountRequiredError) {
-      throw new PgvectorError(ACCOUNT_REQUIRED, 'Sign in to Tracework to change the shared knowledge base.')
-    }
+    })
+  } catch {
     throw new PgvectorError('network_error', 'The vector database route could not be reached. Start Tracework with npm run dev.')
   }
 
@@ -129,7 +109,7 @@ const serializeDocument = (document: DocumentRecord) => ({
 export const requestPgvectorSync = (documents: DocumentRecord[]) => {
   return requestJson<PgvectorSyncResponse>('/api/vector/sync', {
     documents: documents.map(serializeDocument),
-  }, true)
+  })
 }
 
 export const requestPgvectorSearch = (
@@ -145,5 +125,5 @@ export const requestPgvectorSearch = (
 
 export const requestPgvectorDelete = (sourceIds: string[]) => {
   if (!sourceIds.length) return Promise.resolve({ deletedSources: 0 })
-  return requestJson<{ deletedSources: number }>('/api/vector/delete', { sourceIds }, true)
+  return requestJson<{ deletedSources: number }>('/api/vector/delete', { sourceIds })
 }
