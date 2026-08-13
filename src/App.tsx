@@ -31,6 +31,7 @@ import { classifyQueryScope } from './lib/synthesisScope'
 import { prepareSynthesis, type SynthesisPreparationResult } from './lib/synthesisOrchestrator'
 import { planQueryExecution, resetPlanForQuerySurface } from './lib/queryRoute'
 import type { DocumentRecord, RetrievalEngine, SearchResult, SourceKind } from './types'
+import { AuthPanel } from './auth/AuthPanel'
 
 const STORAGE_KEY = 'tracework.documents.v1'
 // Phrased for a visitor reading the demo, not for the author. Each one still
@@ -1200,6 +1201,7 @@ function App() {
           <span className="topbar-index-count">{documents.length} sources / {chunkCount} passages</span>
           <button className="clear-button" type="button" onClick={handleClear} disabled={!documents.length}>clear this index</button>
         </div>
+        <AuthPanel />
       </header>
 
       <div className="workspace-grid">

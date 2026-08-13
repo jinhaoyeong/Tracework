@@ -11,6 +11,11 @@ export interface AuthContextValue {
   state: AuthSessionState
   getCurrentSession: AuthSessionController['getCurrentSession']
   getCurrentAccessToken: AuthSessionController['getCurrentAccessToken']
+  signIn: AuthSessionController['signIn']
+  signUp: AuthSessionController['signUp']
+  requestPasswordReset: AuthSessionController['requestPasswordReset']
+  resendConfirmation: AuthSessionController['resendConfirmation']
+  updatePassword: AuthSessionController['updatePassword']
   signOut: AuthSessionController['signOut']
 }
 
@@ -35,6 +40,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     state,
     getCurrentSession: controller.getCurrentSession,
     getCurrentAccessToken: controller.getCurrentAccessToken,
+    signIn: controller.signIn,
+    signUp: controller.signUp,
+    requestPasswordReset: controller.requestPasswordReset,
+    resendConfirmation: controller.resendConfirmation,
+    updatePassword: controller.updatePassword,
     signOut: controller.signOut,
   }), [controller, state])
 

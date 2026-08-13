@@ -36,6 +36,11 @@ export interface AuthSessionController {
   stop: () => void
   getCurrentSession: () => Promise<Session | null>
   getCurrentAccessToken: () => Promise<string | null>
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<void>
+  requestPasswordReset: (email: string) => Promise<void>
+  resendConfirmation: (email: string) => Promise<void>
+  updatePassword: (password: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -149,6 +154,85 @@ export class BrowserAuthError extends Error {
   }
 }
 
+const getAuthRedirectUrl = (path: string): string | undefined => {
+  if (typeof window === 'undefined' || !window.location.origin) return undefined
+  return new URL(path, window.location.origin).toString()
+}
+
+const requireAuthClient = (client: BrowserAuthClient | null): BrowserAuthClient => {
+  if (client) return client
+  throw new BrowserAuthError({
+    code: 'auth_configuration',
+    message: 'Account sign-in is not configured in this environment.',
+  })
+}
+
+export const signInWithPassword = async (
+  email: string,
+  password: string,
+  client: BrowserAuthClient | null = getSupabaseBrowserClient(),
+): Promise<Session | null> => {
+  const authClient = requireAuthClient(client)
+  const { data, error } = await authClient.auth.signInWithPassword({
+    email: email.trim(),
+    password,
+  })
+  if (error) throw new BrowserAuthError(toAuthStateError(error))
+  return data.session
+}
+
+export const signUpWithPassword = async (
+  email: string,
+  password: string,
+  client: BrowserAuthClient | null = getSupabaseBrowserClient(),
+): Promise<{ session: Session | null; user: User | null }> => {
+  const authClient = requireAuthClient(client)
+  const { data, error } = await authClient.auth.signUp({
+    email: email.trim(),
+    password,
+    options: {
+      emailRedirectTo: getAuthRedirectUrl('/?auth=confirmed'),
+    },
+  })
+  if (error) throw new BrowserAuthError(toAuthStateError(error))
+  return { session: data.session, user: data.user }
+}
+
+export const requestPasswordReset = async (
+  email: string,
+  client: BrowserAuthClient | null = getSupabaseBrowserClient(),
+): Promise<void> => {
+  const authClient = requireAuthClient(client)
+  const { error } = await authClient.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: getAuthRedirectUrl('/?auth=recovery'),
+  })
+  if (error) throw new BrowserAuthError(toAuthStateError(error))
+}
+
+export const resendSignupConfirmation = async (
+  email: string,
+  client: BrowserAuthClient | null = getSupabaseBrowserClient(),
+): Promise<void> => {
+  const authClient = requireAuthClient(client)
+  const { error } = await authClient.auth.resend({
+    type: 'signup',
+    email: email.trim(),
+    options: {
+      emailRedirectTo: getAuthRedirectUrl('/?auth=confirmed'),
+    },
+  })
+  if (error) throw new BrowserAuthError(toAuthStateError(error))
+}
+
+export const updatePassword = async (
+  password: string,
+  client: BrowserAuthClient | null = getSupabaseBrowserClient(),
+): Promise<void> => {
+  const authClient = requireAuthClient(client)
+  const { error } = await authClient.auth.updateUser({ password })
+  if (error) throw new BrowserAuthError(toAuthStateError(error))
+}
+
 export const getCurrentSession = async (
   client: BrowserAuthClient | null = getSupabaseBrowserClient(),
 ): Promise<Session | null> => {
@@ -230,6 +314,27 @@ export const createAuthSessionController = (
 
   const currentSession = () => getCurrentSession(client)
   const currentAccessToken = () => getCurrentAccessToken(client)
+  const localSignIn = async (email: string, password: string) => {
+    const session = await signInWithPassword(email, password, client)
+    if (running) publish(stateFromSession(session))
+  }
+  const localSignUp = async (email: string, password: string) => {
+    const result = await signUpWithPassword(email, password, client)
+    if (!running) return
+    if (result.session) {
+      publish(stateFromSession(result.session))
+    } else if (result.user) {
+      publish(createEmailVerificationPendingState(result.user))
+    } else {
+      publish(createSignedOutState())
+    }
+  }
+  const localRequestPasswordReset = (email: string) => requestPasswordReset(email, client)
+  const localResendConfirmation = (email: string) => resendSignupConfirmation(email, client)
+  const localUpdatePassword = async (password: string) => {
+    await updatePassword(password, client)
+    if (running && state.status === 'password-recovery') publish(stateFromSession(state.session))
+  }
   const localSignOut = async () => {
     await signOut(client)
     if (running) publish(createSignedOutState())
@@ -242,6 +347,11 @@ export const createAuthSessionController = (
     stop,
     getCurrentSession: currentSession,
     getCurrentAccessToken: currentAccessToken,
+    signIn: localSignIn,
+    signUp: localSignUp,
+    requestPasswordReset: localRequestPasswordReset,
+    resendConfirmation: localResendConfirmation,
+    updatePassword: localUpdatePassword,
     signOut: localSignOut,
   }
 }

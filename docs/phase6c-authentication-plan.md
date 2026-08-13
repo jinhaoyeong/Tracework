@@ -1,14 +1,15 @@
 # Tracework Phase 6C1: Authentication Architecture & Authenticated Principal Contract
 
-Status: 6C4A gate/readiness audit uncommitted for review
+Status: 6C5A account UX and Auth-flow integration uncommitted for review
 Date: 2026-08-13
-Checkpoint: 38b699f / Phase 6C3 published
+Checkpoint: 5c817e8 / Phase 6C4A published
 Live database contract: POST_6B2C
 
-This document freezes the identity and request-principal architecture needed
-before authentication implementation. It does not install an Auth package,
-create users, change Supabase Auth settings, change the database, add RLS
-policies, modify RPCs or routes, call a provider, or change the application.
+This document freezes the identity and request-principal architecture and records
+the reviewed implementation proofs through Phase 6C5A. The original 6C1
+architecture checkpoint did not install an Auth package, create users, change
+Supabase Auth settings, change the database, add RLS policies, modify RPCs or
+routes, call a provider, or change the application.
 
 Required boundary for this phase:
 
@@ -1089,8 +1090,61 @@ assertion. The full 6C2, 6C3, grounded, retrieval, and Phase 5E regression
 commands were rerun after this record was written.
 
 6C4A made no Supabase schema or data mutation, Auth user or setting change,
-RLS/RPC change, deployment, provider call, or OpenAI call. The implementation
-and this record remain uncommitted for review. 6C4B and 6C5 are not started.
+RLS/RPC change, deployment, provider call, or OpenAI call. Its implementation
+and record were published at the 6C4A checkpoint. 6C4B and 6C5A follow-up work
+were not started at that checkpoint.
+
+## 28. 6C5A account UX and local Auth-flow record
+
+Phase 6C5A adds the local account UX and the browser-side Auth operations needed
+for a legitimate user flow. It remains intentionally uncommitted for review.
+It does not configure Supabase Auth, create an Auth user, send an email, protect
+a route, change RLS/RPCs, call a provider, or prove a deployed environment.
+
+| Concern | Proven local implementation |
+| --- | --- |
+| Account surface | `src/auth/AuthPanel.tsx`, mounted in the existing Tracework topbar from `src/App.tsx`; the panel preserves the existing compact, ruled control-shelf visual language |
+| Session integration | `src/auth/AuthProvider.tsx` exposes the existing session controller plus thin sign-in, sign-up, reset, resend, update-password, and sign-out operations |
+| Email/password sign-in | `signInWithPassword()` in `src/auth/session.ts`; email is trimmed, password is sent only to the Supabase browser SDK, and a usable session becomes `signed-in` |
+| Signup | `signUpWithPassword()` uses the SDK's email-confirmation path and sends a same-origin `/?auth=confirmed` redirect when browser origin is available; no workspace/profile/role is created |
+| Verification pending | A signup result without a session becomes `email-verification-pending`; the panel offers a resend action without exposing account existence in a generic error path |
+| Password recovery | `resetPasswordForEmail()` requests a same-origin `/?auth=recovery` redirect; recovery state opens the new-password form and `updateUser({ password })` completes the local flow |
+| Sign-out | Local SDK sign-out clears the browser session state; no duplicate token store or application identity cache is created |
+| Missing browser configuration | Missing/invalid `VITE_SUPABASE_URL` or `VITE_SUPABASE_PUBLISHABLE_KEY` is an explicit setup state. It never creates a fake user and leaves the local demo available |
+| Browser credentials | Only the public/publishable browser configuration is referenced. No service-role key, secret key, database password, provider key, JWT, or access token is embedded or logged |
+| Authorization boundary | The panel displays identity/session state only. It does not decide workspace membership, publication rights, resource access, or route authorization |
+
+The redirect paths are implementation-ready but not live-proven. Phase 6C5B
+must configure and allowlist the deployed redirect URLs, provide the browser and
+server environment contract, and use a dedicated test account to prove a real
+browser session reaches the already-built server resolver. No real email or
+account operation was attempted in 6C5A.
+
+### 28.1 Local readiness and tests
+
+At this checkpoint, local environment presence was inspected without printing
+values:
+
+| Setting | Local status | Deployed status |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | absent | unknown |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | absent | unknown |
+| server Auth URL/publishable/JWKS contract | not ready | unknown |
+| legitimate real-user/session path | not ready | unknown |
+| sign-in, signup, recovery UI | implemented locally | not deployed/proven |
+
+`npm.cmd run test:phase6c5a` deterministically exercises missing configuration,
+session restoration, sign-in, signup verification-pending state, confirmation
+resend, password reset, recovery password update, token refresh, sign-out,
+subscription cleanup, redirect construction, credential non-leakage, and the
+absence of client-supplied identity fields. The test uses a local fake Auth
+client and makes no network or provider call.
+
+6C4B remains not started. The next live-readiness checkpoint is **6C5B**:
+controlled Supabase Auth environment configuration, redirect allowlisting, a
+dedicated test user, and an observed browser-to-server bearer-session proof.
+Only after that proof and review should the four 6C4B sensitive routes be
+protected.
 
 ## Official references
 
@@ -1100,6 +1154,9 @@ and this record remain uncommitted for review. 6C4B and 6C5 are not started.
 - [JavaScript getSession](https://supabase.com/docs/reference/javascript/auth-getsession)
 - [JavaScript onAuthStateChange](https://supabase.com/docs/reference/javascript/auth-onauthstatechange)
 - [JavaScript signOut](https://supabase.com/docs/reference/javascript/auth-signout)
+- [JavaScript signUp](https://supabase.com/docs/reference/javascript/auth-signup)
+- [JavaScript resetPasswordForEmail](https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail)
+- [JavaScript updateUser](https://supabase.com/docs/reference/javascript/auth-updateuser)
 - [Password-based Auth](https://supabase.com/docs/guides/auth/passwords)
 - [User sessions](https://supabase.com/docs/guides/auth/sessions)
 - [Understanding Supabase API keys](https://supabase.com/docs/guides/getting-started/api-keys)
