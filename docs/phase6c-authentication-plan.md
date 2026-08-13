@@ -1,8 +1,8 @@
 # Tracework Phase 6C1: Authentication Architecture & Authenticated Principal Contract
 
-Status: planning/audit only; uncommitted for review
+Status: 6C3 implementation uncommitted for review
 Date: 2026-08-13
-Checkpoint: cc6c833 / Phase 6B formally closed
+Checkpoint: eee345a / Phase 6C2 published
 Live database contract: POST_6B2C
 
 This document freezes the identity and request-principal architecture needed
@@ -58,14 +58,13 @@ packages and current repository runtime. It verified:
 | Vercel compatibility | Web Request/Response wrappers are supported directly for Vercel Edge; current Node-style Vercel handlers should use the installed core primitives or a separately reviewed request adapter |
 
 The current Tracework handlers are Node-style Vercel functions rather than
-standard fetch handlers. Therefore 6C3 should compose the verified context with
-@supabase/server/core: extract the request's Authorization and apikey headers,
-call verifyCredentials({ token, apikey }, { auth: 'user' }), take
-verified.userClaims.id as the principal root, and construct the caller client
-with createContextClient using the verified token and key name. It may use
-verifyAuth after a carefully tested Web Request adapter, but it must not wrap a
-Node-style handler with withSupabase by assumption. Neither path permits manual
-JWT decoding or trusting an unverified sub claim.
+standard fetch handlers. 6C3 therefore uses a strict Node/Web header adapter
+that accepts exactly one Authorization: Bearer <token>, constructs a canonical
+Web Request, and calls the installed @supabase/server/core verifyAuth primitive.
+It takes only verified.userClaims.id as the principal root and constructs the
+caller client with createContextClient using the verified token and key name. It
+does not wrap a Node-style handler with withSupabase by assumption. Neither
+path permits manual JWT decoding or trusting an unverified sub claim.
 
 ## 1. Actual Tracework runtime audit
 
@@ -337,8 +336,8 @@ auth-required route:
 ~~~
 resolveAuthenticatedPrincipal(request)
         |
-        +-- extract Authorization: Bearer <token> and apikey
-        +-- @supabase/server/core verifyCredentials({ token, apikey }, { auth: 'user' })
+        +-- strictly parse one Authorization: Bearer <token>
+        +-- canonical Web Request -> @supabase/server/core verifyAuth({ auth: 'user' })
         +-- consume verified.userClaims.id
         +-- createContextClient({ auth: { token, keyName } })
         +-- return AuthenticatedPrincipal plus caller-scoped client
@@ -985,6 +984,34 @@ request, user creation, password-reset email, database query, provider call,
 route authorization change, RLS change, RPC change, or Supabase setting change
 was performed. 6C3 remains responsible for the server principal resolver and
 must use the concrete core-primitive contract above.
+
+## 26. 6C3 implementation record
+
+The Phase 6C3 server identity boundary was implemented locally and remains
+uncommitted for review. It does not protect an existing route or call a live
+Supabase/Auth/provider system.
+
+| Concern | Proven implementation |
+| --- | --- |
+| Resolver | `server/auth.ts`, `resolveAuthenticatedRequestContext()` |
+| Installed primitives | `@supabase/server/core` `verifyAuth` and `createContextClient`; `withSupabase`, `createSupabaseContext`, and `createAdminClient` are not used by the normal resolver |
+| Credential extraction | Strictly accepts one `Authorization: Bearer <token>` value from Node header records, raw header pairs, or Web `Headers`; missing, wrong scheme, empty, whitespace, duplicate, and malformed values fail before verification |
+| Verification | The canonical Web Request is passed to the pinned package's `verifyAuth(request, { auth: 'user' })`; no JWT is decoded or trusted locally |
+| Verified identity | `verified.data.userClaims.id` only |
+| Principal | `AuthenticatedPrincipal { userId, accessToken }`, with the token kept request-scoped and absent from public errors |
+| Caller client | `createContextClient({ auth: { token: verified.data.token, keyName: verified.data.keyName } })`; tests inspect the resulting client Authorization header and never issue a database request |
+| Admin separation | The resolver imports no admin factory and does not read `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`; the legacy service-role compatibility path remains unchanged |
+| Server environment contract | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_JWKS_URL`/`SUPABASE_JWKS`; only safe placeholders were added to `.env.example`, with no local or deployed values changed |
+| Error contract | `missing_auth`, `malformed_auth`, and `invalid_auth` return safe 401 semantics; missing server Auth/client configuration returns safe 503 `auth_configuration`; no raw package error or credential is returned |
+| Adapter proof | The same resolver accepts a Vercel-style Node header record/raw-header pair and a Vite/Web `Headers` object; no route or adapter invokes it yet |
+| Focused tests | `scripts/test-phase6c3.mjs` covers actual local JWKS verification, expiry, foreign-signing-key rejection, parser failures, verifier exceptions, principal derivation, body/query impersonation resistance, cross-request isolation, caller-client headers, admin separation, adapter parity, no-network behavior, and route non-cutover |
+
+The package's current environment contract requires an explicit JWKS source for
+user-token verification and a publishable key for the caller-scoped client.
+Tracework therefore does not claim live Auth readiness until those server-only
+deployment variables are configured in a separately reviewed step. Phase 6C3
+proves the local request-to-principal chain without changing Supabase settings,
+creating users, adding RLS, changing RPCs, or switching provider/write routes.
 
 ## Official references
 
