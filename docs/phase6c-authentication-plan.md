@@ -1,8 +1,8 @@
 # Tracework Phase 6C1: Authentication Architecture & Authenticated Principal Contract
 
-Status: 6C3 implementation uncommitted for review
+Status: 6C4A gate/readiness audit uncommitted for review
 Date: 2026-08-13
-Checkpoint: eee345a / Phase 6C2 published
+Checkpoint: 38b699f / Phase 6C3 published
 Live database contract: POST_6B2C
 
 This document freezes the identity and request-principal architecture needed
@@ -987,8 +987,8 @@ must use the concrete core-primitive contract above.
 
 ## 26. 6C3 implementation record
 
-The Phase 6C3 server identity boundary was implemented locally and remains
-uncommitted for review. It does not protect an existing route or call a live
+The Phase 6C3 server identity boundary was implemented locally and published
+in commit `38b699f`. It does not protect an existing route or call a live
 Supabase/Auth/provider system.
 
 | Concern | Proven implementation |
@@ -1012,6 +1012,85 @@ Tracework therefore does not claim live Auth readiness until those server-only
 deployment variables are configured in a separately reviewed step. Phase 6C3
 proves the local request-to-principal chain without changing Supabase settings,
 creating users, adding RLS, changing RPCs, or switching provider/write routes.
+
+## 27. 6C4A gate and deployment-readiness record
+
+Phase 6C4A adds the future sensitive-route gate mechanism and records whether
+the four-route cutover is safe to perform. It does not activate the gate in
+any production or development route, and it does not make an authentication
+success an authorization decision.
+
+| Concern | Proven result |
+| --- | --- |
+| Shared gate | `server/routeAuth.ts`; `requireAuthenticatedRequest()` calls the single 6C3 `resolveAuthenticatedRequestContext()` resolver and maps its safe `AuthFailure` contract to Vercel- or Node/Vite-style JSON responses |
+| Policy metadata | `TRACEWORK_ROUTE_AUTH_POLICIES` records current behavior and the separately reviewed cutover behavior; it is metadata, not an environment-controlled runtime bypass |
+| Future sensitive routes | `/api/embed`, `/api/generate`, `/api/vector/sync`, and `/api/vector/delete` are current `anonymous` and future `authenticated` |
+| Current read/search routes | `/api/library/collections`, `/api/library/documents`, and `/api/vector/search` remain current and future `anonymous` in this checkpoint; their eventual access control depends on 6D/6E authorization and candidate isolation |
+| Ordering | Authentication resolves before the continuation where provider or database work would be placed; failed-auth tests prove the continuation is not entered |
+| Authorization boundary | A valid principal is not treated as authorized for a resource, workspace, or mutation; ownership, workspace, RLS, and retrieval policy remain later work |
+| Adapter parity | The same gate and resolver handle Vercel/Node response objects and Vite/Web `Headers`/response objects; no second verifier exists |
+| Production cutover | No existing route imports or activates the gate; all seven current route auth requirements remain `NO` |
+
+### 27.1 Deployment and environment readiness
+
+Repository documentation identifies Vercel serverless functions under `api/`,
+but no local `vercel.json`, CI deployment configuration, or read-only hosting
+dashboard evidence proves the production branch, automatic `main` deployment,
+or preview behavior. Deployment behavior is therefore `UNKNOWN`; the safe
+assumption for a future cutover is that a push to `main` could deploy. 6C4A
+did not trigger a deployment or change hosting settings.
+
+The local environment was inspected by key presence only; values were not
+printed:
+
+| Required setting | Local status | Deployed status |
+| --- | --- | --- |
+| `SUPABASE_URL` | configured | unknown |
+| `SUPABASE_PUBLISHABLE_KEY` | absent | unknown |
+| `SUPABASE_JWKS_URL` or `SUPABASE_JWKS` | absent | unknown |
+| `VITE_SUPABASE_URL` | absent | unknown |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | absent | unknown |
+
+The browser session foundation, bearer transport, and server resolver exist,
+but there is still no sign-in UI, signup UI, password-reset UI, or legitimate
+local user/session path. Email-confirmation and recovery redirects are not
+proven configured, and no real user was created.
+
+### 27.2 Cutover readiness and rollback
+
+| Requirement | Status |
+| --- | --- |
+| Gate implementation and deterministic tests | READY |
+| Provider failure before provider call | READY/proven by local mock tests |
+| Mutation failure before database write | READY/proven by local mock tests |
+| Local server Auth environment | NOT READY |
+| Local browser Auth environment | NOT READY |
+| Deployed Auth environment | UNKNOWN |
+| User can obtain a valid session | NOT READY |
+| Production deployment behavior | UNKNOWN |
+| Future cutover rollback | READY |
+
+6C4B is not safe now. The selected sequence is **6C5 account/login flow first,
+then 6C4B route cutover**, because enabling the four sensitive gates without a
+usable sign-in path and proven Auth environment would strand cost-bearing and
+mutation features. 6C5 is not started by this checkpoint.
+
+The future rollback is a source-control rollback: revert the exact 6C4B
+cutover commit that wires the gate into the four routes. No database rollback
+is expected because route authentication cutover requires no schema migration.
+
+### 27.3 6C4A verification boundary
+
+`npm.cmd run test:phase6c4a` covers shared-gate success and safe failures,
+configuration failures, Vercel/Vite adapter parity, provider zero-call
+failures, mutation zero-write failures, principal propagation,
+impersonation resistance, policy classification, and the current non-cutover
+assertion. The full 6C2, 6C3, grounded, retrieval, and Phase 5E regression
+commands were rerun after this record was written.
+
+6C4A made no Supabase schema or data mutation, Auth user or setting change,
+RLS/RPC change, deployment, provider call, or OpenAI call. The implementation
+and this record remain uncommitted for review. 6C4B and 6C5 are not started.
 
 ## Official references
 
