@@ -1140,11 +1140,95 @@ subscription cleanup, redirect construction, credential non-leakage, and the
 absence of client-supplied identity fields. The test uses a local fake Auth
 client and makes no network or provider call.
 
-6C4B remains not started. The next live-readiness checkpoint is **6C5B**:
-controlled Supabase Auth environment configuration, redirect allowlisting, a
-dedicated test user, and an observed browser-to-server bearer-session proof.
-Only after that proof and review should the four 6C4B sensitive routes be
-protected.
+6C4B remains not started at this checkpoint. The next live-readiness checkpoint
+is **6C5B**: controlled Supabase Auth environment configuration, redirect
+allowlisting, a dedicated test user, and an observed browser-to-server
+bearer-session proof. Only after that proof and review should the four 6C4B
+sensitive routes be protected.
+
+## 29. 6C5B2 live identity proof record
+
+The live Auth configuration was applied to the Tracework Supabase project and
+the production deployment, and the full identity chain was proven end to end
+against a real confirmed account.
+
+| Item | Result |
+| --- | --- |
+| Site URL | changed from `http://localhost:3000` to the production origin |
+| Redirect allowlist | four exact confirm/recovery URLs; no wildcards |
+| Confirm email | still required; provider policy unchanged |
+| JWT verification | asymmetric ES256 via the project JWKS URL |
+| Browser + server Auth env | configured locally and for Vercel production |
+| Production deployment | one redeploy of the already-published source commit |
+| Auth users created | exactly one dedicated Auth validation account |
+
+The proof that matters is that a single user id was identical at all three
+layers — the Supabase `auth.users` row, the browser session, and the server's
+`resolveAuthenticatedRequestContext().principal.userId` — established through a
+real signup, a real emailed confirmation, and a real browser sign-in. The server
+side was resolved through a temporary local harness that held the access token
+only in memory and returned only the user id. No JWT, access token, refresh
+token, or password was logged, written to a file, or committed.
+
+Two gaps were recorded rather than papered over: the `/?auth=confirmed` landing
+was completed by the tester in a different browser profile and so was not
+directly observed by the agent, and the `/?auth=recovery` redirect has not yet
+been exercised live.
+
+## 30. 6C4B sensitive route cutover record
+
+6C4B turns the prepared gate into enforced behavior. The central decision is that
+**a verified principal is not authorization**. The four sensitive routes are
+therefore not cut over identically:
+
+| Route | Policy | Anonymous | Verified principal |
+| --- | --- | --- | --- |
+| `/api/embed` | `authenticated` | 401 | handler runs |
+| `/api/generate` | `authenticated` | 401 | handler runs |
+| `/api/vector/sync` | `authenticated-authorization-pending` | 401 | **403**, zero writes |
+| `/api/vector/delete` | `authenticated-authorization-pending` | 401 | **403**, zero writes |
+| `/api/library/collections` | `anonymous` | allowed | allowed |
+| `/api/library/documents` | `anonymous` | allowed | allowed |
+| `/api/vector/search` | `anonymous` | allowed | allowed |
+
+Authentication is a sufficient boundary for the two provider routes because what
+it protects there is provider spend, and the caller's identity is the whole
+question. It is deliberately *not* sufficient for the two mutation routes: those
+run on the service role against knowledge everyone reads, and no ownership,
+workspace, or RLS model exists yet. Letting any signed-in user through would
+convert authentication into authorization it has not earned, so they fail closed
+with `403 authorization_pending` after identity is established and before the
+privileged handler is reachable. The refusal is a 403 rather than a 401 on
+purpose: the credential was accepted, so prompting the user to sign in again
+would be both untrue and an invitation to a pointless retry loop.
+
+Enforcement lives in `server/routeAuth.ts` and is applied by both adapters — the
+Vercel entry points in `api/` via `withRouteAuth`, and the Vite dev middleware
+via `enforceRouteAuthPolicy`. There is one policy table and one verifier; the
+runtimes differ only in request/response plumbing. An unknown route path fails
+closed, so adding a route without a policy cannot silently publish it. No
+environment variable can disable the gate.
+
+The business-logic handlers in `server/traceworkApi.ts` stay free of auth
+concerns, which is why the Phase 5E suites can still drive generation rules
+directly without a credential.
+
+### 30.1 6C4B verification
+
+`npm.cmd run test:phase6c4b` proves the whole matrix offline against the real
+cutover code with a stubbed verifier: missing, malformed, invalid, and
+configuration-failure credentials on all four routes across both adapter response
+shapes; zero provider calls and zero database calls for every rejected
+credential; exactly one mocked provider call for a valid principal on each
+provider route; and 403 with zero privileged-handler entries for a valid
+principal on each mutation route. It also asserts that request-body identity
+(`userId`, `ownerId`, `workspaceId`) never becomes the principal, that the three
+read/search routes remain anonymous in both adapters, and that the client
+transport sends exactly one request and never retries anonymously.
+
+6D remains required before `/api/vector/sync` and `/api/vector/delete` can
+execute at all. That phase replaces the `authorization_pending` refusal with real
+ownership/workspace authorization and RLS.
 
 ## Official references
 
