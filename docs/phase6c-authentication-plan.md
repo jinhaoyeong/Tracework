@@ -41,6 +41,32 @@ The server package choice is a design freeze, not an implementation claim. The
 first implementation task must pin and verify the current package API against
 the Vercel handler shape before changing package.json.
 
+## 0. 6C2 package compatibility addendum
+
+The 6C2 local compatibility spike was run on 2026-08-13 against the installed
+packages and current repository runtime. It verified:
+
+| Package or API | Proven result |
+| --- | --- |
+| @supabase/supabase-js | 2.112.3, exact-pinned in package.json and package-lock.json |
+| @supabase/server | 1.4.1, exact-pinned in package.json and package-lock.json; public-beta status remains an implementation risk |
+| @supabase/server exports | withSupabase and createSupabaseContext import and type-check successfully |
+| @supabase/server/core exports | verifyAuth, verifyCredentials, extractCredentials, createContextClient, and createAdminClient import and type-check successfully |
+| Header auth | The installed package extracts Authorization: Bearer <token> and verifies it with auth: 'user' |
+| Caller context | userClaims.id is available from the verified result; createContextClient({ auth: { token, keyName } }) creates the RLS-scoped client |
+| Privileged context | createAdminClient is a separate service/secret-key client and is not the caller client |
+| Vercel compatibility | Web Request/Response wrappers are supported directly for Vercel Edge; current Node-style Vercel handlers should use the installed core primitives or a separately reviewed request adapter |
+
+The current Tracework handlers are Node-style Vercel functions rather than
+standard fetch handlers. Therefore 6C3 should compose the verified context with
+@supabase/server/core: extract the request's Authorization and apikey headers,
+call verifyCredentials({ token, apikey }, { auth: 'user' }), take
+verified.userClaims.id as the principal root, and construct the caller client
+with createContextClient using the verified token and key name. It may use
+verifyAuth after a carefully tested Web Request adapter, but it must not wrap a
+Node-style handler with withSupabase by assumption. Neither path permits manual
+JWT decoding or trusting an unverified sub claim.
+
 ## 1. Actual Tracework runtime audit
 
 ### 1.1 Runtime classification
@@ -149,9 +175,10 @@ client for privileged operations. It lists framework APIs and Vercel among its
 server runtimes. See [Which package to use](https://supabase.com/docs/guides/auth/choosing-a-server-package).
 
 @supabase/server is a relatively new/public-beta package in the current
-guidance. 6C2 must pin an exact version and verify its Vercel adapter/context
-API before adding it. The architecture does not fall back to trusting decoded
-JWT text if that compatibility spike fails.
+guidance. 6C2 pinned 1.4.1 and verified its actual exports and core primitive
+types against Tracework's Node-style Vercel shape. The architecture does not
+fall back to trusting decoded JWT text if a future package upgrade changes this
+compatibility result.
 
 ### 2.2 Token validation and identity
 
@@ -310,19 +337,18 @@ auth-required route:
 ~~~
 resolveAuthenticatedPrincipal(request)
         |
-        +-- require exactly one Authorization header
-        +-- require scheme Bearer and a non-empty token
-        +-- create @supabase/server request context with auth: 'user'
-        +-- consume the verified user identity/claims from that context
-        +-- return AuthenticatedPrincipal
+        +-- extract Authorization: Bearer <token> and apikey
+        +-- @supabase/server/core verifyCredentials({ token, apikey }, { auth: 'user' })
+        +-- consume verified.userClaims.id
+        +-- createContextClient({ auth: { token, keyName } })
+        +-- return AuthenticatedPrincipal plus caller-scoped client
 ~~~
 
-The context API may be createSupabaseContext or the equivalent Vercel adapter
-documented for the pinned package version; withSupabase({ auth: 'user' }) is
-the corresponding wrapper model. 6C2/6C3 must verify the exact Node/Vercel
-adapter and fail the implementation if the package cannot preserve the
-contract. The implementation must not silently substitute a hand-written JWT
-decoder.
+For a standard Web Request handler, createSupabaseContext or
+withSupabase({ auth: 'user' }) remains the package-level equivalent. The
+current Node-style Vercel handler should use the core primitive contract proven
+by 6C2, or a separately tested adapter that produces the same verified context.
+The implementation must not silently substitute a hand-written JWT decoder.
 
 ### 5.2 Status and privacy behavior
 
@@ -425,8 +451,8 @@ VITE_SUPABASE_PUBLISHABLE_KEY
         +-- detectSessionInUrl: true for confirmation/recovery handling
 ~~~
 
-The exact SDK options must be checked against the pinned package. The browser
-may contain only the project URL and publishable key. It must never contain or
+6C2 verified these SDK options against @supabase/supabase-js 2.112.3. The
+browser may contain only the project URL and publishable key. It must never contain or
 receive:
 
 ~~~
@@ -723,7 +749,7 @@ Expected future modification sites, without changing them in 6C1:
 
 | Location | Future responsibility |
 | --- | --- |
-| package.json / package-lock.json | Pin @supabase/supabase-js and @supabase/server after package/API spike |
+| package.json / package-lock.json | Keep @supabase/supabase-js 2.112.3 and @supabase/server 1.4.1 exact-pinned; re-run the compatibility spike before upgrades |
 | src/lib/supabase.ts or src/auth/* | One browser client, session state, sign-in/out/password flows |
 | src/main.tsx / src/App.tsx | Auth initialization gate and account/demo state; preserve local retrieval behavior |
 | src/lib/vectorDb.ts | Attach bearer token through the shared request wrapper and handle 401 without stale results |
@@ -896,8 +922,8 @@ routes no longer silently depend on missing identity.
 
 These items remain intentionally unresolved or implementation-gated:
 
-- exact pinned versions and Vercel adapter API for the current public-beta
-  @supabase/server package;
+- future upgrades of the public-beta @supabase/server package and whether a
+  Web Request adapter is preferable to its proven core primitives;
 - whether the deployed project should migrate from legacy
   SUPABASE_SERVICE_ROLE_KEY to a new SUPABASE_SECRET_KEY immediately or in a
   separately reviewed credential transition;
@@ -918,8 +944,8 @@ client-supplied identity or use the service role as a normal user context.
 
 ## 24. 6C1 verification and stop boundary
 
-This planning phase is complete only when the following local checks pass after
-the document is created:
+The original 6C1 planning checkpoint was complete when the following local
+checks passed after the document was created:
 
 ~~~
 npm.cmd run check
@@ -935,8 +961,30 @@ Only docs/phase6c-authentication-plan.md is uncommitted
 ~~~
 
 No application, package, environment, Supabase, Auth, RLS, RPC, route,
-deployment, or provider state is changed by 6C1. Stop after reporting the
-frozen architecture and unresolved decisions. Do not begin 6C2.
+deployment, or provider state was changed by 6C1. The later 6C2 implementation
+record is below; it does not authorize 6C3.
+
+## 25. 6C2 implementation record
+
+The browser/session foundation was implemented locally without live Supabase,
+Auth, database, or provider operations:
+
+| Concern | Proven implementation |
+| --- | --- |
+| Browser client | src/lib/supabase.ts; one lazy @supabase/supabase-js client using VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY |
+| Browser Auth options | persistSession: true, autoRefreshToken: true, detectSessionInUrl: true |
+| Missing configuration | Returns no client and an explicit configured=false state; it never invents an authenticated session or falls back to a server secret |
+| Session state | src/auth/session.ts; initializing, signed-out, signed-in, session-expired, email-verification-pending, password-recovery, and error states |
+| SDK events | INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, PASSWORD_RECOVERY, USER_UPDATED, and MFA_CHALLENGE_VERIFIED are handled from the installed SDK type |
+| Token accessor | Reads the current SDK session at request time; no second token store or token logging |
+| Request transport | src/lib/apiClient.ts can add Authorization: Bearer <access_token> and has an explicit anonymous option; current server route authorization is unchanged |
+| Local tests | scripts/phase6c2-server-spike.ts and scripts/test-phase6c2.mjs; package/API exports, core primitives, session restoration/events, sign-out scope, config absence, and bearer/anonymous transport are covered |
+
+The 6C2 checks passed with exact versions 2.112.3 and 1.4.1. No real Auth
+request, user creation, password-reset email, database query, provider call,
+route authorization change, RLS change, RPC change, or Supabase setting change
+was performed. 6C3 remains responsible for the server principal resolver and
+must use the concrete core-primitive contract above.
 
 ## Official references
 

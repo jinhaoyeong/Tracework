@@ -1,6 +1,7 @@
 // Explicit extension so Node can load this module directly, matching the
 // convention the corpus modules already follow for the eval scripts.
 import { createDocument } from './rag.ts'
+import { requestWithAuth } from './apiClient.ts'
 import type { DocumentRecord, SourceKind, SourceProvenance } from '../types'
 
 /**
@@ -50,7 +51,7 @@ interface ApiErrorPayload {
 const requestJson = async <T>(path: string, body: unknown): Promise<T> => {
   let response: Response
   try {
-    response = await fetch(path, {
+    response = await requestWithAuth(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

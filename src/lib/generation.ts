@@ -4,6 +4,7 @@ import type {
   SynthesisGenerationRequest,
   SynthesisGenerationResponse,
 } from './synthesisGeneration.ts'
+import { requestWithAuth } from './apiClient.ts'
 
 export interface GroundedGenerationResponse {
   answer: string
@@ -37,7 +38,7 @@ interface GenerationErrorPayload {
 const postGeneration = async (body: Record<string, unknown>): Promise<GroundedGenerationResponse> => {
   let response: Response
   try {
-    response = await fetch('/api/generate', {
+    response = await requestWithAuth('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

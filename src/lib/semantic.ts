@@ -1,3 +1,5 @@
+import { requestWithAuth } from './apiClient.ts'
+
 export interface NeuralEmbeddingResponse {
   vectors: number[][]
   model: string
@@ -36,7 +38,7 @@ export const requestNeuralEmbeddings = async (
     const batch = inputs.slice(start, start + batchSize)
     let response: Response
     try {
-      response = await fetch('/api/embed', {
+      response = await requestWithAuth('/api/embed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: batch }),

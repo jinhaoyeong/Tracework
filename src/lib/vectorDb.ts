@@ -1,4 +1,5 @@
 import type { DocumentRecord, SourceKind, SourceProvenance } from '../types'
+import { requestWithAuth } from './apiClient.ts'
 
 export const PGVECTOR_DIMENSIONS = 1536
 
@@ -61,7 +62,7 @@ interface ApiErrorPayload {
 const requestJson = async <T>(path: string, body: unknown): Promise<T> => {
   let response: Response
   try {
-    response = await fetch(path, {
+    response = await requestWithAuth(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

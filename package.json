@@ -10,6 +10,7 @@
     "validate:phase6b-migration": "node --experimental-strip-types scripts/validate-phase6b-migration.mjs",
     "validate:phase6b-catalog-preflight": "node --experimental-strip-types scripts/validate-phase6b-catalog-preflight.mjs",
     "inventory:phase6b": "node --experimental-strip-types scripts/phase6b-inventory.mjs --plan",
+    "test:phase6c2": "tsc --noEmit --target ES2022 --module ESNext --moduleResolution Bundler --allowImportingTsExtensions --strict --skipLibCheck scripts/phase6c2-server-spike.ts && node --experimental-strip-types scripts/test-phase6c2.mjs",
     "seed:library": "node --experimental-strip-types scripts/seed-library.mjs",
     "test:grounded": "node --experimental-strip-types scripts/test-grounded.mjs",
     "stress:grounded": "node --experimental-strip-types scripts/stress-grounded.mjs",
@@ -45,9 +46,11 @@
     "preview": "vite preview --configLoader runner"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^5.0.2",
+    "@supabase/server": "1.4.1",
+    "@supabase/supabase-js": "2.112.3",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "typescript": "^5.9.2",
