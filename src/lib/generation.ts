@@ -4,7 +4,7 @@ import type {
   SynthesisGenerationRequest,
   SynthesisGenerationResponse,
 } from './synthesisGeneration.ts'
-import { requestWithAuth } from './apiClient.ts'
+import { ACCOUNT_REQUIRED, AccountRequiredError, requestWithAuth } from './apiClient.ts'
 
 export interface GroundedGenerationResponse {
   answer: string
@@ -42,8 +42,11 @@ const postGeneration = async (body: Record<string, unknown>): Promise<GroundedGe
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    })
-  } catch {
+    }, { requireAccount: true })
+  } catch (error) {
+    if (error instanceof AccountRequiredError) {
+      throw new GenerationError(ACCOUNT_REQUIRED, 'Sign in to Tracework to generate a grounded answer.')
+    }
     throw new GenerationError('network_error', 'The generation route could not be reached. Start Tracework with npm run dev.')
   }
 

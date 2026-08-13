@@ -7,7 +7,7 @@ import {
   extractBearerToken,
   resolveAuthenticatedRequestContext,
   toAuthFailureResponse,
-} from '../server/auth.ts'
+} from '../server/routeAuth.ts'
 
 const require = createRequire(import.meta.url)
 const serverPackage = require('@supabase/server/package.json')
@@ -238,7 +238,7 @@ assert.equal(capturedClientOptions.auth.keyName, null)
 assert.deepEqual(injectedContext.supabase, { injected: true })
 
 /* The resolver must not carry or construct the privileged admin client. */
-const resolverSource = readFileSync(new URL('../server/auth.ts', import.meta.url), 'utf8')
+const resolverSource = readFileSync(new URL('../server/routeAuth.ts', import.meta.url), 'utf8')
 assert.equal(/createAdminClient|supabaseAdmin|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY/.test(resolverSource), false)
 
 /* No existing route or adapter was switched to auth in 6C3. */

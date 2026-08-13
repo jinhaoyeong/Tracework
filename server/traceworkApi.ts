@@ -67,6 +67,14 @@ type RuntimeEnv = Record<string, string | undefined>
 export interface VercelRequestLike {
   method?: string
   body?: unknown
+  /**
+   * Present on the real platform request. The handlers below never read it:
+   * authentication is enforced by the route entry points in api/ and by the
+   * Vite middleware, both through server/routeAuth.ts. Declaring it here keeps
+   * the gated entry points type-safe without pulling auth into business logic.
+   */
+  headers?: Headers | Readonly<Record<string, string | readonly string[] | undefined>>
+  rawHeaders?: readonly string[]
 }
 
 export interface VercelResponseLike {

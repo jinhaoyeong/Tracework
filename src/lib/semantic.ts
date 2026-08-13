@@ -1,4 +1,4 @@
-import { requestWithAuth } from './apiClient.ts'
+import { ACCOUNT_REQUIRED, AccountRequiredError, requestWithAuth } from './apiClient.ts'
 
 export interface NeuralEmbeddingResponse {
   vectors: number[][]
@@ -42,8 +42,11 @@ export const requestNeuralEmbeddings = async (
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: batch }),
-      })
-    } catch {
+      }, { requireAccount: true })
+    } catch (error) {
+      if (error instanceof AccountRequiredError) {
+        throw new NeuralEmbeddingError(ACCOUNT_REQUIRED, 'Sign in to Tracework to build neural embeddings.')
+      }
       throw new NeuralEmbeddingError('network_error', 'The embedding route could not be reached. Start Tracework with npm run dev.')
     }
 

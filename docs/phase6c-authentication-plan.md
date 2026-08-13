@@ -994,7 +994,7 @@ Supabase/Auth/provider system.
 
 | Concern | Proven implementation |
 | --- | --- |
-| Resolver | `server/auth.ts`, `resolveAuthenticatedRequestContext()` |
+| Resolver | `resolveAuthenticatedRequestContext()` (originally `server/auth.ts`; consolidated into `server/routeAuth.ts` in 6C4B-R, see section 31) |
 | Installed primitives | `@supabase/server/core` `verifyAuth` and `createContextClient`; `withSupabase`, `createSupabaseContext`, and `createAdminClient` are not used by the normal resolver |
 | Credential extraction | Strictly accepts one `Authorization: Bearer <token>` value from Node header records, raw header pairs, or Web `Headers`; missing, wrong scheme, empty, whitespace, duplicate, and malformed values fail before verification |
 | Verification | The canonical Web Request is passed to the pinned package's `verifyAuth(request, { auth: 'user' })`; no JWT is decoded or trusted locally |
@@ -1140,11 +1140,183 @@ subscription cleanup, redirect construction, credential non-leakage, and the
 absence of client-supplied identity fields. The test uses a local fake Auth
 client and makes no network or provider call.
 
-6C4B remains not started. The next live-readiness checkpoint is **6C5B**:
-controlled Supabase Auth environment configuration, redirect allowlisting, a
-dedicated test user, and an observed browser-to-server bearer-session proof.
-Only after that proof and review should the four 6C4B sensitive routes be
-protected.
+6C4B remains not started at this checkpoint. The next live-readiness checkpoint
+is **6C5B**: controlled Supabase Auth environment configuration, redirect
+allowlisting, a dedicated test user, and an observed browser-to-server
+bearer-session proof. Only after that proof and review should the four 6C4B
+sensitive routes be protected.
+
+## 29. 6C5B2 live identity proof record
+
+The live Auth configuration was applied to the Tracework Supabase project and
+the production deployment, and the full identity chain was proven end to end
+against a real confirmed account.
+
+| Item | Result |
+| --- | --- |
+| Site URL | changed from `http://localhost:3000` to the production origin |
+| Redirect allowlist | four exact confirm/recovery URLs; no wildcards |
+| Confirm email | still required; provider policy unchanged |
+| JWT verification | asymmetric ES256 via the project JWKS URL |
+| Browser + server Auth env | configured locally and for Vercel production |
+| Production deployment | one redeploy of the already-published source commit |
+| Auth users created | exactly one dedicated Auth validation account |
+
+The proof that matters is that a single user id was identical at all three
+layers — the Supabase `auth.users` row, the browser session, and the server's
+`resolveAuthenticatedRequestContext().principal.userId` — established through a
+real signup, a real emailed confirmation, and a real browser sign-in. The server
+side was resolved through a temporary local harness that held the access token
+only in memory and returned only the user id. No JWT, access token, refresh
+token, or password was logged, written to a file, or committed.
+
+Two gaps were recorded rather than papered over: the `/?auth=confirmed` landing
+was completed by the tester in a different browser profile and so was not
+directly observed by the agent, and the `/?auth=recovery` redirect has not yet
+been exercised live.
+
+## 30. 6C4B sensitive route cutover record
+
+6C4B turns the prepared gate into enforced behavior. The central decision is that
+**a verified principal is not authorization**. The four sensitive routes are
+therefore not cut over identically:
+
+| Route | Policy | Anonymous | Verified principal |
+| --- | --- | --- | --- |
+| `/api/embed` | `authenticated` | 401 | handler runs |
+| `/api/generate` | `authenticated` | 401 | handler runs |
+| `/api/vector/sync` | `authenticated-authorization-pending` | 401 | **403**, zero writes |
+| `/api/vector/delete` | `authenticated-authorization-pending` | 401 | **403**, zero writes |
+| `/api/library/collections` | `anonymous` | allowed | allowed |
+| `/api/library/documents` | `anonymous` | allowed | allowed |
+| `/api/vector/search` | `anonymous` | allowed | allowed |
+
+Authentication is a sufficient boundary for the two provider routes because what
+it protects there is provider spend, and the caller's identity is the whole
+question. It is deliberately *not* sufficient for the two mutation routes: those
+run on the service role against knowledge everyone reads, and no ownership,
+workspace, or RLS model exists yet. Letting any signed-in user through would
+convert authentication into authorization it has not earned, so they fail closed
+with `403 authorization_pending` after identity is established and before the
+privileged handler is reachable. The refusal is a 403 rather than a 401 on
+purpose: the credential was accepted, so prompting the user to sign in again
+would be both untrue and an invitation to a pointless retry loop.
+
+Enforcement lives in `server/routeAuth.ts` and is applied by both adapters — the
+Vercel entry points in `api/` via `withRouteAuth`, and the Vite dev middleware
+via `enforceRouteAuthPolicy`. There is one policy table and one verifier; the
+runtimes differ only in request/response plumbing. An unknown route path fails
+closed, so adding a route without a policy cannot silently publish it. No
+environment variable can disable the gate.
+
+The business-logic handlers in `server/traceworkApi.ts` stay free of auth
+concerns, which is why the Phase 5E suites can still drive generation rules
+directly without a credential.
+
+### 30.1 6C4B verification
+
+`npm.cmd run test:phase6c4b` proves the whole matrix offline against the real
+cutover code with a stubbed verifier: missing, malformed, invalid, and
+configuration-failure credentials on all four routes across both adapter response
+shapes; zero provider calls and zero database calls for every rejected
+credential; exactly one mocked provider call for a valid principal on each
+provider route; and 403 with zero privileged-handler entries for a valid
+principal on each mutation route. It also asserts that request-body identity
+(`userId`, `ownerId`, `workspaceId`) never becomes the principal, that the three
+read/search routes remain anonymous in both adapters, and that the client
+transport sends exactly one request and never retries anonymously.
+
+6D remains required before `/api/vector/sync` and `/api/vector/delete` can
+execute at all. That phase replaces the `authorization_pending` refusal with real
+ownership/workspace authorization and RLS.
+
+## 31. 6C4B production failure, rollback, and artifact-safe repair (6C4B-R)
+
+The first publication of the 6C4B cutover broke production and was rolled back.
+It is recorded here rather than quietly fixed, because the failure mode is a
+property of the deployment pipeline that any future server module can hit.
+
+| Event | Commit | Result |
+| --- | --- | --- |
+| 6C4B publication | `ba4cb37` | all four protected routes returned runtime `500` |
+| Emergency rollback | `aee38b2` | production restored to the `539eb70` behavior |
+| Artifact-safe repair | 6C4B-R | uncommitted at time of writing |
+
+### 31.1 Root cause
+
+The deployed function never started. Vercel's Node builder transpiles each
+server `.ts` file to `.js` individually and leaves relative import specifiers
+verbatim, so `server/routeAuth.ts`'s `from './auth.ts'` survived into the emitted
+`server/routeAuth.js` and failed at load:
+
+```text
+Error [ERR_MODULE_NOT_FOUND]:
+Cannot find module '/var/task/server/auth.ts'
+imported from /var/task/server/routeAuth.js
+runtime: nodejs24.x, ESM   exit status: 1
+```
+
+The failure happened at module load, before the gate, the handler, the provider,
+and the service-role path — so it was fail-closed, with zero provider calls and
+zero database writes, but the four routes were unusable.
+
+`server/traceworkApi.ts` had never exposed this because it deliberately imports
+nothing. `ba4cb37` was the first deployed *multi-file* server module.
+
+### 31.2 Why every test passed anyway
+
+All suites import the server modules directly under `node --experimental-strip-types`,
+where `.ts` specifiers resolve normally. Thirteen green suites, a passing route
+matrix, and a passing HTTP reachability audit were therefore all compatible with
+a function that could not be imported at all. The tests proved the right code was
+wired up; nothing proved it could be *loaded* in the runtime that would run it.
+
+Note that the obvious one-character fix does not work either: Node's type
+stripping will not resolve a `.js` specifier back to a `.ts` source file, so
+changing `'./auth.ts'` to `'./auth.js'` merely trades the production failure for
+a local-suite failure.
+
+### 31.3 The repair
+
+`server/auth.ts` was consolidated into `server/routeAuth.ts` and deleted. The
+single remaining server auth module contains **no relative imports at all** —
+only package specifiers, which resolve identically before and after transpilation.
+The three concerns stay separated by section within the file:
+
+```text
+1. principal verification
+2. route policy, response mapping, and the shared route gate
+```
+
+`api/*.ts` import it as `'../server/routeAuth.js'` (the transpiled name), while
+`vite.config.ts` and the test suites import `'./server/routeAuth.ts'`. Because the
+module has no relative imports, both specifiers are correct in their own runtime.
+
+### 31.4 Artifact proof
+
+`scripts/test-phase6c4b-artifact.mjs` validates a prepared Vercel output
+directory. It needs no Vercel login and no credential, so build acquisition and
+artifact validation stay separate:
+
+```text
+npm.cmd run test:phase6c4b-artifact -- --output <path-to-.vercel/output>
+```
+
+For each of the four protected functions it reads the authoritative `handler`
+from `.vc-config.json`, imports the built module, and issues an anonymous
+request, requiring `401 missing_auth` — never `500`. It also scans the emitted
+graph for relative specifiers that do not resolve on disk, ignoring source-map
+metadata so `.ts` filenames recorded there are not mistaken for executable
+imports.
+
+The validator was first run against a rebuild of `ba4cb37` and correctly failed
+it twice over — statically (`server/routeAuth.js -> ./auth.ts` unresolved in all
+four functions) and dynamically (`ERR_MODULE_NOT_FOUND` on import). Against the
+repaired tree all four functions import and answer `401`, with zero unresolved
+executable specifiers, zero provider calls, and zero database calls.
+
+The rule going forward: a route cutover is not publishable on source-level tests
+alone. The built serverless artifact must load and enter the Auth gate first.
 
 ## Official references
 
