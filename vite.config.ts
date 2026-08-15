@@ -3,11 +3,11 @@ import react from '@vitejs/plugin-react'
 // The dev generation route delegates to the deployed handler rather than
 // reimplementing it, so the mode rules, context limits, and instruction sets
 // exist in exactly one place.
-import { handleGeneration } from './server/traceworkApi.ts'
+import { handleGeneration, handleLibraryCollections, handleLibraryDocuments } from './server/traceworkApi.ts'
 // The dev server enforces the same route matrix as production through the same
 // module. There is exactly one authentication implementation; only the request
 // and response plumbing differs between the two runtimes.
-import { enforceRouteAuthPolicy } from './server/routeAuth.ts'
+import { enforceRouteAuthPolicy, resolveOptionalPrincipal } from './server/routeAuth.ts'
 import type { AuthResolverDependencies } from './server/routeAuth.ts'
 
 const PGVECTOR_DIMENSIONS = 1536
@@ -379,63 +379,57 @@ export const traceworkDevPlugin = (
       }
     })
 
-    server.middlewares.use('/api/library/collections', async (request, response) => {
-      if (request.method !== 'POST') {
-        sendJson(response, 405, { error: { code: 'method_not_allowed', message: 'Use POST /api/library/collections.' } })
-        return
-      }
+    /**
+     * Both library routes delegate to the deployed handlers, exactly as
+     * /api/generate does. Before 6D4A this middleware carried its own copy of
+     * the row mappers, so the response shape existed twice and could drift; now
+     * the composition, the scope field, the nullable counts, the merge ordering,
+     * the catalog ceiling, and the caller-context error mapping all live in
+     * server/traceworkApi.ts and dev cannot diverge from production.
+     *
+     * resolveOptionalPrincipal returns null when no Authorization header is
+     * present, which keeps these routes anonymous; the handler consults it only
+     * when TRACEWORK_AUTHENTICATED_LIBRARY_READS is exactly "true".
+     */
+    const libraryDependencies = {
+      env,
+      resolveCaller: (callerRequest: any) => resolveOptionalPrincipal(callerRequest, authDependencies),
+    }
 
-      try {
-        const rows = await callSupabaseRpc(env, 'tracework_list_collections', {}) as Array<Record<string, any>>
-        sendJson(response, 200, {
-          database: 'supabase postgres / knowledge library',
-          collections: (Array.isArray(rows) ? rows : []).map((row) => ({
-            slug: row.slug,
-            title: row.title,
-            description: row.description ?? '',
-            kind: row.kind,
-            provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
-            documentCount: Number(row.document_count ?? 0),
-            characterCount: Number(row.character_count ?? 0),
-            updatedAt: row.updated_at ?? null,
-          })),
-        })
-      } catch (error) {
-        sendServerError(response, error, 'The knowledge library catalog could not be read.')
-      }
+    const adaptLibraryResponse = (response: any) => ({
+      status(statusCode: number) {
+        response.statusCode = statusCode
+        return this
+      },
+      json(payload: unknown) {
+        response.setHeader('Content-Type', 'application/json')
+        response.end(JSON.stringify(payload))
+      },
+    })
+
+    server.middlewares.use('/api/library/collections', async (request, response) => {
+      await handleLibraryCollections(
+        { method: request.method, headers: request.headers, rawHeaders: request.rawHeaders },
+        adaptLibraryResponse(response),
+        libraryDependencies,
+      )
     })
 
     server.middlewares.use('/api/library/documents', async (request, response) => {
-      if (request.method !== 'POST') {
-        sendJson(response, 405, { error: { code: 'method_not_allowed', message: 'Use POST /api/library/documents.' } })
-        return
-      }
-
-      try {
-        const body = await readJson(request)
-        const slug = typeof body.slug === 'string' ? body.slug.trim() : ''
-        if (!slug) {
-          throw new ServerVectorError('invalid_collection_slug', 'Send the slug of the collection to read.', 400)
+      let body: unknown
+      if (request.method === 'POST') {
+        try {
+          body = await readJson(request)
+        } catch {
+          sendJson(response, 400, { error: { code: 'invalid_request_body', message: 'The knowledge library request body was not valid JSON.' } })
+          return
         }
-
-        const rows = await callSupabaseRpc(env, 'tracework_collection_documents', { p_slug: slug }) as Array<Record<string, any>>
-        const documents = (Array.isArray(rows) ? rows : []).map((row) => ({
-          id: row.id,
-          collectionSlug: row.collection_slug,
-          title: row.title,
-          sourcePath: row.source_path,
-          kind: row.kind,
-          content: row.content,
-          provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
-        }))
-        if (!documents.length) {
-          throw new ServerVectorError('collection_not_found', `The shared library has no documents for "${slug}". Seed it with npm run seed:library.`, 404)
-        }
-
-        sendJson(response, 200, { collectionSlug: slug, documents })
-      } catch (error) {
-        sendServerError(response, error, 'The knowledge library documents could not be read.')
       }
+      await handleLibraryDocuments(
+        { method: request.method, body, headers: request.headers, rawHeaders: request.rawHeaders },
+        adaptLibraryResponse(response),
+        libraryDependencies,
+      )
     })
 
     server.middlewares.use('/api/vector/delete', async (request, response) => {

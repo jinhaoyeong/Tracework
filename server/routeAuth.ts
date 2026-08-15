@@ -203,6 +203,38 @@ export const resolveAuthenticatedRequestContext = async (
   }
 }
 
+/**
+ * Phase 6D4A: resolve a principal only when the request presents one.
+ *
+ * The library routes stay anonymous. A request with no Authorization header is
+ * not a failure - it is the ordinary public read, and it must behave exactly as
+ * it did before 6D4A - so `missing_auth` maps to null rather than to a 401.
+ *
+ * Every other failure still throws. A malformed or expired credential must not
+ * silently fall back to the anonymous service_role path, because that would hand
+ * a signed-in caller a wider-privileged execution path precisely when their own
+ * one failed.
+ *
+ * Verification is delegated rather than reimplemented, so there is still exactly
+ * one verifier. The caller-scoped client it builds is unused by the 6D4A library
+ * composition, which reads PostgREST directly with the verified token; keeping
+ * the shared resolver is worth more than skipping that construction.
+ */
+export const resolveOptionalPrincipal = async (
+  request: TraceworkAuthRequestLike,
+  dependencies: AuthResolverDependencies = {},
+): Promise<AuthenticatedPrincipal | null> => {
+  try {
+    extractBearerToken(request)
+  } catch (error) {
+    if (error instanceof AuthFailure && error.code === 'missing_auth') return null
+    throw error
+  }
+
+  const context = await resolveAuthenticatedRequestContext(request, dependencies)
+  return context.principal
+}
+
 /* ---------------------------------------------------------------------- */
 /* 2. Route policy, response mapping, and the shared route gate           */
 /* ---------------------------------------------------------------------- */

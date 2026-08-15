@@ -154,8 +154,8 @@ const parseBodyValue = (value: unknown): Record<string, unknown> => {
 
 export const readJsonBody = (request: VercelRequestLike) => parseBodyValue(request.body)
 
-const getSupabaseConfig = () => {
-  const env = runtimeEnv()
+const getSupabaseConfig = (injectedEnv?: RuntimeEnv) => {
+  const env = injectedEnv ?? runtimeEnv()
   const url = env.SUPABASE_URL?.trim().replace(/\/+$/, '')
   const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim()
   if (!url || !serviceRoleKey) {
@@ -168,11 +168,18 @@ const getSupabaseConfig = () => {
   return { url, serviceRoleKey }
 }
 
-const callSupabaseRpc = async (functionName: string, body: unknown) => {
-  const config = getSupabaseConfig()
+const callSupabaseRpc = async (
+  functionName: string,
+  body: unknown,
+  // Injected by the Vite dev adapter, whose loadEnv result never reaches
+  // process.env. The deployed routes pass nothing and read process.env as before.
+  injectedEnv?: RuntimeEnv,
+  fetchImpl: typeof fetch = fetch,
+) => {
+  const config = getSupabaseConfig(injectedEnv)
   let response: Response
   try {
-    response = await fetch(`${config.url}/rest/v1/rpc/${functionName}`, {
+    response = await fetchImpl(`${config.url}/rest/v1/rpc/${functionName}`, {
       method: 'POST',
       headers: {
         apikey: config.serviceRoleKey,
@@ -231,8 +238,25 @@ const validateVector = (value: unknown, label: string) => {
   }
 }
 
+/**
+ * An error that already describes its own public response: a string `code`, a
+ * numeric `status`, and a message written to be shown to a caller.
+ * ServerVectorError satisfies this, and so does routeAuth's AuthFailure, which
+ * is how a 401 raised while resolving an optional caller keeps its status
+ * instead of collapsing into a generic 500. Requiring all three fields keeps
+ * incidental runtime errors - which carry at most one of them - out of the
+ * public path.
+ */
+const isPublicRouteError = (error: unknown): error is { code: string; status: number; message: string } => (
+  Boolean(error)
+  && typeof error === 'object'
+  && typeof (error as { code?: unknown }).code === 'string'
+  && typeof (error as { status?: unknown }).status === 'number'
+  && typeof (error as { message?: unknown }).message === 'string'
+)
+
 const sendServerError = (response: VercelResponseLike, error: unknown, fallback: string) => {
-  if (error instanceof ServerVectorError) {
+  if (isPublicRouteError(error)) {
     sendJson(response, error.status, { error: { code: error.code, message: error.message } })
     return
   }
@@ -600,16 +624,299 @@ export const handleVectorSearch = async (request: VercelRequestLike, response: V
   }
 }
 
-const mapCollectionRow = (row: Record<string, any>) => ({
+/**
+ * Phase 6D4A - the composed knowledge catalog.
+ *
+ * A signed-in reader's catalog comes from two different database paths, and they
+ * are not interchangeable:
+ *
+ *   public + published  ->  service_role, through the unchanged 6D2A functions.
+ *                           service_role has BYPASSRLS, so containment lives in
+ *                           the function bodies. This path is what an anonymous
+ *                           reader gets, byte for byte.
+ *
+ *   private + workspace ->  the caller's own JWT, through PostgREST, contained
+ *                           by row level security.
+ *
+ * They are composed here rather than in the database because the collections
+ * policy cannot carry a visibility = 'public' branch: suppressing a public
+ * collection with no published documents requires reading document state from a
+ * collections policy, and the documents policy must read collections, which is
+ * the 42P17 recursion the 6D4A migration header documents at length.
+ *
+ * The two result sets are disjoint by construction - visibility is NOT NULL with
+ * a validated CHECK over exactly {private, workspace, public} - so no
+ * deduplication is performed. A collision is treated as a broken invariant and
+ * fails the request rather than being silently resolved.
+ */
+
+/**
+ * The whole catalog is fetched in one shot and merged in memory, so it needs a
+ * stated ceiling rather than an assumption that it stays small. Exceeding it
+ * fails the request: silently truncating a catalog would drop collections a user
+ * can see with no signal that anything is missing, and paginating a two-source
+ * merge is not sound without a cursor.
+ */
+export const LIBRARY_CATALOG_MAX_COLLECTIONS = 200
+
+export type CollectionScope = 'public' | 'private' | 'workspace'
+
+const SCOPED_COLLECTION_VISIBILITIES = new Set<CollectionScope>(['private', 'workspace'])
+
+/** A verified principal, resolved by the route adapter rather than by this module. */
+export interface LibraryCaller {
+  readonly userId: string
+  readonly accessToken: string
+}
+
+export interface LibraryDependencies {
+  env?: RuntimeEnv
+  fetchImpl?: typeof fetch
+  /**
+   * Returns the verified caller, or null when the request carries no credential.
+   * Injected so this module keeps its no-imports property: token verification
+   * lives in server/routeAuth.ts, which the route entry points already load.
+   */
+  resolveCaller?: (request: VercelRequestLike) => Promise<LibraryCaller | null>
+}
+
+/**
+ * Default OFF. Note what this flag does not do: once the 6D4A grants are applied,
+ * `authenticated` can read those tables directly through PostgREST whatever this
+ * value is. The flag gates Tracework's route composition, not the Data API
+ * surface created by the grants. Turning it off is not a way to un-expose the
+ * tables; only revoking the grants does that.
+ */
+const authenticatedLibraryReadsEnabled = (env: RuntimeEnv) => (
+  env.TRACEWORK_AUTHENTICATED_LIBRARY_READS?.trim() === 'true'
+)
+
+const PGREST_AUTH_CODES = new Set(['PGRST301', 'PGRST302', 'PGRST303'])
+
+/**
+ * Maps a PostgREST failure on the caller path onto a stable public code.
+ *
+ * Two mappings matter more than the rest. An expired token mid-flight becomes
+ * 401 invalid_auth, matching what the pre-handler verifier would have returned,
+ * so a client refreshes instead of seeing a raw PGRST code. A missing grant
+ * (42501) becomes a 500, never the 403 authorization_pending used for a
+ * deliberate policy refusal - a broken ACL must not be able to disguise itself
+ * as an intentional decision.
+ *
+ * The upstream message is never forwarded; it can carry schema and policy detail.
+ */
+const mapCallerContextError = (status: number, payload: any) => {
+  const code = typeof payload?.code === 'string' ? payload.code : ''
+  if (status === 401 || PGREST_AUTH_CODES.has(code)) {
+    return new ServerVectorError('invalid_auth', 'Authentication credentials are invalid.', 401)
+  }
+  if (code === '42501' || status === 403) {
+    return new ServerVectorError(
+      'caller_context_misconfigured',
+      'The signed-in knowledge path is not provisioned on this deployment.',
+      500,
+    )
+  }
+  return new ServerVectorError('caller_context_read_failed', 'The signed-in knowledge path could not be read.', 502)
+}
+
+/** A PostgREST GET issued with the caller's own JWT, so RLS applies to it. */
+const callSupabaseRest = async (
+  path: string,
+  caller: LibraryCaller,
+  env: RuntimeEnv,
+  fetchImpl: typeof fetch,
+) => {
+  const url = env.SUPABASE_URL?.trim().replace(/\/+$/, '')
+  const publishableKey = env.SUPABASE_PUBLISHABLE_KEY?.trim()
+  if (!url || !publishableKey) {
+    throw new ServerVectorError(
+      'missing_caller_context_config',
+      'Signed-in knowledge reads are not configured. Add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY to the deployment environment.',
+      503,
+    )
+  }
+
+  let response: Response
+  try {
+    response = await fetchImpl(`${url}/rest/v1/${path}`, {
+      method: 'GET',
+      headers: {
+        apikey: publishableKey,
+        Authorization: `Bearer ${caller.accessToken}`,
+        Accept: 'application/json',
+      },
+    })
+  } catch {
+    throw new ServerVectorError('supabase_network_error', 'The Supabase database could not be reached.')
+  }
+
+  let payload: any = null
+  try {
+    payload = await response.json()
+  } catch {
+    throw new ServerVectorError('supabase_invalid_response', 'Supabase returned an unreadable database response.')
+  }
+
+  if (!response.ok) throw mapCallerContextError(response.status, payload)
+  return Array.isArray(payload) ? payload as Array<Record<string, any>> : []
+}
+
+/**
+ * Resolves the caller for a library route.
+ *
+ * An absent credential is not an error: these routes stay anonymous, and a
+ * request without a token must behave exactly as it did before 6D4A. A present
+ * but invalid credential does fail, because falling back to the anonymous path
+ * would hand a signed-in caller a different, wider-privileged execution path
+ * precisely when their own has failed.
+ */
+const resolveLibraryCaller = async (
+  request: VercelRequestLike,
+  env: RuntimeEnv,
+  dependencies: LibraryDependencies,
+) => {
+  if (!authenticatedLibraryReadsEnabled(env)) return null
+  if (!dependencies.resolveCaller) return null
+  return dependencies.resolveCaller(request)
+}
+
+/**
+ * The catalog entry shape returned to clients.
+ *
+ * `scope` is explicit so no consumer has to infer where a row came from, and
+ * the counts are nullable rather than reused across two different rules. The
+ * public counts keep their existing 6D2A meaning exactly: published documents in
+ * public collections. A private or workspace row reports null because no
+ * equivalent number exists yet - a caller-scoped count needs the D8 view, which
+ * 6D4A deliberately does not build. Null means "not computed here", never zero.
+ */
+export interface CatalogCollection {
+  slug: string
+  title: string
+  description: string
+  kind: string
+  provenance: Record<string, unknown> | null
+  documentCount: number | null
+  characterCount: number | null
+  updatedAt: string | null
+  scope: CollectionScope
+}
+
+interface CatalogEntry {
+  /** Kept out of the response; used only to order the merged catalog. */
+  readonly sortOrder: number
+  readonly collection: CatalogCollection
+}
+
+const normalizedProvenance = (value: any) => (
+  value && Object.keys(value).length ? value : null
+)
+
+/**
+ * The pre-6D4A response row, preserved exactly.
+ *
+ * An anonymous request must be indistinguishable from what it was before this
+ * phase: the same keys in the same order, no `scope`, numeric counts, no
+ * ceiling, and the ordering the 6D2A function itself returned. Whether the
+ * anonymous contract should gain `scope`, a row ceiling, or the deterministic
+ * slug tiebreak is a separate API decision and is not taken here.
+ */
+const mapLegacyCollectionRow = (row: Record<string, any>) => ({
   slug: row.slug,
   title: row.title,
   description: row.description ?? '',
   kind: row.kind,
-  provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
+  provenance: normalizedProvenance(row.provenance),
   documentCount: Number(row.document_count ?? 0),
   characterCount: Number(row.character_count ?? 0),
   updatedAt: row.updated_at ?? null,
 })
+
+/** The public path inside a composed catalog: 6D2A aggregate output, counts unchanged. */
+export const mapCollectionRow = (row: Record<string, any>): CatalogEntry => ({
+  sortOrder: Number(row.sort_order ?? 0),
+  collection: {
+    slug: row.slug,
+    title: row.title,
+    description: row.description ?? '',
+    kind: row.kind,
+    provenance: normalizedProvenance(row.provenance),
+    documentCount: Number(row.document_count ?? 0),
+    characterCount: Number(row.character_count ?? 0),
+    updatedAt: row.updated_at ?? null,
+    scope: 'public',
+  },
+})
+
+/** The caller path: no aggregate is available, so both counts are null. */
+export const mapScopedCollectionRow = (row: Record<string, any>): CatalogEntry => {
+  const visibility = row.visibility as CollectionScope
+  if (!SCOPED_COLLECTION_VISIBILITIES.has(visibility)) {
+    // A public row must never arrive here. The collections policy has no public
+    // branch, so one appearing means the policy has been widened.
+    throw new ServerVectorError(
+      'catalog_scope_violation',
+      'The signed-in knowledge path returned a collection outside the private and workspace scopes.',
+      500,
+    )
+  }
+  return {
+    sortOrder: Number(row.sort_order ?? 0),
+    collection: {
+      slug: row.slug,
+      title: row.title,
+      description: row.description ?? '',
+      kind: row.kind,
+      provenance: normalizedProvenance(row.provenance),
+      documentCount: null,
+      characterCount: null,
+      updatedAt: row.updated_at ?? null,
+      scope: visibility,
+    },
+  }
+}
+
+/**
+ * Merges the two paths into one catalog.
+ *
+ * Ordering is applied here, over the merged set, which is also what makes the
+ * result deterministic: tracework_list_collections orders by (sort_order, title)
+ * with no unique tiebreak, and adding `slug` at this layer fixes that without
+ * modifying the 6D2A function.
+ */
+export const mergeCatalogEntries = (entries: readonly CatalogEntry[]): CatalogCollection[] => {
+  const bySlug = new Map<string, CatalogEntry>()
+  for (const entry of entries) {
+    if (bySlug.has(entry.collection.slug)) {
+      throw new ServerVectorError(
+        'catalog_scope_collision',
+        `The collection "${entry.collection.slug}" was returned by both the public and the signed-in path, which means a collection carries more than one visibility.`,
+        500,
+      )
+    }
+    bySlug.set(entry.collection.slug, entry)
+  }
+
+  if (bySlug.size > LIBRARY_CATALOG_MAX_COLLECTIONS) {
+    throw new ServerVectorError(
+      'catalog_too_large',
+      `The knowledge catalog holds ${bySlug.size} collections, over the ${LIBRARY_CATALOG_MAX_COLLECTIONS}-collection limit this route reads in one request.`,
+      503,
+    )
+  }
+
+  return [...bySlug.values()]
+    .sort((left, right) => (
+      left.sortOrder - right.sortOrder
+      || left.collection.title.localeCompare(right.collection.title)
+      || left.collection.slug.localeCompare(right.collection.slug)
+    ))
+    .map((entry) => entry.collection)
+}
+
+const SCOPED_COLLECTION_COLUMNS = 'slug,title,description,kind,provenance,sort_order,updated_at,visibility'
+const SCOPED_DOCUMENT_COLUMNS = 'id,collection_slug,title,source_path,kind,content,provenance'
 
 const mapLibraryDocumentRow = (row: Record<string, any>) => ({
   id: row.id,
@@ -618,31 +925,74 @@ const mapLibraryDocumentRow = (row: Record<string, any>) => ({
   sourcePath: row.source_path,
   kind: row.kind,
   content: row.content,
-  provenance: row.provenance && Object.keys(row.provenance).length ? row.provenance : null,
+  provenance: normalizedProvenance(row.provenance),
 })
 
-export const handleLibraryCollections = async (request: VercelRequestLike, response: VercelResponseLike) => {
+export const handleLibraryCollections = async (
+  request: VercelRequestLike,
+  response: VercelResponseLike,
+  dependencies: LibraryDependencies = {},
+) => {
   if (request.method !== 'POST') {
     sendMethodNotAllowed(response, '/api/library/collections')
     return
   }
 
+  const env = dependencies.env ?? runtimeEnv()
+  const fetchImpl = dependencies.fetchImpl ?? fetch
+
   try {
-    const rows = await callSupabaseRpc('tracework_list_collections', {}) as Array<Record<string, any>>
+    // Resolved before the RPC so an invalid credential fails without spending a
+    // database round trip. With the flag off this returns null without looking
+    // at the credential at all, which is what makes the flag a true no-op.
+    const caller = await resolveLibraryCaller(request, env, dependencies)
+    const publicRows = await callSupabaseRpc('tracework_list_collections', {}, env, fetchImpl) as Array<Record<string, any>>
+    const rows = Array.isArray(publicRows) ? publicRows : []
+
+    // No caller: the pre-6D4A payload, unchanged. The composed shape below is a
+    // contract change and applies only once a signed-in path actually
+    // contributes to the response.
+    if (!caller) {
+      sendJson(response, 200, {
+        database: 'supabase postgres / knowledge library',
+        collections: rows.map(mapLegacyCollectionRow),
+      })
+      return
+    }
+
+    const entries = rows.map(mapCollectionRow)
+    // One row over the ceiling is requested so an overflowing catalog is
+    // detected rather than quietly clipped at exactly the limit.
+    const scopedRows = await callSupabaseRest(
+      `tracework_collections?select=${SCOPED_COLLECTION_COLUMNS}`
+      + `&order=sort_order.asc,title.asc,slug.asc&limit=${LIBRARY_CATALOG_MAX_COLLECTIONS + 1}`,
+      caller,
+      env,
+      fetchImpl,
+    )
+    entries.push(...scopedRows.map(mapScopedCollectionRow))
+
     sendJson(response, 200, {
       database: 'supabase postgres / knowledge library',
-      collections: (Array.isArray(rows) ? rows : []).map(mapCollectionRow),
+      collections: mergeCatalogEntries(entries),
     })
   } catch (error) {
     sendServerError(response, error, 'The knowledge library catalog could not be read.')
   }
 }
 
-export const handleLibraryDocuments = async (request: VercelRequestLike, response: VercelResponseLike) => {
+export const handleLibraryDocuments = async (
+  request: VercelRequestLike,
+  response: VercelResponseLike,
+  dependencies: LibraryDependencies = {},
+) => {
   if (request.method !== 'POST') {
     sendMethodNotAllowed(response, '/api/library/documents')
     return
   }
+
+  const env = dependencies.env ?? runtimeEnv()
+  const fetchImpl = dependencies.fetchImpl ?? fetch
 
   try {
     const body = readJsonBody(request) as { slug?: unknown }
@@ -651,8 +1001,30 @@ export const handleLibraryDocuments = async (request: VercelRequestLike, respons
       throw new ServerVectorError('invalid_collection_slug', 'Send the slug of the collection to read.', 400)
     }
 
-    const rows = await callSupabaseRpc('tracework_collection_documents', { p_slug: slug }) as Array<Record<string, any>>
-    const documents = (Array.isArray(rows) ? rows : []).map(mapLibraryDocumentRow)
+    // A slug identifies one collection row, which carries one visibility, so the
+    // two paths cannot both produce documents. The public path runs first to
+    // keep the common case at its current latency; the caller path is consulted
+    // only when it returns nothing.
+    const publicRows = await callSupabaseRpc('tracework_collection_documents', { p_slug: slug }, env, fetchImpl) as Array<Record<string, any>>
+    let documents = (Array.isArray(publicRows) ? publicRows : []).map(mapLibraryDocumentRow)
+
+    if (!documents.length) {
+      const caller = await resolveLibraryCaller(request, env, dependencies)
+      if (caller) {
+        const scopedRows = await callSupabaseRest(
+          `tracework_library_documents?collection_slug=eq.${encodeURIComponent(slug)}`
+          + `&select=${SCOPED_DOCUMENT_COLUMNS}&order=sort_order.asc,id.asc`,
+          caller,
+          env,
+          fetchImpl,
+        )
+        documents = scopedRows.map(mapLibraryDocumentRow)
+      }
+    }
+
+    // Both paths are exhausted before this fires, so an unauthorized slug and a
+    // nonexistent one are indistinguishable. That is deliberate: a distinct
+    // "exists but forbidden" response would be an existence oracle.
     if (!documents.length) {
       throw new ServerVectorError('collection_not_found', `The shared library has no documents for "${slug}". Seed it with npm run seed:library.`, 404)
     }
