@@ -47,13 +47,25 @@ import {
 
 /* This repository checks out CRLF on Windows; an assertion about what the SQL
  * says must not depend on which line ending git handed us. */
-const readMigration = (name) => readFileSync(
-  new URL(`../supabase/migrations/${name}`, import.meta.url),
+const readMigration = (name, directory = 'migrations') => readFileSync(
+  new URL(`../supabase/${directory}/${name}`, import.meta.url),
   'utf8',
 ).replace(/\r\n/g, '\n')
 
 const baseline = readMigration('20260814045002_tracework_inert_rls_policies.sql')
-const migration = readMigration('20260815000100_tracework_6d4a_authenticated_library_read.sql')
+
+/*
+ * 6D4A is DEFERRED: it lives in supabase/deferred/, not supabase/migrations/, so
+ * `supabase db push` never applies it. See supabase/deferred/README.md.
+ *
+ * This suite still runs, and still means something: it proves the migration is
+ * correct IF APPLIED. Deferral is a rollout decision, not a retraction, and a
+ * deferred migration that silently rots is worse than one that is watched.
+ */
+const migration = readMigration(
+  '20260815000100_tracework_6d4a_authenticated_library_read.sql',
+  'deferred',
+)
 
 /** Executable SQL only, with string literals blanked. Comments must not satisfy
  * a content assertion, and a literal inside a `raise exception` message must not
@@ -802,17 +814,35 @@ const documentRow = (id, slug) => ({ id, collection_slug: slug, title: 't', sour
   assert.ok(missing.payload.error.message.includes('npm run seed:library'), 'the anonymous 404 message is unchanged')
 }
 
-/* The catalog is no longer one shared list, so the UI must not claim it is. */
+/*
+ * UI copy while 6D4A is DEFERRED.
+ *
+ * This block previously asserted the opposite: that the intro must advertise
+ * owned and workspace collections, because 6D4A was going to make them visible.
+ * 6D4A is now deferred and unapplied (supabase/deferred/README.md), so the
+ * catalog returns public collections and nothing else, and copy promising
+ * private or workspace collections would be describing a feature that does not
+ * exist.
+ *
+ * IF 6D4A IS EVER REINSTATED, this block and the intro must flip together.
+ * Keeping the assertion here, rather than deleting it, is what forces that.
+ */
 {
   const component = readFileSync(new URL('../src/components/KnowledgeLibrary.tsx', import.meta.url), 'utf8')
   const intro = component.slice(component.indexOf('className="library-intro"'), component.indexOf('{status === \'error\''))
   assert.equal(
-    /anyone opening tracework reads the same catalog/i.test(intro),
+    /you own|your own collections|workspace/i.test(intro),
     false,
-    'the intro must not claim every user sees the same catalog',
+    'while 6D4A is deferred the intro must not promise owned or workspace collections',
   )
-  assert.ok(/public collections/i.test(intro), 'the intro must distinguish public collections')
-  assert.ok(/workspace/i.test(intro) && /you own/i.test(intro), 'the intro must mention owned and workspace collections')
+  assert.ok(
+    /same catalog/i.test(intro),
+    'with only public collections reachable, the intro should say every reader sees the same catalog',
+  )
+  assert.ok(
+    /this device|stays on this device|no private cloud/i.test(intro),
+    'the intro must be explicit that unsubmitted knowledge is local-only; there is no private cloud storage',
+  )
 }
 
 console.log('  transport: anonymous contract byte-identical, composed path scoped/ordered/ceilinged, error mapping stable')

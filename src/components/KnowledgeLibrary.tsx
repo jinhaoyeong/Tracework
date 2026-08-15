@@ -52,6 +52,13 @@ const formatDocumentCount = (count: number | null | undefined) => {
   return `${count} ${count === 1 ? 'source' : 'sources'}`
 }
 
+/**
+ * UNREACHABLE while Phase 6D4A is deferred. The composed catalog path is the
+ * only thing that can attach a scope to a row, and it needs both the 6D4A grants
+ * (unapplied) and TRACEWORK_AUTHENTICATED_LIBRARY_READS (unset). Every row the
+ * catalog returns today is public, so no badge renders. Kept, not deleted,
+ * because the code is inert rather than wrong - see supabase/deferred/README.md.
+ */
 const SCOPE_LABELS: Record<CollectionScope, string | null> = {
   public: null,
   private: 'private',
@@ -120,13 +127,14 @@ export function KnowledgeLibrary({
         </button>
       </div>
       {/*
-        The catalog stopped being one shared list in 6D4A. Public collections are
-        still identical for everyone; private and workspace collections are
-        visible only to their owner or to an active member, so the old "anyone
-        reads the same catalog" line would now be false for part of this list.
+        This text must not promise cloud-private storage. Phase 6D4A, which would
+        have made owned and workspace collections visible to their owner, is
+        deferred and unapplied (see supabase/deferred/README.md), so the catalog
+        returns public collections and nothing else. Knowledge kept out of the
+        shared library stays in this browser.
       */}
       <p className="library-intro">
-        Collections stored in the shared database. Public collections read the same for everyone opening Tracework; collections you own, or share with a workspace, appear only for you. Adding one indexes it into this browser.
+        Collections stored in the shared database. Everyone opening Tracework reads the same catalog, and adding one indexes it into this browser. Anything you do not submit stays on this device only &mdash; there is no private cloud storage yet.
       </p>
 
       {status === 'error' && (
@@ -200,7 +208,7 @@ export function KnowledgeLibrary({
           <h3 id="library-contribute-title">Submit to a shared collection</h3>
           {!contributeTargets?.length && (
             <p className="library-note">
-              No collection accepts submissions from this account yet. Ingest requires a collection you own, or one belonging to a workspace you are an active member of.
+              No collection accepts submissions yet. A submission needs a public collection that is not system-managed; the bundled and quarantine collections are managed and reject contributions.
             </p>
           )}
           {contributeTargets && contributeTargets.length > 0 && (
