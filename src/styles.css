@@ -192,11 +192,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .example-row button { border: 0; border-bottom: 1px solid #b9c4c0; padding: 2px 0; background: transparent; color: #5c6a65; cursor: pointer; font-size: 10px; text-align: left; }
 .example-row button:hover { border-color: var(--vermilion); color: var(--vermilion-dark); }
 
-.answer-sheet { max-width: 900px; margin: 0 auto 32px; border: 1px solid var(--ink); background: #e6ebe8; }
+.answer-sheet { position: relative; max-width: 900px; margin: 0 auto 32px; border: 1px solid var(--ink); background: #e6ebe8; }
 /* The lab identity and guide action share the top row; the two decisions form
-   one deliberate shelf beneath them. Explanatory content stays outside the
-   instrument surface when the guide is opened. */
-.sheet-topline { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 18px; border-bottom: 1px solid var(--ink); padding: 12px 15px 13px; background: var(--ink); color: var(--paper); }
+   one deliberate shelf beneath them. The guide is anchored to this header so
+   its detail can open without pushing the evidence stream down. */
+.sheet-topline { position: relative; z-index: 4; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 18px; border-bottom: 1px solid var(--ink); padding: 12px 15px 13px; background: var(--ink); color: var(--paper); }
 .signal-label, .method-label { display: flex; align-items: center; gap: 9px; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
 .signal-dot { width: 6px; height: 6px; background: #ed816d; box-shadow: none; }
 .method-label { color: #aebbb6; font-weight: 650; }
@@ -225,7 +225,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .method-help-toggle { grid-column: 2; grid-row: 1; justify-self: end; align-self: center; white-space: nowrap; min-height: 27px; border: 0; border-bottom: 1px solid #50605a; padding: 3px 0 2px; background: transparent; color: #ef9b8b; cursor: pointer; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
 .method-help-toggle:hover, .method-help-toggle:focus-visible, .method-help-toggle.is-active { border-color: var(--paper); color: var(--paper); }
 .method-help { padding: 16px 15px 15px; background: #d8e1dd; color: var(--ink); }
-.method-help-external { max-width: 900px; margin: 0 auto 48px; border: 1px solid var(--line-strong); }
+.method-help-popover { position: absolute; top: calc(100% + 1px); right: 15px; z-index: 20; width: min(640px, calc(100% - 30px)); max-height: min(70vh, 520px); overflow-y: auto; border: 1px solid var(--line-strong); box-shadow: 8px 10px 24px rgba(23, 33, 31, 0.16); transform-origin: top right; animation: method-help-reveal 170ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 .method-help-heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 12px; }
 .method-help-kicker, .method-help-label { color: var(--teal); font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
 .method-help h2 { margin: 5px 0 0; font-size: 22px; letter-spacing: -0.05em; line-height: 1; }
@@ -235,6 +235,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .method-help-item + .method-help-item { border-left: 1px solid #b8c6c0; }
 .method-help-item p { margin: 7px 0 0; color: #475650; font-size: 11px; line-height: 1.55; }
 .method-help-note { margin: 10px 0 0; color: #62726c; font-size: 10px; line-height: 1.5; }
+
+@keyframes method-help-reveal {
+  from { opacity: 0; transform: translate3d(0, -6px, 0) scaleY(0.98); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scaleY(1); }
+}
 /* Shared knowledge library. The catalog is database state, so it is presented as
    a standing list of collections rather than a row of one-shot load actions. */
 .library-block { padding: 21px 0 18px; border-bottom: 1px solid var(--line-strong); }
@@ -541,7 +546,7 @@ mark { border-bottom: 1px solid rgba(200, 73, 53, 0.55); background: rgba(200, 7
   .mobile-control-select select { min-height: 44px; }
   .mobile-compare-button { display: inline-flex; grid-column: 1 / -1; width: 100%; min-height: 44px; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 10px; }
   .method-help-toggle { justify-self: end; min-height: 44px; padding: 10px 0; }
-  .method-help-external { margin-bottom: 39px; }
+  .method-help-popover { right: 13px; width: calc(100% - 26px); max-height: min(66vh, 470px); }
   .method-help { padding: 14px 13px 13px; }
   .method-help-heading { align-items: start; flex-direction: column; gap: 7px; }
   .method-help h2 { font-size: 21px; }

@@ -287,6 +287,15 @@ function App() {
   const neuralIndexPromiseRef = useRef<Promise<DocumentRecord[]> | null>(null)
 
   useEffect(() => {
+    if (!showMethodHelp) return undefined
+    const handleMethodHelpKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowMethodHelp(false)
+    }
+    window.addEventListener('keydown', handleMethodHelpKeyDown)
+    return () => window.removeEventListener('keydown', handleMethodHelpKeyDown)
+  }, [showMethodHelp])
+
+  useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(documents))
     } catch {
@@ -1339,11 +1348,36 @@ function App() {
                 className={`method-help-toggle ${showMethodHelp ? 'is-active' : ''}`}
                 type="button"
                 aria-expanded={showMethodHelp}
+                aria-haspopup="dialog"
                 aria-controls="method-help"
                 onClick={() => setShowMethodHelp((visible) => !visible)}
               >
                 {showMethodHelp ? 'close guide' : 'how this works'}
               </button>
+
+              {showMethodHelp && (
+                <section className="method-help method-help-popover" id="method-help" role="dialog" aria-labelledby="method-help-title">
+                  <div className="method-help-heading">
+                    <div>
+                      <div className="method-help-kicker">guide / two decisions</div>
+                      <h2 id="method-help-title">Search first. Answer second.</h2>
+                    </div>
+                    <span className="method-help-rule">engine → evidence / answer → response</span>
+                  </div>
+                  <div className="method-help-grid">
+                    <div className="method-help-item">
+                      <span className="method-help-label">engine / how to find</span>
+                      <p>Chooses how Tracework searches. Hashed is the fast local baseline; neural and pgvector search by meaning; BM25 matches exact terms; hybrid combines rankings; Union Rerank keeps both candidate pools before selecting passages.</p>
+                    </div>
+                    <div className="method-help-item">
+                      <span className="method-help-label">answer / what happens next</span>
+                      <p>Retrieval only shows the evidence. Grounded answer sends the selected context to the model for a cited response, with refusal behavior when the evidence is not sufficient.</p>
+                    </div>
+                  </div>
+                  <p className="method-help-note">For inspection, pair any engine with Retrieval Only. For the current end-to-end path, try Union Rerank + Grounded Answer.</p>
+                  <p className="method-help-note">Browser engines stay on this device. Pgvector searches the shared Supabase library once configured, so sources synced there can be retrieved from another device.</p>
+                </section>
+              )}
             </div>
             <div className="neural-status-row" role="status" aria-live="polite">
               <span className="method-label">{engine === 'pgvector' ? 'pgvector / database cosine search' : engine === 'neural' ? 'local neural / semantic similarity' : engine === 'lexical' ? 'lexical / bm25 over title, path, and body' : engine === 'hybrid' ? `hybrid / reciprocal rank fusion of ${denseSourceLabel} + bm25` : engine === 'rerank' ? 'phase 5B / dense + lexical union / relevance-only rerank' : 'baseline / hashed vector + term overlap'}</span>
@@ -1378,30 +1412,6 @@ function App() {
           </section>
 
           <SynthesisInspector preparation={synthesisPreparation} generation={synthesisView.report} />
-
-          {showMethodHelp && (
-            <section className="method-help method-help-external" id="method-help" aria-labelledby="method-help-title">
-              <div className="method-help-heading">
-                <div>
-                  <div className="method-help-kicker">guide / two decisions</div>
-                  <h2 id="method-help-title">Search first. Answer second.</h2>
-                </div>
-                <span className="method-help-rule">engine → evidence / answer → response</span>
-              </div>
-              <div className="method-help-grid">
-                <div className="method-help-item">
-                  <span className="method-help-label">engine / how to find</span>
-                  <p>Chooses how Tracework searches. Hashed is the fast local baseline; neural and pgvector search by meaning; BM25 matches exact terms; hybrid combines rankings; Union Rerank keeps both candidate pools before selecting passages.</p>
-                </div>
-                <div className="method-help-item">
-                  <span className="method-help-label">answer / what happens next</span>
-                  <p>Retrieval only shows the evidence. Grounded answer sends the selected context to the model for a cited response, with refusal behavior when the evidence is not sufficient.</p>
-                </div>
-              </div>
-              <p className="method-help-note">For inspection, pair any engine with Retrieval Only. For the current end-to-end path, try Union Rerank + Grounded Answer.</p>
-              <p className="method-help-note">Browser engines stay on this device. Pgvector searches the shared Supabase library once configured, so sources synced there can be retrieved from another device.</p>
-            </section>
-          )}
 
           {(engine === 'lexical' || engine === 'hybrid') && <section className="retrieval-explain-section" aria-labelledby="retrieval-explain-title">
             <div className="grounded-debug-heading">
