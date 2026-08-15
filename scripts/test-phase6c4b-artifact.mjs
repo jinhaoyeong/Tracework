@@ -35,8 +35,23 @@ if (!existsSync(functionsDir)) {
   process.exit(2)
 }
 
-/** The routes whose policy requires a credential; all must answer 401 anonymously. */
-const PROTECTED_ROUTES = ['api/embed', 'api/generate', 'api/vector/sync', 'api/vector/delete']
+/**
+ * The routes whose policy requires a credential; all must answer 401 anonymously.
+ *
+ * The three Phase 6E entries matter most in this suite: they are the only write
+ * routes that a verified caller is allowed to reach, so "does the deployed
+ * artifact actually demand a credential" is not something their handler-level
+ * tests can answer.
+ */
+const PROTECTED_ROUTES = [
+  'api/embed',
+  'api/generate',
+  'api/vector/sync',
+  'api/vector/delete',
+  'api/library/ingest',
+  'api/library/publish',
+  'api/library/status',
+]
 /** Present for completeness: these must stay reachable without a credential. */
 const ANONYMOUS_ROUTES = ['api/library/collections', 'api/library/documents', 'api/vector/search']
 

@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 // The dev generation route delegates to the deployed handler rather than
 // reimplementing it, so the mode rules, context limits, and instruction sets
 // exist in exactly one place.
-import { handleGeneration, handleLibraryCollections, handleLibraryDocuments } from './server/traceworkApi.ts'
+import { handleGeneration, handleLibraryCollections, handleLibraryDocuments, handleLibraryIngest, handleLibraryPublish, handleLibraryStatus } from './server/traceworkApi.ts'
 // The dev server enforces the same route matrix as production through the same
 // module. There is exactly one authentication implementation; only the request
 // and response plumbing differs between the two runtimes.
@@ -427,6 +427,56 @@ export const traceworkDevPlugin = (
       }
       await handleLibraryDocuments(
         { method: request.method, body, headers: request.headers, rawHeaders: request.rawHeaders },
+        adaptLibraryResponse(response),
+        libraryDependencies,
+      )
+    })
+
+    /**
+     * Phase 6E write routes. The policy gate runs first here exactly as
+     * withRouteAuth runs it in the deployed entry points, so an unverified
+     * caller gets 401 from the same implementation in both runtimes. The
+     * handlers then apply the TRACEWORK_ALLOW_SHARED_WRITES boundary and, for
+     * publish, the TRACEWORK_PUBLISHERS allowlist.
+     */
+    const readLibraryWriteBody = async (request: any, response: any) => {
+      if (request.method !== 'POST') return { ok: true as const, body: undefined }
+      try {
+        return { ok: true as const, body: await readJson(request) }
+      } catch {
+        sendJson(response, 400, { error: { code: 'invalid_request_body', message: 'The knowledge library request body was not valid JSON.' } })
+        return { ok: false as const, body: undefined }
+      }
+    }
+
+    server.middlewares.use('/api/library/ingest', async (request, response) => {
+      if (!(await enforceRouteAuthPolicy('/api/library/ingest', request, response, authDependencies)).allowed) return
+      const parsed = await readLibraryWriteBody(request, response)
+      if (!parsed.ok) return
+      await handleLibraryIngest(
+        { method: request.method, body: parsed.body, headers: request.headers, rawHeaders: request.rawHeaders },
+        adaptLibraryResponse(response),
+        libraryDependencies,
+      )
+    })
+
+    server.middlewares.use('/api/library/publish', async (request, response) => {
+      if (!(await enforceRouteAuthPolicy('/api/library/publish', request, response, authDependencies)).allowed) return
+      const parsed = await readLibraryWriteBody(request, response)
+      if (!parsed.ok) return
+      await handleLibraryPublish(
+        { method: request.method, body: parsed.body, headers: request.headers, rawHeaders: request.rawHeaders },
+        adaptLibraryResponse(response),
+        libraryDependencies,
+      )
+    })
+
+    server.middlewares.use('/api/library/status', async (request, response) => {
+      if (!(await enforceRouteAuthPolicy('/api/library/status', request, response, authDependencies)).allowed) return
+      const parsed = await readLibraryWriteBody(request, response)
+      if (!parsed.ok) return
+      await handleLibraryStatus(
+        { method: request.method, body: parsed.body, headers: request.headers, rawHeaders: request.rawHeaders },
         adaptLibraryResponse(response),
         libraryDependencies,
       )
