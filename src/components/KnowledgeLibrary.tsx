@@ -1,5 +1,5 @@
 import { Icon } from './Icon'
-import type { KnowledgeCollection } from '../lib/knowledgeLibrary'
+import type { CollectionScope, KnowledgeCollection } from '../lib/knowledgeLibrary'
 
 export type LibraryStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -7,6 +7,26 @@ const formatCharacters = (count: number) => {
   if (count < 1000) return `${count} chars`
   if (count < 1_000_000) return `${(count / 1000).toFixed(count < 10_000 ? 1 : 0)}k chars`
   return `${(count / 1_000_000).toFixed(1)}M chars`
+}
+
+/**
+ * Private and workspace entries carry no counts, because the only count the
+ * database computes is "published documents in a public collection". Rendering
+ * a placeholder rather than a zero keeps an uncounted collection from reading as
+ * an empty one.
+ */
+const formatDocumentCount = (count: number | null | undefined) => {
+  // Null means "not computed for this scope", never "unpublished" and never
+  // zero: the only count the database produces is published documents inside a
+  // public collection.
+  if (count === null || count === undefined) return 'count unavailable'
+  return `${count} ${count === 1 ? 'source' : 'sources'}`
+}
+
+const SCOPE_LABELS: Record<CollectionScope, string | null> = {
+  public: null,
+  private: 'private',
+  workspace: 'workspace',
 }
 
 export function KnowledgeLibrary({
@@ -39,8 +59,14 @@ export function KnowledgeLibrary({
           {status === 'loading' ? 'reading...' : 'refresh'}
         </button>
       </div>
+      {/*
+        The catalog stopped being one shared list in 6D4A. Public collections are
+        still identical for everyone; private and workspace collections are
+        visible only to their owner or to an active member, so the old "anyone
+        reads the same catalog" line would now be false for part of this list.
+      */}
       <p className="library-intro">
-        Collections stored in the shared database. Anyone opening Tracework reads the same catalog; adding one indexes it into this browser.
+        Collections stored in the shared database. Public collections read the same for everyone opening Tracework; collections you own, or share with a workspace, appear only for you. Adding one indexes it into this browser.
       </p>
 
       {status === 'error' && (
@@ -75,8 +101,13 @@ export function KnowledgeLibrary({
                 </div>
                 <p>{collection.description}</p>
                 <div className="library-item-meta">
-                  <span>{collection.documentCount} {collection.documentCount === 1 ? 'source' : 'sources'}</span>
-                  <span>{formatCharacters(collection.characterCount)}</span>
+                  {SCOPE_LABELS[collection.scope ?? 'public'] && (
+                    <span className="library-item-scope">{SCOPE_LABELS[collection.scope ?? 'public']}</span>
+                  )}
+                  <span>{formatDocumentCount(collection.documentCount)}</span>
+                  {typeof collection.characterCount === 'number' && (
+                    <span>{formatCharacters(collection.characterCount)}</span>
+                  )}
                   <span>{collection.provenance?.authority ?? 'unknown'} authority</span>
                 </div>
                 <button

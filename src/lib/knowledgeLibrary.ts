@@ -23,15 +23,39 @@ export class KnowledgeLibraryError extends Error {
   }
 }
 
+/**
+ * Where a catalog entry came from, and therefore which containment rule applied.
+ *
+ * 'public'    the shared library, read through the service-role path and
+ *             contained to published documents in public collections.
+ * 'private'   a collection this signed-in reader owns.
+ * 'workspace' a collection belonging to a workspace this reader is active in.
+ */
+export type CollectionScope = 'public' | 'private' | 'workspace'
+
 export interface KnowledgeCollection {
   slug: string
   title: string
   description: string
   kind: SourceKind
   provenance: SourceProvenance | null
-  documentCount: number
-  characterCount: number
+  /**
+   * Null on private and workspace entries.
+   *
+   * These counts have exactly one meaning - published documents inside a public
+   * collection - and it is only computable on the public path. Reusing the same
+   * field for a caller-scoped count would put two different rules behind one
+   * name, so a scoped entry reports null instead. Null means "not computed",
+   * never zero, and must not be rendered as a number.
+   */
+  documentCount: number | null
+  characterCount: number | null
   updatedAt: string | null
+  /**
+   * Absent on an anonymous response, which keeps the pre-6D4A contract exactly.
+   * Absent means 'public': the anonymous catalog has no other scope.
+   */
+  scope?: CollectionScope
 }
 
 export interface KnowledgeLibraryDocument {
