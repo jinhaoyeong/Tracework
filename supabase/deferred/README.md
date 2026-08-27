@@ -10,8 +10,9 @@ They are not abandoned and their history is intact. Moving a file back into
 ## `20260815000100_tracework_6d4a_authenticated_library_read.sql`
 
 Phase 6D4A — authenticated private/workspace library reads. Merged in `56105c0`,
-never applied to any environment except a disposable proof project that has since
-been deleted.
+never applied to any environment except a disposable proof project used on
+2026-08-15. That project's ref was never recorded here, and its current lifecycle
+is not relied upon by this rollout.
 
 **Why it is deferred.** 6D4A grants `authenticated` direct `SELECT` through
 PostgREST on `tracework_collections`, `tracework_library_documents`, and four
@@ -114,9 +115,10 @@ migration, the bootstrap script and the route handlers — and not from any comm
 message. Each step is separately authorised; recording the order here is not a
 licence to run it.
 
-None of it has been executed. `6D3 -> 6E` with 6D4A absent is still **not**
-runtime-proven, per the section above. This describes what to do once that proof
-exists, not a state that has been reached.
+The sequence itself is runtime-proven: `6D3 -> 6E` with 6D4A absent ran against
+a real PostgreSQL on 2026-08-27, per the section above. What has **not** happened
+is any of it against production — no step below has been executed on
+`xbphaeuvthyfonyflhwb`. Recording the order here is not authorisation to run it.
 
 ### 1. Apply the Phase 6E migration
 
@@ -181,6 +183,14 @@ This is the runtime activation switch for mutation
 * the publisher allowlist is configured;
 * the contributable collection exists;
 * the writes-closed state has been verified.
+
+It opens the Phase 6E ingest, publish and status handlers, and only those. It
+does **not** open `/api/vector/sync` or `/api/vector/delete`: `api/vector/sync.ts`
+and `api/vector/delete.ts` wrap those handlers under the
+`authenticated-authorization-pending` policy, which refuses every caller with 403
+after identity is proven and before the handler is entered. That flag lifts only
+the inner guard in `server/traceworkApi.ts`; the two vector routes stay closed
+until their route policy is changed deliberately and separately.
 
 ### The `8ee98d2` commit message is superseded
 

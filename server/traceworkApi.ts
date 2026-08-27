@@ -213,11 +213,24 @@ const callSupabaseRpc = async (
 /**
  * Writes to the shared vector table are opt-in, not opt-out.
  *
- * These routes run on the Supabase service role and have no notion of a caller,
- * so on a reachable deployment they are an unauthenticated write and delete path
- * into knowledge everyone reads. Until Tracework has a real permission model,
- * a deployment must say explicitly that it wants to accept writes. Defaulting to
- * "deny" means forgetting the variable leaves a deployment safe rather than open.
+ * This is a second, inner default-deny, and it is not the outer one. The two
+ * handlers it guards run on the Supabase service role and carry no resource-
+ * authority context of their own: handed a request they would replace or delete
+ * shared rows without being able to ask whether this caller owns them. So they
+ * keep their own flag, and forgetting the variable has to leave a deployment
+ * closed rather than open.
+ *
+ * What actually keeps them shut in the deployed app is earlier and separate.
+ * api/vector/sync.ts and api/vector/delete.ts wrap these handlers in
+ * withRouteAuth under the 'authenticated-authorization-pending' policy, which
+ * refuses every caller with 403 authorization_pending after identity is proven
+ * and before the handler is entered (server/routeAuth.ts). Setting
+ * TRACEWORK_ALLOW_SHARED_WRITES=true therefore does NOT make /api/vector/sync or
+ * /api/vector/delete reachable; it lifts this inner guard only, and the route
+ * policy would have to change separately for anything to get through.
+ *
+ * The Phase 6E library ingest/publish/status handlers are what that flag does
+ * open, because 6E supplies the resource authorization these two still lack.
  */
 const assertSharedWritesEnabled = () => {
   if (runtimeEnv().TRACEWORK_ALLOW_SHARED_WRITES?.trim() === 'true') return
