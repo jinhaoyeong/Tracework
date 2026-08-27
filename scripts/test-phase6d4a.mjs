@@ -37,7 +37,7 @@
  * PostgreSQL is the next gate and is NOT satisfied by this file.
  */
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import {
   LIBRARY_CATALOG_MAX_COLLECTIONS,
   handleLibraryCollections,
@@ -846,4 +846,87 @@ const documentRow = (id, slug) => ({ id, collection_slug: slug, title: 't', sour
 }
 
 console.log('  transport: anonymous contract byte-identical, composed path scoped/ordered/ceilinged, error mapping stable')
+
+/* ------------------------------------- active-chain grant containment */
+
+/*
+ * The invariant that keeps 6D3's policies safe while 6D4A is deferred.
+ *
+ * Those six SELECT policies are permissive read on their own. In particular
+ * tracework_library_documents_select is a bare "the parent collection exists",
+ * with no visibility scoping at all, because tightening it is 6D4A's job. They
+ * are harmless today only because `authenticated` holds no table or column
+ * privilege, so PostgREST can never reach them - measured in the live catalogs
+ * during the 2026-08-27 disposable proof.
+ *
+ * The containment therefore rests on the ABSENCE of a grant, not on the policy.
+ * One `grant select ... to authenticated` added to the active chain would expose
+ * every library document regardless of visibility, and nothing else in this
+ * repository would notice. This is the noticer.
+ */
+const PROTECTED_TABLES = [
+  'workspace_members',
+  'workspaces',
+  'tracework_collections',
+  'tracework_library_documents',
+  'tracework_sources',
+  'tracework_chunks',
+]
+
+/**
+ * Privilege-bearing GRANTs naming a role.
+ *
+ * `create policy ... to authenticated` names the role too but confers no
+ * privilege, so a statement-leading `grant` is what separates the two. Matching
+ * the bare word would fail on a correct 6D3 chain.
+ */
+const grantsToRole = (sql, role) => statementsOf(sql)
+  .split(';')
+  .map((statement) => statement.trim().replace(/\s+/g, ' '))
+  .filter((statement) => /^grant\b/i.test(statement))
+  .filter((statement) => new RegExp(`\\bto\\b[^;]*\\b${role}\\b`, 'i').test(statement))
+
+const activeMigrations = readdirSync(new URL('../supabase/migrations/', import.meta.url))
+  .filter((name) => name.endsWith('.sql'))
+  .sort()
+assert.ok(activeMigrations.length > 0, 'the active migration chain must not be empty')
+
+const offending = activeMigrations.flatMap((name) => grantsToRole(readMigration(name), 'authenticated')
+  .filter((statement) => PROTECTED_TABLES.some((table) => statement.includes(table)))
+  .map((statement) => `${name}: ${statement.slice(0, 90)}`))
+assert.deepEqual(
+  offending,
+  [],
+  'while 6D4A is deferred, no ACTIVE migration may grant authenticated access to a protected table',
+)
+
+/* Positive control. 6D3's policy role clauses must NOT read as grants, or this
+ * tripwire would fire on a correct chain. */
+assert.ok(
+  /create policy[\s\S]*?to authenticated/i.test(baselineStatements),
+  '6D3 is expected to contain create-policy clauses naming authenticated',
+)
+assert.deepEqual(
+  grantsToRole(baseline, 'authenticated'),
+  [],
+  "6D3's create-policy role clauses must not be counted as privilege grants",
+)
+
+/* Negative control. The deferred 6D4A migration really does grant, and would be
+ * caught the moment anyone moved it back into supabase/migrations/. Without
+ * this, a detector that quietly matched nothing would still pass. */
+const deferredGrants = grantsToRole(migration, 'authenticated')
+assert.equal(
+  deferredGrants.length,
+  3,
+  "the detector must find 6D4A's three grants; if this drifts it is no longer detecting",
+)
+for (const table of ['tracework_collections', 'tracework_library_documents', 'workspace_members']) {
+  assert.ok(
+    deferredGrants.some((statement) => statement.includes(table)),
+    `the detector must catch 6D4A's grant on ${table}`,
+  )
+}
+
+console.log(`  containment: ${activeMigrations.length} active migrations grant authenticated nothing; detector proven against 6D4A's 3 grants`)
 console.log('phase 6D4A: all assertions passed')

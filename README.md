@@ -96,10 +96,13 @@ The migration at `supabase/migrations/20260811000100_tracework_knowledge_library
 Apply it in the Supabase SQL Editor after the pgvector migration, then publish the bundled collections:
 
 ```powershell
-npm run seed:library            # add --dry-run to see what would be written
+npm run seed:library -- --dry-run                  # what would be written
+npm run seed:library -- --project-ref <ref>        # write it
 ```
 
 The seeder talks to Supabase directly with the service-role key from `.env.local`. The browser routes `/api/library/collections` and `/api/library/documents` are read-only by design: an unauthenticated write endpoint would let anyone rewrite the shared catalog.
+
+A real seed must name its target with `--project-ref`, and that ref must match `SUPABASE_URL`, or the command refuses before sending anything. `.env.local` names a real project with a real service-role key, so without an explicit target the seeder would write wherever the inherited environment happened to point. The dry run needs no credential and no ref.
 
 Adding a collection chunks its documents into the local index under the database's own document ids, so two devices indexing the same collection produce one row in the shared vector table rather than a duplicate per device. **remove from this index** and **clear index** are local operations — a library row belongs to every reader, so neither deletes shared state. Choose **pgvector** after adding a collection to sync its neural chunks; another device can then retrieve those passages without a local copy.
 
