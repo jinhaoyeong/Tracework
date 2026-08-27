@@ -110,6 +110,134 @@ export const requestCollectionDocuments = (slug: string) => (
 )
 
 /**
+ * Phase 6E: explicit publication.
+ *
+ * 'pending'    submitted, invisible to every reader through the public path
+ * 'published'  visible in the shared catalog and to vector search
+ * 'blocked'    quarantined; never returned, and not reachable by editing
+ * 'superseded' terminal, so a withdrawn version cannot be resurrected
+ */
+export type PublicationState = 'pending' | 'published' | 'blocked' | 'superseded'
+
+export interface LibraryIngestRequest {
+  document: {
+    id: string
+    collectionSlug: string
+    title: string
+    sourcePath: string
+    kind: SourceKind
+    content: string
+    provenance?: SourceProvenance | null
+    sortOrder?: number
+  }
+  source: {
+    id: string
+    title: string
+    sourcePath: string
+    kind: SourceKind
+    content: string
+    fileType?: string | null
+    createdAt?: string
+  }
+  chunks: unknown[]
+}
+
+export interface LibraryIngestResult {
+  documentId: string | null
+  publicationState: PublicationState | null
+  /** True when an edit withdrew an already published document back to pending. */
+  withdrawn: boolean
+  /** True when the content hash matched and nothing was written. */
+  unchanged: boolean
+  chunkCount: number
+}
+
+/**
+ * Submits content to the shared library. There is no argument that publishes:
+ * a new document is created 'pending', and editing a published one withdraws it
+ * back to 'pending' so a reader never receives an unreviewed change.
+ */
+export const submitLibraryDocument = (request: LibraryIngestRequest) => (
+  requestJson<LibraryIngestResult>('/api/library/ingest', request)
+)
+
+/**
+ * Builds an ingest payload from a locally indexed document.
+ *
+ * The source id is the document id, deliberately: one local document owns one
+ * shared source, so re-submitting the same document adopts its own source rather
+ * than colliding with anyone else's. The database rejects a source id already
+ * claimed by a different document, so a guessed or copied id cannot re-point
+ * another person's lineage.
+ */
+export const toIngestRequest = (
+  document: DocumentRecord,
+  collectionSlug: string,
+): LibraryIngestRequest => ({
+  document: {
+    id: document.id,
+    collectionSlug,
+    title: document.title,
+    sourcePath: document.source,
+    kind: document.kind,
+    content: document.content,
+    provenance: document.provenance ?? null,
+  },
+  source: {
+    id: document.id,
+    title: document.title,
+    sourcePath: document.source,
+    kind: document.kind,
+    content: document.content,
+    createdAt: document.createdAt,
+  },
+  chunks: document.chunks.map((chunk) => ({
+    id: chunk.id,
+    index: chunk.index,
+    text: chunk.text,
+    start: chunk.start,
+    end: chunk.end,
+    neuralEmbedding: chunk.neuralEmbedding ?? null,
+  })),
+})
+
+export interface LibraryDocumentStatus {
+  id: string
+  collectionSlug: string
+  title: string
+  publicationState: PublicationState
+  chunkCount: number
+}
+
+/**
+ * The reviewer's queue. Restricted to allowlisted publishers, because the 6D2A
+ * catalog deliberately cannot show unpublished work and the list of pending
+ * submissions is not public information.
+ */
+export const requestLibraryStatus = (collectionSlug?: string) => (
+  requestJson<{ documents: LibraryDocumentStatus[] }>(
+    '/api/library/status',
+    collectionSlug ? { collectionSlug } : {},
+  )
+)
+
+export interface PublicationChangeResult {
+  documentId: string
+  previousState: PublicationState | null
+  currentState: PublicationState | null
+}
+
+/**
+ * Moves a document between publication states. Rejected with
+ * 'publish_not_permitted' unless the signed-in account is in the deployment's
+ * TRACEWORK_PUBLISHERS allowlist; the legal transitions are enforced in the
+ * database, not here.
+ */
+export const setLibraryPublicationState = (documentId: string, state: PublicationState) => (
+  requestJson<PublicationChangeResult>('/api/library/publish', { documentId, state })
+)
+
+/**
  * Chunks a library document for the local index while keeping the database id,
  * so two devices indexing the same library row produce the same source id
  * instead of two duplicate rows in the shared vector table.

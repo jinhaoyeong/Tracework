@@ -289,6 +289,29 @@ export const TRACEWORK_ROUTE_AUTH_POLICIES = {
     policy: 'authenticated-authorization-pending',
     reason: 'shared-state-mutation',
   },
+  // Phase 6E supplies the resource authorization the two routes above still
+  // lack, which is why these are 'authenticated' rather than
+  // 'authorization-pending':
+  //   * ingest stamps created_by_user_id from the verified principal, re-ingest
+  //     is refused for anyone but that creator, and the result lands as
+  //     'pending', which the 6D2A read path cannot return to anyone;
+  //   * publish is additionally gated on the TRACEWORK_PUBLISHERS allowlist, so
+  //     a verified identity alone is still not a licence to reach readers.
+  // Both remain behind the TRACEWORK_ALLOW_SHARED_WRITES default-deny.
+  '/api/library/ingest': {
+    policy: 'authenticated',
+    reason: 'shared-state-mutation',
+  },
+  '/api/library/publish': {
+    policy: 'authenticated',
+    reason: 'shared-state-mutation',
+  },
+  // Read-only, but not public: the set of pending submissions is restricted to
+  // reviewers, so it carries the same policy as the action it feeds.
+  '/api/library/status': {
+    policy: 'authenticated',
+    reason: 'shared-state-mutation',
+  },
   '/api/vector/delete': {
     policy: 'authenticated-authorization-pending',
     reason: 'shared-state-mutation',

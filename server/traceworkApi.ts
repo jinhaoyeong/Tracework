@@ -1026,7 +1026,7 @@ export const handleLibraryDocuments = async (
     // nonexistent one are indistinguishable. That is deliberate: a distinct
     // "exists but forbidden" response would be an existence oracle.
     if (!documents.length) {
-      throw new ServerVectorError('collection_not_found', `The shared library has no documents for "${slug}". Seed it with npm run seed:library.`, 404)
+      throw new ServerVectorError('collection_not_found', `The shared library has no documents for "${slug}". Seed it with npm run seed:library -- --project-ref <project-ref>.`, 404)
     }
 
     sendJson(response, 200, { collectionSlug: slug, documents })
@@ -1036,6 +1036,335 @@ export const handleLibraryDocuments = async (
       return
     }
     sendServerError(response, error, 'The knowledge library documents could not be read.')
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Phase 6E: explicit publication                                          */
+/* ---------------------------------------------------------------------- */
+
+/**
+ * Env-aware form of assertSharedWritesEnabled. The Vite dev adapter's loadEnv
+ * result never reaches process.env, so the 6E routes take the same injected env
+ * the library read routes already take. Same default-deny: forgetting the
+ * variable leaves a deployment closed rather than open.
+ */
+const assertSharedWritesEnabledIn = (env: RuntimeEnv) => {
+  if (env.TRACEWORK_ALLOW_SHARED_WRITES?.trim() === 'true') return
+  throw new ServerVectorError(
+    'shared_writes_disabled',
+    'This deployment does not accept writes to the shared knowledge base. Reading and searching the existing library still work. Set TRACEWORK_ALLOW_SHARED_WRITES=true to enable submitting and publishing.',
+    403,
+  )
+}
+
+/**
+ * Submitting content and publishing it to everyone are different powers.
+ * Any verified principal may ingest, because ingested content lands as
+ * 'pending' and is invisible to the 6D2A read path. Only an allowlisted
+ * principal may move a document into or out of the public catalog.
+ *
+ * The allowlist lives in the environment rather than the database because there
+ * is no roles table yet; when one exists this is the single place to replace.
+ */
+const publisherAllowlist = (env: RuntimeEnv): ReadonlySet<string> => new Set(
+  (env.TRACEWORK_PUBLISHERS ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean),
+)
+
+/**
+ * Phase 6E write-path error containment.
+ *
+ * callSupabaseRpc forwards the upstream code and message verbatim, which is
+ * right for the pre-6E routes but wrong here: the 6E functions raise messages
+ * that name document ids, source ids and collection slugs, and PostgreSQL's own
+ * errors carry schema and constraint detail. Forwarding either would rebuild the
+ * existence oracle the 6D2A/6D4A read path deliberately refuses to provide.
+ *
+ * The decisive mapping is 42501 and 23503 onto ONE response. "You may not touch
+ * this" and "this does not exist" must be indistinguishable, otherwise a caller
+ * enumerates document ids by watching which refusal comes back.
+ *
+ * Errors raised by this module are already identifier-free and pass through, so
+ * a caller still learns that writes are disabled or that their token expired.
+ */
+const LIBRARY_SAFE_ERROR_CODES = new Set([
+  'shared_writes_disabled',
+  'invalid_auth',
+  'publish_not_permitted',
+  'invalid_document',
+  'invalid_publication_request',
+  'embedding_model_mismatch',
+  'missing_caller_context_config',
+  'supabase_network_error',
+])
+
+/*
+ * Deliberately ambiguous: it names neither outcome, so the caller cannot tell a
+ * missing item from a forbidden one. Phrased to avoid the upstream wording too,
+ * so the suite can ban those fragments outright without matching this text.
+ */
+export const LIBRARY_WRITE_REFUSED_MESSAGE =
+  'That request was refused. The item is unavailable, or this account may not change it.'
+
+const mapLibraryWriteError = (error: unknown): unknown => {
+  if (!(error instanceof ServerVectorError)) return error
+  if (LIBRARY_SAFE_ERROR_CODES.has(error.code)) return error
+
+  /*
+   * Server-side diagnostics. The upstream text is the only thing that explains
+   * WHY a write failed, so discarding it entirely would leave an operator with a
+   * bare 500 and nothing to act on. It is written to the server log and never to
+   * the response.
+   *
+   * Only the upstream code, status and message are logged. No environment value,
+   * no key, and no request body is included: a PostgREST error payload carries
+   * no credential, and nothing here reads one.
+   */
+  console.error(
+    `[tracework:6e] library write RPC failed. upstream_code=${error.code} upstream_status=${error.status} upstream_message=${error.message}`,
+  )
+
+  switch (error.code) {
+    // insufficient_privilege and foreign_key_violation collapse together on
+    // purpose: not-permitted and not-found must look identical from outside.
+    case '42501':
+    case '23503':
+      return new ServerVectorError('library_write_refused', LIBRARY_WRITE_REFUSED_MESSAGE, 403)
+    // invalid_parameter_value: the caller's input was wrong. The upstream text
+    // names the offending states, so it is replaced rather than forwarded.
+    case '22023':
+      return new ServerVectorError(
+        'invalid_library_request',
+        'That request was not valid for this document in its current state.',
+        400,
+      )
+    default:
+      return new ServerVectorError(
+        'library_write_error',
+        'The shared library could not complete this request.',
+        500,
+      )
+  }
+}
+
+/** A verified principal, or a 401. Never falls back to an anonymous write. */
+const requireLibraryCaller = async (
+  request: VercelRequestLike,
+  dependencies: LibraryDependencies,
+): Promise<LibraryCaller> => {
+  const caller = dependencies.resolveCaller ? await dependencies.resolveCaller(request) : null
+  if (!caller) {
+    throw new ServerVectorError(
+      'invalid_auth',
+      'Sign in before submitting or publishing shared knowledge.',
+      401,
+    )
+  }
+  return caller
+}
+
+/**
+ * 6E ingest. Creates the library document, links source lineage, and replaces
+ * chunks in one transaction.
+ *
+ * There is no argument that reaches publication_state: a new document takes the
+ * column's 'pending' default and an edited published document is withdrawn back
+ * to pending by the RPC. Promotion is /api/library/publish and nothing else.
+ */
+export const handleLibraryIngest = async (
+  request: VercelRequestLike,
+  response: VercelResponseLike,
+  dependencies: LibraryDependencies = {},
+) => {
+  if (request.method !== 'POST') {
+    sendMethodNotAllowed(response, '/api/library/ingest')
+    return
+  }
+
+  const env = dependencies.env ?? runtimeEnv()
+  const fetchImpl = dependencies.fetchImpl ?? fetch
+
+  try {
+    // Second boundary. The route gate in server/routeAuth.ts has already
+    // rejected an unauthenticated caller with 401, so a closed deployment does
+    // not disclose "writes are disabled" to an anonymous prober. This check is
+    // what stops a *verified* caller from writing to a deployment that has not
+    // opted in. requireLibraryCaller then re-resolves the principal because the
+    // handler needs the userId and access token, not just the gate's verdict.
+    assertSharedWritesEnabledIn(env)
+    const caller = await requireLibraryCaller(request, dependencies)
+
+    const body = readJsonBody(request) as {
+      document?: unknown
+      source?: unknown
+      chunks?: unknown
+    }
+    if (!isRecord(body.document) || !isRecord(body.source)) {
+      throw new ServerVectorError('invalid_document', 'Send a document and a source object.', 400)
+    }
+    const chunks = Array.isArray(body.chunks) ? body.chunks : []
+
+    // Same vector contract the existing sync route enforces, so 6E cannot become
+    // a side door for unvalidated embeddings.
+    const expectedModel = env.OPENAI_EMBEDDING_MODEL?.trim() || 'text-embedding-3-small'
+    for (const chunk of chunks as any[]) {
+      validateVector(chunk?.neuralEmbedding?.vector, `Chunk ${chunk?.id ?? 'unknown'}`)
+      if (chunk?.neuralEmbedding?.model !== expectedModel) {
+        throw new ServerVectorError(
+          'embedding_model_mismatch',
+          `Chunk ${chunk?.id ?? 'unknown'} uses ${chunk?.neuralEmbedding?.model ?? 'an unknown model'}, but this server is configured for ${expectedModel}. Re-index the source before submitting.`,
+          400,
+        )
+      }
+    }
+
+    const result = await callSupabaseRpc(
+      'tracework_ingest_document',
+      {
+        p_document: body.document,
+        p_source: body.source,
+        p_chunks: chunks,
+        p_actor: caller.userId,
+      },
+      env,
+      fetchImpl,
+    ) as Record<string, any>
+
+    sendJson(response, 200, {
+      database: 'supabase postgres / knowledge library',
+      documentId: result?.documentId ?? null,
+      publicationState: result?.publicationState ?? null,
+      withdrawn: Boolean(result?.withdrawn),
+      unchanged: Boolean(result?.unchanged),
+      chunkCount: Number(result?.chunkCount ?? 0),
+    })
+  } catch (error) {
+    if (error instanceof InvalidRequestBodyError) {
+      sendJson(response, 400, { error: { code: 'invalid_request_body', message: error.message } })
+      return
+    }
+    sendServerError(response, mapLibraryWriteError(error), 'The document could not be submitted to the shared library.')
+  }
+}
+
+/**
+ * 6E review queue. The 6D2A catalog returns published rows only and must keep
+ * doing so, so a reviewer has no way to see what is waiting. This route is that
+ * view, and it is restricted to allowlisted publishers: the set of pending
+ * submissions is not public information.
+ */
+export const handleLibraryStatus = async (
+  request: VercelRequestLike,
+  response: VercelResponseLike,
+  dependencies: LibraryDependencies = {},
+) => {
+  if (request.method !== 'POST') {
+    sendMethodNotAllowed(response, '/api/library/status')
+    return
+  }
+
+  const env = dependencies.env ?? runtimeEnv()
+  const fetchImpl = dependencies.fetchImpl ?? fetch
+
+  try {
+    assertSharedWritesEnabledIn(env)
+    const caller = await requireLibraryCaller(request, dependencies)
+    if (!publisherAllowlist(env).has(caller.userId)) {
+      throw new ServerVectorError(
+        'publish_not_permitted',
+        'This account may submit shared knowledge but may not review it.',
+        403,
+      )
+    }
+
+    const body = readJsonBody(request) as { collectionSlug?: unknown }
+    const collectionSlug = typeof body.collectionSlug === 'string' && body.collectionSlug.trim()
+      ? body.collectionSlug.trim()
+      : null
+
+    const rows = await callSupabaseRpc(
+      'tracework_document_status',
+      { p_collection_slug: collectionSlug },
+      env,
+      fetchImpl,
+    ) as Array<Record<string, any>>
+
+    sendJson(response, 200, {
+      documents: (Array.isArray(rows) ? rows : []).map((row) => ({
+        id: row.id,
+        collectionSlug: row.collection_slug,
+        title: row.title,
+        publicationState: row.publication_state,
+        chunkCount: Number(row.chunk_count ?? 0),
+      })),
+    })
+  } catch (error) {
+    if (error instanceof InvalidRequestBodyError) {
+      sendJson(response, 400, { error: { code: 'invalid_request_body', message: error.message } })
+      return
+    }
+    sendServerError(response, mapLibraryWriteError(error), 'The review queue could not be read.')
+  }
+}
+
+/**
+ * 6E publication. The only route that can move a document into or out of the
+ * public catalog. The permitted transitions themselves are enforced in the
+ * database, so a handler bug cannot invent an illegal one.
+ */
+export const handleLibraryPublish = async (
+  request: VercelRequestLike,
+  response: VercelResponseLike,
+  dependencies: LibraryDependencies = {},
+) => {
+  if (request.method !== 'POST') {
+    sendMethodNotAllowed(response, '/api/library/publish')
+    return
+  }
+
+  const env = dependencies.env ?? runtimeEnv()
+  const fetchImpl = dependencies.fetchImpl ?? fetch
+
+  try {
+    assertSharedWritesEnabledIn(env)
+    const caller = await requireLibraryCaller(request, dependencies)
+
+    if (!publisherAllowlist(env).has(caller.userId)) {
+      throw new ServerVectorError(
+        'publish_not_permitted',
+        'This account may submit shared knowledge but may not publish it. An approved publisher must review it first.',
+        403,
+      )
+    }
+
+    const body = readJsonBody(request) as { documentId?: unknown; state?: unknown }
+    const documentId = typeof body.documentId === 'string' ? body.documentId.trim() : ''
+    const state = typeof body.state === 'string' ? body.state.trim() : ''
+    if (!documentId || !state) {
+      throw new ServerVectorError('invalid_publication_request', 'Send a documentId and a target state.', 400)
+    }
+
+    const result = await callSupabaseRpc(
+      'tracework_set_publication_state',
+      { p_document_id: documentId, p_next_state: state, p_actor: caller.userId },
+      env,
+      fetchImpl,
+    ) as Record<string, any>
+
+    sendJson(response, 200, {
+      documentId: result?.documentId ?? documentId,
+      previousState: result?.previousState ?? null,
+      currentState: result?.currentState ?? null,
+    })
+  } catch (error) {
+    if (error instanceof InvalidRequestBodyError) {
+      sendJson(response, 400, { error: { code: 'invalid_request_body', message: error.message } })
+      return
+    }
+    sendServerError(response, mapLibraryWriteError(error), 'The publication state could not be changed.')
   }
 }
 

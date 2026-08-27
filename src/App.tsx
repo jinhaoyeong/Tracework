@@ -3,7 +3,7 @@ import { buildSampleCorpus } from './data/sampleCorpus'
 import { Icon } from './components/Icon'
 import { KnowledgeLibrary, type LibraryStatus } from './components/KnowledgeLibrary'
 import { TemporalInspector } from './components/TemporalInspector'
-import { KnowledgeLibraryError, requestCollectionDocuments, requestKnowledgeLibrary, toIndexedDocument, type KnowledgeCollection } from './lib/knowledgeLibrary'
+import { KnowledgeLibraryError, requestCollectionDocuments, requestKnowledgeLibrary, requestLibraryStatus, setLibraryPublicationState, submitLibraryDocument, toIndexedDocument, toIngestRequest, type KnowledgeCollection, type LibraryDocumentStatus, type PublicationState } from './lib/knowledgeLibrary'
 import { buildAnswer, createDocument, formatBytes, searchDocuments, tokenize } from './lib/rag'
 import { adjudicateEvidence, ensureConflictCoverage, type EvidenceAdjudication } from './lib/adjudication'
 import { buildConflictAnswer, buildGroundedContext, buildInsufficientAnswer, buildTemporalHoldAnswer, classifyGeneratedAnswer, evaluateEvidence, type GroundedContext, type GroundedSession } from './lib/grounded'
@@ -283,6 +283,15 @@ function App() {
   const [libraryStatus, setLibraryStatus] = useState<LibraryStatus>('idle')
   const [libraryMessage, setLibraryMessage] = useState<string | null>(null)
   const [libraryPendingSlug, setLibraryPendingSlug] = useState<string | null>(null)
+  // Phase 6E. Submission and review are separate powers, so they carry separate
+  // state: anyone signed in may submit, only an allowlisted publisher may load
+  // the queue or change a publication state. Both surfaces fail loudly rather
+  // than hiding, because the server is the authority on both.
+  const [reviewQueue, setReviewQueue] = useState<LibraryDocumentStatus[] | undefined>(undefined)
+  const [reviewPendingId, setReviewPendingId] = useState<string | null>(null)
+  const [reviewMessage, setReviewMessage] = useState<string | null>(null)
+  const [contributePendingId, setContributePendingId] = useState<string | null>(null)
+  const [contributeMessage, setContributeMessage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const neuralIndexPromiseRef = useRef<Promise<DocumentRecord[]> | null>(null)
 
@@ -1101,6 +1110,78 @@ function App() {
     showNotice('info', 'Collection removed from this browser. It remains in the shared library.')
   }
 
+  /*
+   * Phase 6E. Submitting sends one locally indexed document to a shared
+   * collection as 'pending'. It reaches no reader until a publisher promotes it,
+   * so this action shares nothing by itself. Editing an already published
+   * document withdraws it back to pending, which the server reports as
+   * `withdrawn` so the message can say so rather than looking like a no-op.
+   */
+  const handleSubmitDocument = async (documentId: string, collectionSlug: string) => {
+    const document = documents.find((candidate) => candidate.id === documentId)
+    if (!document) return
+    setContributePendingId(documentId)
+    setContributeMessage(null)
+    try {
+      const result = await submitLibraryDocument(toIngestRequest(document, collectionSlug))
+      const summary = result.unchanged
+        ? 'Already submitted and unchanged; nothing was rewritten.'
+        : result.withdrawn
+          ? `Submitted. This was published, so the edit withdrew it back to ${result.publicationState} for re-review.`
+          : `Submitted as ${result.publicationState}. A publisher must approve it before anyone else can read it.`
+      setContributeMessage(summary)
+      showNotice('success', summary)
+    } catch (error) {
+      const message = error instanceof KnowledgeLibraryError
+        ? error.message
+        : 'That document could not be submitted to the shared library.'
+      setContributeMessage(message)
+      showNotice('error', message)
+    } finally {
+      setContributePendingId(null)
+    }
+  }
+
+  /* Publisher-only. A non-publisher gets 403 publish_not_permitted from the
+   * server; the surface does not pretend to know the allowlist locally. */
+  const handleLoadReviewQueue = async () => {
+    setReviewMessage(null)
+    try {
+      const response = await requestLibraryStatus()
+      setReviewQueue(response.documents)
+      if (!response.documents.length) setReviewMessage('Nothing is awaiting review.')
+    } catch (error) {
+      const message = error instanceof KnowledgeLibraryError
+        ? error.message
+        : 'The review queue could not be read.'
+      setReviewQueue([])
+      setReviewMessage(message)
+    }
+  }
+
+  const handleChangePublicationState = async (documentId: string, next: PublicationState) => {
+    setReviewPendingId(documentId)
+    setReviewMessage(null)
+    try {
+      const result = await setLibraryPublicationState(documentId, next)
+      setReviewQueue((current) => (current ?? []).map((entry) => (
+        entry.id === documentId ? { ...entry, publicationState: result.currentState ?? next } : entry
+      )))
+      const summary = `${documentId}: ${result.previousState} -> ${result.currentState}`
+      setReviewMessage(summary)
+      showNotice('success', summary)
+      if (next === 'published') void loadLibraryCatalog()
+    } catch (error) {
+      const message = error instanceof KnowledgeLibraryError
+        ? error.message
+        : 'That publication change was refused.'
+      setReviewMessage(message)
+      showNotice('error', message)
+    } finally {
+      setReviewPendingId(null)
+    }
+  }
+
   const handleClear = () => {
     // Library sources are excluded: clearing a local index must not delete a
     // collection another reader is relying on.
@@ -1263,6 +1344,42 @@ function App() {
             onRefresh={() => void loadLibraryCatalog()}
             onAdd={(slug) => void handleAddCollection(slug)}
             onRemove={handleRemoveCollection}
+            /*
+             * Phase 6E. Only documents carrying neural embeddings can be
+             * submitted: ingest re-validates the embedding model server-side and
+             * rejects anything else, so offering an unembedded document would be
+             * offering a guaranteed failure.
+             */
+            contributable={documents
+              .filter((document) => document.chunks.some((chunk) => chunk.neuralEmbedding))
+              .map((document) => ({
+                id: document.id,
+                title: document.title,
+                chunkCount: document.chunks.length,
+              }))}
+            /*
+             * Every collection the catalog returns is a candidate: public ones
+             * accept contributions, a private one is only listed for its owner,
+             * and a workspace one only for an active member. Submitting is not
+             * publishing - the row lands 'pending' and reaches no reader until an
+             * allowlisted publisher promotes it.
+             *
+             * One case cannot be filtered here: a SYSTEM collection (quarantine)
+             * is public, and the 6D2A catalog does not expose
+             * created_by_system_key, so the client cannot tell it apart. The
+             * database refuses it with the same generic message as any other
+             * unwritable collection.
+             */
+            contributeTargets={libraryCollections
+              .map((collection) => ({ slug: collection.slug, title: collection.title }))}
+            contributePendingId={contributePendingId}
+            contributeMessage={contributeMessage}
+            onSubmitDocument={(documentId, slug) => void handleSubmitDocument(documentId, slug)}
+            reviewQueue={reviewQueue}
+            reviewPendingId={reviewPendingId}
+            reviewMessage={reviewMessage}
+            onRefreshReview={() => void handleLoadReviewQueue()}
+            onChangePublicationState={(documentId, next) => void handleChangePublicationState(documentId, next)}
           />
 
           <div className="loop-block">

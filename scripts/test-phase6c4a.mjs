@@ -209,7 +209,8 @@ for (const [route, definition] of Object.entries(TRACEWORK_ROUTE_AUTH_POLICIES))
   assert.equal(VALID_POLICIES.has(definition.policy), true, `${route} needs a known policy`)
   assert.equal(typeof definition.reason === 'string' && definition.reason.length > 0, true, `${route} needs a reason`)
 }
-assert.equal(Object.keys(TRACEWORK_ROUTE_AUTH_POLICIES).length, 7)
+/* 7 before Phase 6E; ingest, publish and status are the only additions. */
+assert.equal(Object.keys(TRACEWORK_ROUTE_AUTH_POLICIES).length, 10)
 assert.equal(getTraceworkRouteAuthPolicy('/api/not-a-route'), null)
 
 /* The public read/search surface was not part of the cutover. */
@@ -232,11 +233,29 @@ const routeFiles = [
   'api/vector/search.ts',
   'api/vector/sync.ts',
   'api/vector/delete.ts',
+  // Phase 6E. These are write routes, so "no second verifier" matters more here
+  // than anywhere else: they must reach the shared resolver through
+  // server/routeAuth.ts like every other route.
+  'api/library/ingest.ts',
+  'api/library/publish.ts',
+  'api/library/status.ts',
 ]
 for (const file of routeFiles) {
   const source = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
   assert.equal(source.includes('resolveAuthenticatedRequestContext'), false, `${file} must not verify tokens itself`)
   assert.equal(source.includes('jwtVerify'), false, `${file} must not implement a second verifier`)
+}
+
+/* The negative check above cannot tell an entry point that is gated from one
+ * that simply forgot to gate. For the Phase 6E write routes, assert positively
+ * that each goes through the shared gate. */
+for (const file of ['api/library/ingest.ts', 'api/library/publish.ts', 'api/library/status.ts']) {
+  const source = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8')
+  assert.equal(source.includes('withRouteAuth('), true, `${file} must route through the shared withRouteAuth gate`)
+  assert.equal(
+    /withRouteAuth\(\s*'(\/api\/library\/(ingest|publish|status))'/.test(source), true,
+    `${file} must pass its own path to withRouteAuth so the matrix entry is the one enforced`,
+  )
 }
 
 const routeAuthSource = readFileSync(new URL('../server/routeAuth.ts', import.meta.url), 'utf8')

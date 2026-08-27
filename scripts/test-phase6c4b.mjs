@@ -30,6 +30,20 @@ const PROVIDER_ROUTES = ['/api/embed', '/api/generate']
 const MUTATION_ROUTES = ['/api/vector/sync', '/api/vector/delete']
 const ANONYMOUS_ROUTES = ['/api/library/collections', '/api/library/documents', '/api/vector/search']
 
+/*
+ * Phase 6E. These differ from MUTATION_ROUTES above in one specific way: those
+ * refuse a verified caller at the gate because resource authorization does not
+ * exist for them, whereas 6E supplies it (creator stamping on ingest, the
+ * TRACEWORK_PUBLISHERS allowlist on publish and status). So the gate lets a
+ * verified caller through and the handler decides.
+ *
+ * They must NOT drift into the provider group: 'provider-cost' means "a verified
+ * identity is the whole justification", which is exactly what is not true here.
+ */
+const LIBRARY_WRITE_ROUTES = ['/api/library/ingest', '/api/library/publish']
+const LIBRARY_REVIEW_ROUTES = ['/api/library/status']
+const LIBRARY_6E_ROUTES = [...LIBRARY_WRITE_ROUTES, ...LIBRARY_REVIEW_ROUTES]
+
 /* ---------------------------------------------------------------- helpers */
 
 const verifiedDependencies = (overrides = {}) => ({
@@ -118,7 +132,37 @@ for (const route of MUTATION_ROUTES) {
 for (const route of ANONYMOUS_ROUTES) {
   assert.equal(getTraceworkRouteAuthPolicy(route).policy, 'anonymous', `${route} must stay anonymous`)
 }
-assert.equal(Object.keys(TRACEWORK_ROUTE_AUTH_POLICIES).length, 7)
+
+/* Phase 6E classification. Policy AND reason are both pinned: a route that
+ * silently became 'provider-cost' would still require auth while losing the
+ * "this mutates shared state" labelling the matrix exists to record. */
+for (const route of LIBRARY_6E_ROUTES) {
+  const definition = getTraceworkRouteAuthPolicy(route)
+  assert.equal(definition.policy, 'authenticated', `${route} must require a verified principal`)
+  assert.equal(
+    definition.reason, 'shared-state-mutation',
+    `${route} must stay classified as shared-state mutation, not an ordinary authenticated read`,
+  )
+}
+/* The pre-6E groups must not have absorbed the new routes or changed shape. */
+for (const route of PROVIDER_ROUTES) {
+  assert.equal(getTraceworkRouteAuthPolicy(route).reason, 'provider-cost', `${route} classification drifted`)
+}
+for (const route of MUTATION_ROUTES) {
+  assert.equal(getTraceworkRouteAuthPolicy(route).reason, 'shared-state-mutation', `${route} classification drifted`)
+}
+for (const route of LIBRARY_6E_ROUTES) {
+  assert.equal(MUTATION_ROUTES.includes(route), false, `${route} must not be conflated with the ungoverned mutation routes`)
+  assert.equal(ANONYMOUS_ROUTES.includes(route), false, `${route} must never be anonymous`)
+}
+
+/* 7 before Phase 6E; the three 6E routes are the only additions. */
+assert.equal(Object.keys(TRACEWORK_ROUTE_AUTH_POLICIES).length, 10)
+assert.equal(
+  [...PROVIDER_ROUTES, ...MUTATION_ROUTES, ...ANONYMOUS_ROUTES, ...LIBRARY_6E_ROUTES].length,
+  Object.keys(TRACEWORK_ROUTE_AUTH_POLICIES).length,
+  'every route in the matrix must belong to exactly one named group in this file',
+)
 /* An unpolicied route fails closed rather than defaulting to public. */
 {
   const { response, captured } = makeVercelResponse()
@@ -129,7 +173,7 @@ assert.equal(Object.keys(TRACEWORK_ROUTE_AUTH_POLICIES).length, 7)
 
 /* ------------------------- 2. rejected credentials, both adapter shapes */
 
-for (const route of [...PROVIDER_ROUTES, ...MUTATION_ROUTES]) {
+for (const route of [...PROVIDER_ROUTES, ...MUTATION_ROUTES, ...LIBRARY_6E_ROUTES]) {
   for (const [label, request, dependencies, expectedStatus, expectedCode] of REJECTED_CREDENTIALS) {
     for (const [shape, factory] of [['vercel', makeVercelResponse], ['vite', makeViteResponse]]) {
       const { response, captured } = factory()
@@ -176,6 +220,30 @@ for (const route of MUTATION_ROUTES) {
 }
 assert.equal(providerCalls, 0, 'Mutation refusal must not call a provider')
 assert.equal(databaseCalls, 0, 'Mutation refusal must not touch the database')
+
+/*
+ * Phase 6E routes are the deliberate contrast to the block above. A verified
+ * caller DOES reach the handler, because for these routes the gate is not the
+ * whole authorization story: the handler still applies the
+ * TRACEWORK_ALLOW_SHARED_WRITES boundary and, for publish and status, the
+ * TRACEWORK_PUBLISHERS allowlist. Those handler-level refusals - 403
+ * shared_writes_disabled, 403 publish_not_permitted, and the authorized success
+ * path - are asserted against the real handlers in scripts/test-phase6e.mjs.
+ *
+ * This block asserts only what belongs to the gate: a verified caller is passed
+ * through rather than refused, which is what makes 6E different from the
+ * authorization-pending mutation routes.
+ */
+for (const route of LIBRARY_6E_ROUTES) {
+  for (const [shape, factory] of [['vercel', makeVercelResponse], ['vite', makeViteResponse]]) {
+    handlerEntries = 0
+    const { response, captured } = factory()
+    await withRouteAuth(route, countingHandler, verifiedDependencies())(validRequest(), response)
+
+    assert.equal(handlerEntries, 1, `${route} (${shape}) must reach its handler once for a verified caller`)
+    assert.equal(captured.status, 0, `${route} (${shape}) must not write an auth error for a verified caller`)
+  }
+}
 
 /* --------------- 4. the real privileged handlers are never even invoked */
 
