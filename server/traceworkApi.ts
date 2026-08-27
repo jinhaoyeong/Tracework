@@ -1026,7 +1026,7 @@ export const handleLibraryDocuments = async (
     // nonexistent one are indistinguishable. That is deliberate: a distinct
     // "exists but forbidden" response would be an existence oracle.
     if (!documents.length) {
-      throw new ServerVectorError('collection_not_found', `The shared library has no documents for "${slug}". Seed it with npm run seed:library.`, 404)
+      throw new ServerVectorError('collection_not_found', `The shared library has no documents for "${slug}". Seed it with npm run seed:library -- --project-ref <project-ref>.`, 404)
     }
 
     sendJson(response, 200, { collectionSlug: slug, documents })

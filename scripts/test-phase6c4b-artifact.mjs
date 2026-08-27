@@ -216,6 +216,6 @@ if (failures > 0) {
   process.exit(1)
 }
 
-console.log('  all four built functions import and answer 401 anonymously')
+console.log(`  all ${PROTECTED_ROUTES.length} protected built functions import and answer 401 anonymously`)
 console.log('  provider calls 0 / database calls 0 / unresolved executable imports 0')
 console.log('\nPhase 6C4B artifact validation passed.')

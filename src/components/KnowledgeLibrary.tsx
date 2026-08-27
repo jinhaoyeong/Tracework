@@ -151,7 +151,7 @@ export function KnowledgeLibrary({
       {status === 'ready' && !collections.length && (
         <div className="library-state" role="status">
           <strong>the library is empty</strong>
-          <span>Run npm run seed:library to publish the bundled collections into the database.</span>
+          <span>Run npm run seed:library -- --project-ref {'<project-ref>'} to publish the bundled collections into the database. The ref must match SUPABASE_URL, or the seed refuses.</span>
         </div>
       )}
 

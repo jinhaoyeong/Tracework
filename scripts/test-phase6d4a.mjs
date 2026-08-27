@@ -811,7 +811,13 @@ const documentRow = (id, slug) => ({ id, collection_slug: slug, title: 't', sour
   assert.equal(unauthorized.status, 404)
   assert.equal(missing.status, 404)
   assert.deepEqual(unauthorized.payload, missing.payload, 'an unauthorized slug must be indistinguishable from a nonexistent one')
-  assert.ok(missing.payload.error.message.includes('npm run seed:library'), 'the anonymous 404 message is unchanged')
+  // The remediation must name a command that actually works. A real seed needs
+  // an explicit --project-ref (scripts/seed-library.mjs), so telling an operator
+  // to run the bare command would send them at a guaranteed refusal.
+  assert.ok(
+    missing.payload.error.message.includes('npm run seed:library -- --project-ref'),
+    'the anonymous 404 must remediate with the target-confirmed seed command',
+  )
 }
 
 /*
@@ -842,6 +848,23 @@ const documentRow = (id, slug) => ({ id, collection_slug: slug, title: 't', sour
   assert.ok(
     /this device|stays on this device|no private cloud/i.test(intro),
     'the intro must be explicit that unsubmitted knowledge is local-only; there is no private cloud storage',
+  )
+
+  /* The empty-state tells an operator how to fill the library, so it must name a
+   * command that works. seed-library.mjs refuses a real write without an
+   * explicit --project-ref, and the server's 404 remediation says the same
+   * thing; all three drift together or not at all. */
+  const emptyState = component.slice(
+    component.indexOf('the library is empty'),
+    component.indexOf('{collections.length > 0'),
+  )
+  assert.ok(
+    emptyState.includes('npm run seed:library'),
+    'the empty state should still tell the operator how to seed the library',
+  )
+  assert.ok(
+    emptyState.includes('--project-ref'),
+    'the empty state must name the target-confirmed seed command, not the bare one that refuses',
   )
 }
 
