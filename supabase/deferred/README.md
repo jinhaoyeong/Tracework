@@ -77,3 +77,108 @@ application flag can withdraw.
 `scripts/test-phase6d4a.mjs` still runs and still passes; it reads the migration
 from this directory. It analyses the SQL statically and proves the migration is
 correct **if applied** — which remains true while it is deferred.
+
+## Phase 6E activation order
+
+This order is authoritative. It is derived from the executable contracts — the
+migration, the bootstrap script and the route handlers — and not from any commit
+message. Each step is separately authorised; recording the order here is not a
+licence to run it.
+
+None of it has been executed. `6D3 -> 6E` with 6D4A absent is still **not**
+runtime-proven, per the section above. This describes what to do once that proof
+exists, not a state that has been reached.
+
+### 1. Apply the Phase 6E migration
+
+```
+supabase/migrations/20260815081045_tracework_6e_explicit_publication.sql
+```
+
+Its preconditions are the 6D2B constraints and the three 6D2A functions, which
+the migration asserts fail-closed before doing anything. It creates the three
+publication RPCs and nothing else: no policy, no table grant, and no dependency
+on any process environment value. **No mutation surface opens at this step.**
+
+### 2. Configure `TRACEWORK_PUBLISHERS`
+
+It must be configured **independently in two places**:
+
+* the deployed Tracework runtime, which reads it when authorising a publish
+  (`server/traceworkApi.ts:1071`);
+* the operator environment running `scripts/bootstrap-shared-collection.mjs`,
+  which reads it before any request and refuses to run when it is empty
+  (`scripts/bootstrap-shared-collection.mjs:193`).
+
+These are separate processes. Setting it in the deployment does not configure
+the operator shell, and setting it in the shell does not configure the
+deployment.
+
+### 3. Bootstrap the shared collection
+
+```
+dry-run  ->  --apply  ->  --verify
+```
+
+The bootstrap:
+
+* uses the service role and writes through PostgREST, never through a 6E RPC;
+* requires the publisher allowlist, and requires `--owner` to be in it;
+* requires a real `auth.users` owner, checked through the Auth admin API;
+* does **not** read `TRACEWORK_ALLOW_SHARED_WRITES`;
+* runs once per environment, outside the migration chain, after the chain has
+  been applied;
+* defaults to dry-run, refuses to modify an existing collection, and refuses
+  rollback once the collection holds documents.
+
+### 4. Verify mutation is still closed
+
+Before activation, ingest and publish must still fail closed with:
+
+```
+shared_writes_disabled
+```
+
+This is the evidence that steps 1-3 did not open mutation. Applying the
+migration, configuring publishers and creating the collection must all leave the
+write boundary shut.
+
+### 5. Set `TRACEWORK_ALLOW_SHARED_WRITES=true` LAST
+
+This is the runtime activation switch for mutation
+(`server/traceworkApi.ts:1053`). It must not be enabled until:
+
+* the 6E RPCs exist;
+* the publisher allowlist is configured;
+* the contributable collection exists;
+* the writes-closed state has been verified.
+
+### The `8ee98d2` commit message is superseded
+
+The commit message for `8ee98d2` described an earlier ordering in which
+`TRACEWORK_ALLOW_SHARED_WRITES` was enabled *before* the Phase 6E migration was
+applied. That ordering is superseded by this section.
+
+The executable contracts are authoritative, and they say:
+
+* the Phase 6E migration does not depend on process environment — its only
+  mention of `TRACEWORK_PUBLISHERS` is a comment recording that the database has
+  no notion of that value;
+* `bootstrap-shared-collection.mjs` states it runs once per environment, outside
+  the migration chain, **after** the chain has been applied;
+* the bootstrap requires `TRACEWORK_PUBLISHERS` and never reads
+  `TRACEWORK_ALLOW_SHARED_WRITES`;
+* `TRACEWORK_ALLOW_SHARED_WRITES` is the final switch that opens mutation.
+
+History is not rewritten and `8ee98d2` is not amended. The commit prose stays as
+a record of the reasoning at the time; this section is what to follow.
+
+### What the bootstrap does not solve
+
+`scripts/bootstrap-shared-collection.mjs` creates the first
+contributor-writable collection. It does **not** solve the Phase 6B
+empty-database requirement for the eleven pre-existing corpus identity rows —
+four collection slugs and seven document ids that `20260812000100` asserts and
+that no migration creates.
+
+Those are different problems. The empty-database replay debt remains open.
