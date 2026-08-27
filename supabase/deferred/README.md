@@ -34,33 +34,62 @@ anyone reads once published — does not need any of that. It runs entirely on t
   composed branch of the pre-existing catalog routes.
 * No 6E client code reads the 6D4A-only `scope` field.
 
-## ⚠️ The resulting sequence is NOT runtime-proven
+## The resulting sequence IS runtime-proven
 
-Deferring 6D4A changes the order production will apply. **Do not claim this
-sequence has been tested, because it has not.**
+Deferring 6D4A changed the order production will apply, and that order has now
+been executed against a real PostgreSQL.
 
 | Sequence | Status |
 |---|---|
 | `6D3 -> 6D4A -> 6E` | runtime-proven on a disposable project, 2026-08-15 |
-| `6D3 -> 6E` (6D4A absent) | **static analysis only** |
+| `6D3 -> 6E` (6D4A absent) | **runtime-proven, 2026-08-27** |
 
-The disposable proof applied the whole chain in filename order, so 6D4A was
-already present when 6E ran. The sequence production will now use — 6E straight
-after 6D3, with 6D4A never applied — has never been executed against a real
-PostgreSQL.
+The 2026-08-27 proof ran on disposable project `vxdcgixymlltdjpujgwu`, created
+for it and retained for review. Production (`xbphaeuvthyfonyflhwb`) was not
+touched: no migration, no SQL, no Auth mutation, no environment change, no
+deployment. No provider call of any kind was made — every embedding was a
+deterministic synthetic 1536-dimension vector.
 
-The static case that it will work: 6E's preconditions require only the 6D2B
-constraints (`publication_state` and `visibility` CHECKs, validated) and the
-three 6D2A functions carrying both containment predicates. They assert nothing
-about 6D4A, and every 6D4A mention in the 6E migration is a comment. Its RPCs use
-`callSupabaseRpc` (service role) and never the caller-JWT path 6D4A's grants
-serve.
+**What it established.**
 
-That is a strong argument, not a proof. Both defects found in 6E review — the R1
-source hijack and the R9 error-message oracle — passed static analysis and were
-caught only by execution. Closing this gap needs a new disposable project, which
-is a separate authorisation; the previous one (`tpaczjiptkdmahomtffg`) has been
-deleted.
+* The chain `6B -> 6D2A -> 6D2B -> 6D3 -> 6E` applies cleanly with 6D4A absent.
+  `20260815000100` was never applied and is absent from `schema_migrations`.
+* Measured in the live catalogs rather than inferred from SQL: `authenticated`
+  holds **no** table privilege and **no** column privilege on any of the six
+  tables, so 6D4A's Data API grants are genuinely absent and the six 6D3
+  policies are inert. `anon` holds nothing either. Only `service_role` has DML.
+* All nine `tracework_*` functions are `SECURITY INVOKER`, with `EXECUTE` to
+  `service_role` alone. The three 6D2A read functions still carry both
+  containment predicates; 6E did not redefine them.
+* `scripts/bootstrap-shared-collection.mjs` was proven against a real project:
+  eight fail-closed guards, dry-run with zero writes, `--apply`, `--verify`,
+  overwrite refusal, rollback while empty, recreate, and rollback **refused**
+  once the collection held documents.
+* The lifecycle works end to end. Ingest lands `pending`; publish promotes to
+  `published`; only then does the document reach an anonymous reader.
+* R1 (source-id hijack) fails closed. An attacker's own new document claiming
+  another document's source id is refused, the victim keeps its lineage and its
+  chunks, and the refusal names neither id.
+* R9 (existence oracle) stays closed. For an unauthorised caller an existing and
+  a nonexistent document return identical status, error code, message and
+  response shape.
+* 6D2A containment holds against real rows. With four documents in one
+  collection sharing an identical embedding, anonymous search returned exactly
+  one candidate — the `published` one. `pending`, `blocked` and `superseded`
+  were hidden from both the catalog and the candidate set, so hidden rows do not
+  influence `candidateCount`.
+
+**What it did NOT establish.** The eleven Phase 6B identity rows — four
+collection slugs and seven document ids — had to be hand-seeded before the chain
+would pass, using the committed `scripts/seed-library.mjs`. That was explicit
+test setup for the known portability debt, not a fix for it.
+**Empty-database portability remains OPEN**: the chain still cannot replay from
+a genuinely empty project, because `20260812000100` asserts content that no
+migration creates.
+
+`TRACEWORK_ALLOW_SHARED_WRITES` was enabled only inside the disposable runtime,
+and only after the writes-closed state had been verified. It stays off
+everywhere else.
 
 **Consequence while deferred.** The composed catalog path in
 `server/traceworkApi.ts` is unreachable: its flag is unset and its grants are
